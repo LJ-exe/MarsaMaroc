@@ -967,27 +967,91 @@ def generer_evaluation_pdf(stagiaire: dict, evaluation: dict, signatures: dict) 
 
 
 def duree_stage_en_mois(period: str) -> str:
-    """Convert a stored ``start - end`` period into a calendar-month label."""
+    """
+    Retourne la durée du stage écrite en lettres.
+    Exemples :
+    1 mois  -> d'un mois
+    2 mois -> de deux mois
+    3 mois -> de trois mois
+    """
     from datetime import datetime
     import re
 
     dates = re.findall(r"\d{4}-\d{2}-\d{2}", str(period))
+
     if len(dates) < 2:
-        return str(period).replace(" - ", " au ").strip()
+        return ""
 
     try:
         start = datetime.strptime(dates[0], "%Y-%m-%d").date()
         end = datetime.strptime(dates[1], "%Y-%m-%d").date()
+
         if end < start:
             return ""
 
-        months = (end.year - start.year) * 12 + end.month - start.month
-        if end.day < start.day:
-            months -= 1
-        months = max(1, months)
-        return f"{months} mois" if months != 1 else "1 mois"
+        # Nombre de mois couverts par le stage
+        months = (
+            (end.year - start.year) * 12
+            + (end.month - start.month)
+            + 1
+        )
+
+        nombres = {
+            1: "un",
+            2: "deux",
+            3: "trois",
+            4: "quatre",
+            5: "cinq",
+            6: "six",
+            7: "sept",
+            8: "huit",
+            9: "neuf",
+            10: "dix",
+            11: "onze",
+            12: "douze",
+        }
+
+        if months == 1:
+            return "d'un mois"
+
+        if months in nombres:
+            return f"de {nombres[months]} mois"
+
+        return f"de {months} mois"
+
     except ValueError:
-        return str(period).replace(" - ", " au ").strip()
+        return ""
+    
+
+def formater_periode_stage(period: str) -> str:
+    """
+    Convertit :
+    2026-07-01 - 2026-07-31
+
+    en :
+    01/07/2026 au 31/07/2026
+    """
+    from datetime import datetime
+    import re
+
+    dates = re.findall(r"\d{4}-\d{2}-\d{2}", str(period))
+
+    if len(dates) < 2:
+        return ""
+
+    try:
+        start = datetime.strptime(dates[0], "%Y-%m-%d")
+        end = datetime.strptime(dates[1], "%Y-%m-%d")
+
+        return (
+            f"{start.strftime('%d/%m/%Y')} "
+            f"au "
+            f"{end.strftime('%d/%m/%Y')}"
+        )
+
+    except ValueError:
+        return ""
+
 
 
 def generer_attestation_pdf(stagiaire: dict, rh_data: dict) -> str:
@@ -1036,6 +1100,7 @@ def generer_attestation_pdf(stagiaire: dict, rh_data: dict) -> str:
         # 1. Directeur des Ressources Humaines - blank space after "Je soussigné,"
         # Baseline Y = 626, starting at X = 195 (right after "Je soussigné," which ends at ~190)
         # Max width set to 68 to prevent overlap with "Directeur" which starts around X = 265
+        
         directeur_rh = rh_data.get('directeur_rh', '')
         if directeur_rh:
             draw_text(c, directeur_rh, 195, 626, max_width=68, font_size=9.0)
@@ -1049,9 +1114,43 @@ def generer_attestation_pdf(stagiaire: dict, rh_data: dict) -> str:
         # 3. Durée du stage - blank line after the trainee name.
         # Calculate calendar months from the stored "start - end" period.
         period = candidat.get('period', '') or ''
+        
+        # =====================================================
+        # 3. DURÉE DU STAGE - 3ème espace blanc
+        # =====================================================
+
+        period = candidat.get('period', '') or ''
+
         if period:
             duration_text = duree_stage_en_mois(period)
-            draw_text(c, duration_text, 135, 528, max_width=250, font_size=9.0)
+
+            if duration_text:
+                draw_text(
+                    c,
+                    duration_text,
+                    281,        # X : après "un stage"
+                    553.5,        # même ligne que le nom du stagiaire
+                    max_width=55,
+                    font_size=8.2 #plus petite police
+                )
+
+
+    # =====================================================
+    # 4. PÉRIODE DU STAGE - 4ème espace blanc
+    # =====================================================
+
+            if period:
+                periode_formatee = formater_periode_stage(period)
+
+                if periode_formatee:
+                    draw_text(
+                        c,
+                        periode_formatee,
+                        245,        # X : après "à compter du"
+                        539.5,        # ligne suivante
+                        max_width=200,
+                        font_size=9.0
+                    )
 
         c.save()
 
