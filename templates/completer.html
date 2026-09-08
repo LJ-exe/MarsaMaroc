@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compléter mon dossier | Marsa Maroc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --marsa-blue: #003399;
+            --marsa-dark: #001a4d;
+            --marsa-bg: #f8fafc;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: var(--marsa-bg);
+            color: var(--marsa-dark);
+            min-h-screen: 100vh;
+        }
+        h1, h2, h3, .heading { font-family: 'Outfit', sans-serif; }
+        
+        .card-completer {
+            background: white;
+            box-shadow: 0 20px 40px rgba(0, 51, 153, 0.04);
+            border: 1px solid rgba(0, 51, 153, 0.05);
+        }
+
+        .input-accent {
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        .input-accent:focus {
+            border-color: var(--marsa-blue);
+            ring: 2px solid rgba(0, 51, 153, 0.1);
+            outline: none;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-6 bg-slate-50 min-h-screen">
+
+    <div class="w-full max-w-xl space-y-8 animate-in fade-in zoom-in-95 duration-700">
+        <!-- Logo -->
+        <div class="flex flex-col items-center gap-3">
+            <img src="/static/logo_marsa.png" alt="Marsa Maroc" class="w-16 h-16 rounded-2xl object-contain shadow-lg">
+            <div class="text-center">
+                <h1 class="font-bold text-2xl tracking-tight text-[#003399] uppercase leading-none">Marsa Maroc</h1>
+                <p class="text-[10px] font-bold tracking-widest text-slate-400 uppercase mt-1">E-Recrutement & Carrière</p>
+            </div>
+        </div>
+
+        <!-- Card Content -->
+        <div class="card-completer p-10 rounded-2xl space-y-8">
+            <div class="text-center space-y-2">
+                <h2 class="text-2xl font-bold text-slate-800">Dossier de Candidature</h2>
+                <p class="text-sm text-slate-500">Mettez à jour vos pièces justificatives demandées par la RH</p>
+            </div>
+
+            <!-- Candidate Profile Info -->
+            <div class="bg-[#f3f7fb] border border-[#e5eef7] p-5 rounded-xl space-y-2">
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Candidat</p>
+                <div class="flex justify-between items-center">
+                    <p class="text-sm font-black text-[#001a4d]">{{ candidate.name }}</p>
+                    <p class="text-xs font-medium text-slate-500">{{ candidate.school }}</p>
+                </div>
+            </div>
+
+            <!-- HR Remark Alert Box -->
+            {% if candidate.remark %}
+            <div class="bg-amber-50 border border-amber-200 text-amber-900 rounded-xl p-5 space-y-2">
+                <div class="flex items-center gap-2 text-amber-700">
+                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <p class="text-xs font-black uppercase tracking-wider">Message de la Direction RH</p>
+                </div>
+                <p class="text-sm font-semibold text-amber-800 italic">" {{ candidate.remark }} "</p>
+            </div>
+            {% endif %}
+
+            <!-- Documents Status -->
+            <div class="space-y-4">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">État de vos documents</h3>
+                <div id="documents-list" class="space-y-3">
+                    {% for doc, label in doc_labels.items() %}
+                    <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100" id="doc-item-{{ doc }}">
+                        <div>
+                            <p class="text-xs font-black text-[#001a4d]">{{ label }}</p>
+                            <span class="doc-status text-[9px] font-bold uppercase text-slate-400">Vérification...</span>
+                        </div>
+                        <button onclick="selectDocForUpload('{{ doc }}', '{{ label }}')" class="btn-action hidden bg-[#003399] text-white text-[10px] font-black px-4 py-2 rounded-lg hover:bg-blue-800 transition">
+                            Remplacer
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Upload Area (Hidden by default, shown when clicking Remplacer) -->
+            <div id="upload-section" class="hidden border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center space-y-4 transition-all">
+                <div class="flex flex-col items-center gap-2">
+                    <div class="w-12 h-12 bg-blue-50 text-[#003399] rounded-full flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h4 class="text-xs font-black text-[#001a4d]" id="selected-doc-title">Document sélectionné</h4>
+                        <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Format PDF uniquement (Max 10Mo)</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-center">
+                    <label class="w-full cursor-pointer">
+                        <input type="file" id="file-input" class="hidden" accept="application/pdf" onchange="handleFileSelect()">
+                        <div class="bg-slate-50 border border-slate-200 hover:bg-slate-100 transition py-3 rounded-lg text-xs font-bold text-slate-600" id="file-select-label">
+                            Choisir le fichier PDF
+                        </div>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <button id="btn-submit-upload" onclick="uploadMissingFile()" disabled class="w-full bg-[#003399] opacity-50 cursor-not-allowed text-white py-4 rounded-xl font-bold transition-all text-xs uppercase tracking-widest">
+                    Envoyer le document
+                </button>
+            </div>
+
+            <!-- Success Alert -->
+            <div id="success-alert" class="hidden bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl p-5 space-y-2 text-center animate-in fade-in zoom-in duration-300">
+                <div class="flex justify-center text-emerald-500">
+                    <svg viewBox="0 0 24 24" class="w-10 h-10" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                </div>
+                <h3 class="text-sm font-black uppercase tracking-wider">Document envoyé avec succès !</h3>
+                <p class="text-xs text-slate-500">Votre dossier a été remis en cours d'examen par la Direction RH. Vous pouvez fermer cette page.</p>
+            </div>
+
+            <p class="text-center text-[10px] font-medium text-slate-400 uppercase tracking-widest">
+                © 2024 Direction du Capital Humain - Marsa Maroc
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const candidateId = "{{ candidate.id }}";
+        const candidateName = "{{ candidate.name }}";
+        let selectedDocType = null;
+        let selectedFile = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadDocumentsStatus();
+        });
+
+        function loadDocumentsStatus() {
+            fetch(`/api/candidates/${candidateId}/documents`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.documents) {
+                    const docs = ["cv", "cin", "assurance", "convention", "demande"];
+                    docs.forEach(doc => {
+                        const docData = data.documents[doc];
+                        const item = document.getElementById(`doc-item-${doc}`);
+                        const statusSpan = item.querySelector('.doc-status');
+                        const btnAction = item.querySelector('.btn-action');
+
+                        if (docData && docData.uploaded) {
+                            statusSpan.innerText = 'Déjà en ligne';
+                            statusSpan.className = 'doc-status text-[9px] font-black text-emerald-500 uppercase';
+                            btnAction.innerText = 'Remplacer';
+                            btnAction.classList.remove('hidden');
+                        } else {
+                            statusSpan.innerText = 'Manquant';
+                            statusSpan.className = 'doc-status text-[9px] font-black text-rose-500 uppercase animate-pulse';
+                            btnAction.innerText = 'Ajouter';
+                            btnAction.classList.remove('hidden');
+                        }
+                    });
+                }
+            })
+            .catch(err => console.error("Error loading documents:", err));
+        }
+
+        function selectDocForUpload(type, label) {
+            selectedDocType = type;
+            document.getElementById('selected-doc-title').innerText = label;
+            document.getElementById('upload-section').classList.remove('hidden');
+            
+            // Clear file input
+            document.getElementById('file-input').value = '';
+            document.getElementById('file-select-label').innerText = 'Choisir le fichier PDF';
+            document.getElementById('file-select-label').className = 'bg-slate-50 border border-slate-200 hover:bg-slate-100 transition py-3 rounded-lg text-xs font-bold text-slate-600';
+            
+            const btn = document.getElementById('btn-submit-upload');
+            btn.disabled = true;
+            btn.className = 'w-full bg-[#003399] opacity-50 cursor-not-allowed text-white py-4 rounded-xl font-bold transition-all text-xs uppercase tracking-widest';
+
+            // Scroll to upload section smoothly
+            document.getElementById('upload-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function handleFileSelect() {
+            const input = document.getElementById('file-input');
+            const label = document.getElementById('file-select-label');
+            const btn = document.getElementById('btn-submit-upload');
+            
+            if (input.files && input.files.length > 0) {
+                selectedFile = input.files[0];
+                if (!selectedFile.name.toLowerCase().endswith('.pdf')) {
+                    alert('Seuls les fichiers PDF sont acceptés.');
+                    input.value = '';
+                    return;
+                }
+                label.innerText = '📄 ' + selectedFile.name;
+                label.className = 'bg-blue-50 border border-blue-200 text-blue-900 py-3 rounded-lg text-xs font-bold';
+                
+                btn.disabled = false;
+                btn.className = 'w-full bg-[#003399] text-white py-4 rounded-xl font-bold hover:bg-blue-800 shadow-lg shadow-blue-500/20 transition-all text-xs uppercase tracking-widest';
+            }
+        }
+
+        function uploadMissingFile() {
+            if (!selectedDocType || !selectedFile) return;
+
+            const btn = document.getElementById('btn-submit-upload');
+            btn.disabled = true;
+            btn.innerText = 'Envoi en cours...';
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('type', selectedDocType);
+            formData.append('candidate_id', candidateId);
+
+            fetch('/reupload-document', {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('upload-section').classList.add('hidden');
+                    document.getElementById('documents-list').parentElement.classList.add('hidden');
+                    document.getElementById('success-alert').classList.remove('hidden');
+                } else {
+                    alert("Erreur lors de l'envoi : " + (data.error || "Erreur inconnue"));
+                    btn.disabled = false;
+                    btn.innerText = 'Envoyer le document';
+                }
+            })
+            .catch(err => {
+                console.error("Upload error:", err);
+                alert("Erreur de connexion au serveur.");
+                btn.disabled = false;
+                btn.innerText = 'Envoyer le document';
+            });
+        }
+    </script>
+</body>
+</html>

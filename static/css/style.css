@@ -1,0 +1,19 @@
+/* Marsa Maroc Custom Styles */
+:root {
+    --marsa-blue: #1e3a8a;
+    --marsa-accent: #f59e0b;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.marsa-card {
+    transition: all 0.3s ease;
+}
+
+.marsa-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}

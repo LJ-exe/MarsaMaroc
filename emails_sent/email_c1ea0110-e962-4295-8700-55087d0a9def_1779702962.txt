@@ -1,0 +1,16 @@
+To: None
+Subject: Dossier Incomplet - Action Requise | Marsa Maroc
+
+Votre dossier est incomplet.
+Veuillez ajouter :
+- Convention de Stage
+
+Remarque de l'examinateur RH :
+"BONJOUR"
+
+Lien pour compléter votre dossier :
+http://127.0.0.1:5000/completer/c1ea0110-e962-4295-8700-55087d0a9def
+
+---
+Direction du Capital Humain
+Marsa Maroc

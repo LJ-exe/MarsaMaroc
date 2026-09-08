@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FICHE D'ACCUEIL DES STAGIAIRES DE PASSAGE</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            line-height: 1.4;
+            color: #000;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #003399;
+            margin-bottom: 5px;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .title {
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 30px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #003399;
+        }
+        
+        .section {
+            margin: 20px 0;
+        }
+        
+        .section-title {
+            font-size: 13px;
+            font-weight: bold;
+            text-transform: uppercase;
+            background-color: #003399;
+            color: white;
+            padding: 5px 10px;
+            margin-bottom: 10px;
+        }
+        
+        .field {
+            margin: 8px 0;
+        }
+        
+        .field-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 200px;
+        }
+        
+        .field-value {
+            display: inline-block;
+            border-bottom: 1px solid #000;
+            padding: 0 5px;
+            min-width: 300px;
+        }
+        
+        .signature {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .signature-box {
+            width: 45%;
+            text-align: center;
+        }
+        
+        .signature-line {
+            border-top: 1px solid #000;
+            margin-top: 60px;
+            padding-top: 10px;
+        }
+        
+        .date {
+            margin-top: 30px;
+            text-align: right;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        
+        td {
+            padding: 5px;
+            vertical-align: top;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">MARSA MAROC</div>
+        <div class="subtitle">Société d'Exploitation des Ports - Direction du Capital Humain</div>
+    </div>
+    
+    <div class="title">
+        FICHE D'ACCUEIL DES STAGIAIRES DE PASSAGE
+    </div>
+    
+    <div class="section">
+        <div class="section-title">I - IDENTIFICATION DU STAGIAIRE</div>
+        <table>
+            <tr>
+                <td>
+                    <div class="field">
+                        <span class="field-label">Nom & Prénom :</span>
+                        <span class="field-value">{{ stagiaire.name }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="field">
+                        <span class="field-label">Téléphone :</span>
+                        <span class="field-value">{{ stagiaire.phone }}</span>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="field">
+                        <span class="field-label">Établissement :</span>
+                        <span class="field-value">{{ stagiaire.school }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="field">
+                        <span class="field-label">Filière / Spécialité :</span>
+                        <span class="field-value">{{ stagiaire.specialty }}</span>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="field">
+                        <span class="field-label">Niveau d'études :</span>
+                        <span class="field-value">{{ stagiaire.level }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="field">
+                        <span class="field-label">Type de stage :</span>
+                        <span class="field-value">{{ stagiaire.type }}</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">II - PÉRIODE DE STAGE</div>
+        <table>
+            <tr>
+                <td>
+                    <div class="field">
+                        <span class="field-label">Date de début :</span>
+                        <span class="field-value">{{ stagiaire.period_start }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="field">
+                        <span class="field-label">Date de fin :</span>
+                        <span class="field-value">{{ stagiaire.period_end }}</span>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="field">
+                        <span class="field-label">Durée totale :</span>
+                        <span class="field-value">{{ stagiaire.duration }}</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">III - AFFECTATION</div>
+        <table>
+            <tr>
+                <td>
+                    <div class="field">
+                        <span class="field-label">Direction / Pôle :</span>
+                        <span class="field-value">{{ affectation.department }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="field">
+                        <span class="field-label">Zone / Port :</span>
+                        <span class="field-value">{{ affectation.zone }}</span>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <div class="field">
+                        <span class="field-label">Projet de stage :</span>
+                        <span class="field-value">{{ affectation.project }}</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">IV - ENCADREMENT</div>
+        <table>
+            <tr>
+                <td>
+                    <div class="field">
+                        <span class="field-label">Responsable Encadrement :</span>
+                        <span class="field-value">{{ affectation.mentor }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="field">
+                        <span class="field-label">Fonction :</span>
+                        <span class="field-value">{{ affectation.mentor_function }}</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">V - INFORMATIONS COMPLÉMENTAIRES</div>
+        <table>
+            <tr>
+                <td>
+                    <div class="field">
+                        <span class="field-label">Email :</span>
+                        <span class="field-value">{{ stagiaire.email }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="field">
+                        <span class="field-label">CIN :</span>
+                        <span class="field-value">{{ stagiaire.cin }}</span>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="date">
+        <p>Fait à {{ affectation.location }}, le {{ affectation.date }}</p>
+    </div>
+    
+    <div class="signature">
+        <div class="signature-box">
+            <p>Le Stagiaire</p>
+            <div class="signature-line">{{ stagiaire.name }}</div>
+        </div>
+        <div class="signature-box">
+            <p>Le Responsable RH</p>
+            <div class="signature-line">{{ affectation.rh_responsable }}</div>
+        </div>
+    </div>
+    
+    <div class="signature">
+        <div class="signature-box">
+            <p>Le Responsable Encadrement</p>
+            <div class="signature-line">{{ affectation.mentor }}</div>
+        </div>
+        <div class="signature-box">
+            <p>Le Responsable du Service</p>
+            <div class="signature-line">{{ affectation.service_responsable }}</div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Stagiaire | Marsa Maroc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --marsa-blue: #003399;
+            --marsa-dark: #001a4d;
+            --marsa-bg: #f3f7fb;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--marsa-bg);
+            color: var(--marsa-dark);
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        .heading {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .navbar-top {
+            background: white;
+            border-bottom: 1px solid #e5eef7;
+        }
+
+        .input-premium {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-weight: 500;
+            font-size: 0.875rem;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .input-premium:focus {
+            background: white;
+            border-color: var(--marsa-blue);
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(0, 51, 153, 0.05);
+        }
+
+        .label-premium {
+            font-size: 10px;
+            font-weight: 800;
+            color: #1e293b;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .card-doc {
+            background: white;
+            border: 1px solid #e5eef7;
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .card-doc:hover {
+            border-color: var(--marsa-blue);
+            box-shadow: 0 8px 24px rgba(0, 51, 153, 0.04);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen">
+
+    <nav class="navbar-top sticky top-0 z-50 w-full px-8 py-4 flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-3">
+                <img src="/static/logo_marsa.png" alt="Marsa Maroc" class="w-10 h-10 rounded-lg object-contain">
+                <div class="flex flex-col">
+                    <a href="/"
+                        class="font-bold text-lg tracking-tight text-[#003399] uppercase leading-none">Marsa
+                        Maroc</a>
+                    <span class="text-[9px] font-medium text-slate-400 uppercase tracking-widest mt-1">Gestion des Ports</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-8">
+            <div class="hidden sm:flex items-center gap-4 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                <a href="/stagiaire"
+                    class="text-[9px] font-black text-[#003399] uppercase tracking-widest">Stagiaire</a>
+            </div>
+            <div class="h-6 w-px bg-slate-200"></div>
+            <div class="flex items-center gap-4">
+                <div class="text-right">
+                    <p class="text-[12px] font-bold text-slate-900 leading-none">
+                        {{ user }}
+                    </p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-1">Stagiaire</p>
+                </div>
+                <div class="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
+                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                        <circle cx="12" cy="7" r="4" />
+                    </svg>
+                </div>
+                <a href="/logout" class="text-slate-300 hover:text-red-500 transition">
+                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-6xl mx-auto p-8 space-y-8">
+
+
+        <div class="bg-white rounded-[24px] p-8 relative overflow-hidden shadow-sm border border-[#e5eef7]">
+            <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="space-y-2">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center text-[#003399]">
+                            <svg viewBox="0 0 24 24" class="w-6 h-6 rotate-12" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path
+                                    d="M5 3l3.057-1.905A2 2 0 0110.151 1H13.8a2 2 0 012.094 1.095L19 3M5 3l-.4 1.2M5 3h14M19 3l.4 1.2M22 9v10a2 2 0 01-2 2H4a2 2 0 01-2-2V9M22 9l-10-6M2 9l10-6M12 21V9" />
+                            </svg>
+                        </div>
+                        <h1 class="text-3xl font-black text-[#001a4d]">Bonjour, {{ user }}</h1>
+                    </div>
+                    <p class="text-slate-500 font-medium">Portail stagiaire Marsa Maroc — Suivez l'évolution de votre candidature.</p>
+                </div>
+
+                <div id="status-badge" class="{% if mode_vue == 'form' %}hidden{% endif %}">
+                    <div
+                        class="bg-white rounded-2xl p-4 flex items-center gap-4 shadow-xl shadow-blue-900/5 border border-slate-50">
+                        {% if candidat %}
+                            {% if candidat.status == 'Accepté' or candidat.status == 'Attente Affectation' %}
+                            <div class="w-10 h-10 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500">
+                                <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">État actuel</p>
+                                <p class="text-sm font-black text-emerald-600">{{ candidat.status }}</p>
+                            </div>
+                            {% elif candidat.status == 'Refusé' %}
+                            <div class="w-10 h-10 bg-rose-50 rounded-full flex items-center justify-center text-rose-500">
+                                <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18" />
+                                    <line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">État actuel</p>
+                                <p class="text-sm font-black text-rose-600">{{ candidat.status }}</p>
+                            </div>
+                            {% elif candidat.status == 'Action Requise' %}
+                            <div class="w-10 h-10 bg-amber-50 rounded-full flex items-center justify-center text-amber-500 animate-pulse">
+                                <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                    <line x1="12" y1="9" x2="12" y2="13" />
+                                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">État actuel</p>
+                                <p class="text-sm font-black text-amber-600">{{ candidat.status }}</p>
+                            </div>
+                            {% else %}
+                            <div class="w-10 h-10 bg-amber-50 rounded-full flex items-center justify-center text-amber-500">
+                                <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">État actuel</p>
+                                <p class="text-sm font-black text-[#001a4d]">{{ candidat.status }}</p>
+                            </div>
+                            {% endif %}
+                        {% else %}
+                            <div class="w-10 h-10 bg-amber-50 rounded-full flex items-center justify-center text-amber-500">
+                                <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <polyline points="12 6 12 12 16 14" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">État actuel</p>
+                                <p class="text-sm font-black text-[#001a4d]">En attente</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="absolute -right-10 -bottom-10 opacity-[0.03] pointer-events-none">
+                <svg viewBox="0 0 500 500" class="w-96 h-96">
+                    <path d="M250 50 L450 150 L450 350 L250 450 L50 350 L50 150 Z" fill="currentColor" />
+                </svg>
+            </div>
+        </div>
+
+        {% if db_error %}
+        <div class="bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl px-6 py-4 text-sm font-semibold">
+            {{ db_error }}
+        </div>
+        {% endif %}
+
+        <div id="form-view" class="space-y-8 animate-in fade-in duration-500 {% if mode_vue != 'form' %}hidden{% endif %}">
+            <div class="bg-white rounded-[32px] p-12 border border-[#e5eef7] shadow-sm flex flex-col items-center">
+                <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-[#003399] mb-6">
+                    <svg viewBox="0 0 24 24" class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                    </svg>
+                </div>
+                <h2 class="text-3xl font-black text-[#001a4d] mb-2 uppercase">Demander un Stage</h2>
+                <p class="text-slate-400 text-center max-w-lg mb-12 font-medium">Commencez votre voyage professionnel
+                    avec Marsa Maroc. Remplissez ce formulaire d'engagement.</p>
+
+                <form class="w-full grid md:grid-cols-2 gap-x-12 gap-y-10">
+                    <div class="col-span-2 flex items-center gap-4 border-b border-slate-100 pb-2">
+                        <div class="w-8 h-1 bg-[#003399] rounded-full"></div>
+                        <h3 class="text-[11px] font-black uppercase tracking-widest text-[#001a4d]">Identification
+                            Personnelle</h3>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="label-premium">Nom</label>
+                        <input type="text" id="app-nom" class="input-premium" placeholder="Entrez votre nom">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="label-premium">Prénom</label>
+                        <input type="text" id="app-prenom" class="input-premium" placeholder="Entrez votre prénom">
+                    </div>
+                    <div class="space-y-2 col-span-2 md:col-span-1">
+                        <label class="label-premium">Téléphone</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">📞</span>
+                            <input type="tel" id="app-phone" class="input-premium pl-12" placeholder="06 .. .. .. ..">
+                        </div>
+                    </div>
+
+                    <div class="col-span-2 flex items-center gap-4 border-b border-slate-100 pb-2 mt-4">
+                        <div class="w-8 h-1 bg-[#003399] rounded-full"></div>
+                        <h3 class="text-[11px] font-black uppercase tracking-widest text-[#001a4d]">Cursor Académique
+                        </h3>
+                    </div>
+
+                    <div class="col-span-2 space-y-2">
+                        <label class="label-premium">Établissement / École</label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🎓</span>
+                            <input type="text" id="app-school" class="input-premium pl-12" placeholder="Ex: EMI, ENCG, ...">
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="label-premium">Filière</label>
+                        <input type="text" id="app-specialty" class="input-premium" placeholder="Votre spécialité">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="label-premium">Niveau</label>
+                        <select id="app-level" class="input-premium appearance-none">
+                            <option>Choisir</option>
+                            <option>Bac +2</option>
+                            <option>Bac +3</option>
+                            <option>Bac +5</option>
+                        </select>
+                    </div>
+
+                    <div class="col-span-2 flex items-center gap-4 border-b border-slate-100 pb-2 mt-4">
+                        <div class="w-8 h-1 bg-[#003399] rounded-full"></div>
+                        <h3 class="text-[11px] font-black uppercase tracking-widest text-[#001a4d]">Conditions du Stage
+                        </h3>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="label-premium">Type de Stage</label>
+                        <select id="app-type" class="input-premium appearance-none">
+                            <option>PFE</option>
+                            <option>Stage Technique</option>
+                            <option>Stage d'Immersion</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="label-premium">Zone d'affectation souhaitée</label>
+                        <select id="app-zone" class="input-premium appearance-none" required>
+                            <option value="">Choisir une zone</option>
+                            {% for zone in zones %}
+                            <option value="{{ zone }}">{{ zone }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="text-[10px] font-medium text-slate-400">Indiquez où vous souhaitez effectuer votre stage.</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="label-premium">Début</label>
+                        <input type="date" id="app-start" class="input-premium">
+                    </div>
+                    <div class="space-y-2">
+                        <label class="label-premium">Fin</label>
+                        <input type="date" id="app-end" class="input-premium">
+                    </div>
+
+                    <div class="col-span-2 pt-8">
+                        <button type="button" onclick="submitApplication()"
+                            class="w-full bg-[#001a4d] text-white py-5 rounded-2xl flex items-center justify-center gap-4 font-black uppercase tracking-[0.2em] shadow-2xl shadow-blue-900/20 hover:scale-[1.01] transition-transform">
+                            <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                            </svg>
+                            Valider le dossier
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div id="docs-view" class="{% if mode_vue != 'docs' %}hidden{% endif %} grid lg:grid-cols-12 gap-10 animate-in slide-in-from-bottom duration-700">
+
+            <div class="lg:col-span-4 space-y-8">
+                <div class="bg-white rounded-[32px] overflow-hidden shadow-sm border border-[#e5eef7]">
+                    <div class="bg-amber-50 h-1.5 w-full"></div>
+                    <div class="p-8 space-y-8">
+                        <h2 class="text-xl font-black text-[#001a4d]">Synthèse Administrative</h2>
+                        <div class="space-y-6">
+                            <div class="border-b border-dashed border-slate-200 pb-4">
+                                <p
+                                    class="text-[9px] font-black text-[#001a4d]/30 uppercase mb-4 pl-4 border-l-2 border-[#003399]">
+                                    Profil Candidat</p>
+                                <div class="grid grid-cols-2 gap-y-4">
+                                    <div class="text-[11px] font-bold text-slate-500">Type:</div>
+                                    <div class="text-[11px] font-black text-[#003399] justify-self-end bg-blue-50 px-3 py-1 rounded-md">
+                                        {{ candidat.type if candidat else '—' }}</div>
+
+                                    <div class="text-[11px] font-bold text-slate-500">Formation:</div>
+                                    <div class="text-[11px] font-black text-slate-900 justify-self-end uppercase">
+                                        {{ candidat.school if candidat else '—' }}</div>
+
+                                    <div class="text-[11px] font-bold text-slate-500">Période:</div>
+                                    <div class="text-[11px] font-black text-slate-900 justify-self-end">
+                                        {{ candidat.period if candidat else '—' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-[#003399] rounded-[32px] p-8 text-white relative overflow-hidden group shadow-xl shadow-blue-900/10">
+                    <div class="relative z-10 space-y-6">
+                        <h3 class="text-xl font-black">Besoin d'aide ?</h3>
+                        <p class="text-xs font-medium text-white/70 leading-relaxed">Contactez notre service RH pour
+                            toute question relative à votre dossier.</p>
+                        <button
+                            class="w-full py-4 bg-white/10 hover:bg-white/20 transition rounded-2xl flex items-center justify-center gap-3 border border-white/10">
+                            <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                <polyline points="22,6 12,13 2,6" />
+                            </svg>
+                            <span class="text-[11px] font-black uppercase tracking-widest">Support RH</span>
+                        </button>
+                    </div>
+                    <div
+                        class="absolute -right-4 -bottom-4 opacity-10 group-hover:scale-110 transition-transform duration-700">
+                        <svg viewBox="0 0 24 24" class="w-40 h-40" fill="currentColor">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-8 space-y-8">
+                <div class="bg-white rounded-[32px] p-10 border border-[#e5eef7] shadow-sm">
+                    <div class="flex items-center gap-4 mb-2">
+                        <div class="w-10 h-10 bg-[#001a4d] rounded-xl flex items-center justify-center text-white">
+                            <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                <polyline points="14 2 14 8 20 8" />
+                            </svg>
+                        </div>
+                        <h2 class="text-2xl font-black text-[#001a4d]">Documents de Bord</h2>
+                    </div>
+                    <p class="text-slate-400 font-medium text-sm mb-10">Téléchargez les pièces justificatives requises
+                        pour finaliser votre embarquement.</p>
+
+                    {% set cv_uploaded = candidat.documents.cv.uploaded if (candidat and candidat.documents and candidat.documents.cv) else false %}
+                    {% set cin_uploaded = candidat.documents.cin.uploaded if (candidat and candidat.documents and candidat.documents.cin) else false %}
+                    {% set assurance_uploaded = candidat.documents.assurance.uploaded if (candidat and candidat.documents and candidat.documents.assurance) else false %}
+                    {% set convention_uploaded = candidat.documents.convention.uploaded if (candidat and candidat.documents and candidat.documents.convention) else false %}
+                    {% set demande_uploaded = candidat.documents.demande.uploaded if (candidat and candidat.documents and candidat.documents.demande) else false %}
+
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <!-- CV -->
+                        <div class="card-doc group" onclick="triggerUpload('cv')">
+                            <div class="flex items-center gap-4">
+                                <div id="cv-icon"
+                                    class="w-12 h-12 {% if cv_uploaded %}bg-emerald-50 text-emerald-500{% else %}bg-slate-50 text-slate-300{% endif %} group-hover:bg-blue-50 group-hover:text-[#003399] transition rounded-xl flex items-center justify-center">
+                                    <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                        <polyline points="14 2 14 8 20 8" />
+                                    </svg>
+                                </div>
+                                <div class="space-y-1">
+                                    <p class="text-[13px] font-black text-[#001a4d]">CV</p>
+                                    <p id="cv-status"
+                                        class="text-[10px] font-black {% if cv_uploaded %}text-emerald-500{% else %}text-slate-400{% endif %} uppercase tracking-widest">
+                                        {% if cv_uploaded %}Valide{% else %}En attente{% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 {% if cv_uploaded %}text-emerald-500{% else %}text-slate-300{% endif %} group-hover:text-[#003399]"
+                                fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                            <input type="file" id="cv-input" class="hidden" accept=".pdf" onchange="handleFile('cv')">
+                        </div>
+
+                        <!-- CIN -->
+                        <div class="card-doc group" onclick="triggerUpload('cin')">
+                            <div class="flex items-center gap-4">
+                                <div id="cin-icon"
+                                    class="w-12 h-12 {% if cin_uploaded %}bg-emerald-50 text-emerald-500{% else %}bg-slate-50 text-slate-300{% endif %} group-hover:bg-blue-50 group-hover:text-[#003399] transition rounded-xl flex items-center justify-center">
+                                    <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                        <polyline points="14 2 14 8 20 8" />
+                                    </svg>
+                                </div>
+                                <div class="space-y-1">
+                                    <p class="text-[13px] font-black text-[#001a4d]">CIN</p>
+                                    <p id="cin-status"
+                                        class="text-[10px] font-black {% if cin_uploaded %}text-emerald-500{% else %}text-slate-400{% endif %} uppercase tracking-widest">
+                                        {% if cin_uploaded %}Valide{% else %}En attente{% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 {% if cin_uploaded %}text-emerald-500{% else %}text-slate-300{% endif %} group-hover:text-[#003399]"
+                                fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                            <input type="file" id="cin-input" class="hidden" accept=".pdf" onchange="handleFile('cin')">
+                        </div>
+
+                        <!-- Assurance -->
+                        <div class="card-doc group" onclick="triggerUpload('assurance')">
+                            <div class="flex items-center gap-4">
+                                <div id="assurance-icon"
+                                    class="w-12 h-12 {% if assurance_uploaded %}bg-emerald-50 text-emerald-500{% else %}bg-slate-50 text-slate-300{% endif %} group-hover:bg-blue-50 group-hover:text-[#003399] transition rounded-xl flex items-center justify-center">
+                                    <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                        <polyline points="14 2 14 8 20 8" />
+                                    </svg>
+                                </div>
+                                <div class="space-y-1">
+                                    <p class="text-[13px] font-black text-[#001a4d]">Assurance</p>
+                                    <p id="assurance-status"
+                                        class="text-[10px] font-black {% if assurance_uploaded %}text-emerald-500{% else %}text-slate-400{% endif %} uppercase tracking-widest">
+                                        {% if assurance_uploaded %}Valide{% else %}En attente{% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 {% if assurance_uploaded %}text-emerald-500{% else %}text-slate-300{% endif %} group-hover:text-[#003399]"
+                                fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                            <input type="file" id="assurance-input" class="hidden" accept=".pdf"
+                                onchange="handleFile('assurance')">
+                        </div>
+
+                        <!-- Convention -->
+                        <div class="card-doc group" onclick="triggerUpload('convention')">
+                            <div class="flex items-center gap-4">
+                                <div id="convention-icon"
+                                    class="w-12 h-12 {% if convention_uploaded %}bg-emerald-50 text-emerald-500{% else %}bg-slate-50 text-slate-300{% endif %} group-hover:bg-blue-50 group-hover:text-[#003399] transition rounded-xl flex items-center justify-center">
+                                    <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                        <polyline points="14 2 14 8 20 8" />
+                                    </svg>
+                                </div>
+                                <div class="space-y-1">
+                                    <p class="text-[13px] font-black text-[#001a4d]">Convention</p>
+                                    <p id="convention-status"
+                                        class="text-[10px] font-black {% if convention_uploaded %}text-emerald-500{% else %}text-slate-400{% endif %} uppercase tracking-widest">
+                                        {% if convention_uploaded %}Valide{% else %}En attente{% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 {% if convention_uploaded %}text-emerald-500{% else %}text-slate-300{% endif %} group-hover:text-[#003399]"
+                                fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                            <input type="file" id="convention-input" class="hidden" accept=".pdf"
+                                onchange="handleFile('convention')">
+                        </div>
+
+                        <!-- Demande -->
+                        <div class="card-doc md:col-span-2 group" onclick="triggerUpload('demande')">
+                            <div class="flex items-center gap-4">
+                                <div id="demande-icon"
+                                    class="w-12 h-12 {% if demande_uploaded %}bg-emerald-50 text-emerald-500{% else %}bg-slate-50 text-slate-300{% endif %} group-hover:bg-blue-50 group-hover:text-[#003399] transition rounded-xl flex items-center justify-center">
+                                    <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor"
+                                        stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                        <polyline points="14 2 14 8 20 8" />
+                                    </svg>
+                                </div>
+                                <div class="space-y-1">
+                                    <p class="text-[13px] font-black text-[#001a4d]">Demande de Stage</p>
+                                    <p id="demande-status"
+                                        class="text-[10px] font-black {% if demande_uploaded %}text-emerald-500{% else %}text-slate-400{% endif %} uppercase tracking-widest">
+                                        {% if demande_uploaded %}Valide{% else %}En attente{% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 {% if demande_uploaded %}text-emerald-500{% else %}text-slate-300{% endif %} group-hover:text-[#003399]"
+                                fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                <polyline points="17 8 12 3 7 8" />
+                                <line x1="12" y1="3" x2="12" y2="15" />
+                            </svg>
+                            <input type="file" id="demande-input" class="hidden" accept=".pdf"
+                                onchange="handleFile('demande')">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Final Card -->
+                <div
+                    class="bg-[#001a4d] rounded-[32px] p-8 text-white flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
+                    <div class="flex items-center gap-6 relative z-10 text-center md:text-left">
+                        <div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center shrink-0">
+                            <svg viewBox="0 0 24 24" class="w-8 h-8 rotate-12" fill="none" stroke="currentColor"
+                                stroke-width="2.5">
+                                <path
+                                    d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                                <line x1="12" y1="9" x2="12" y2="13" />
+                                <line x1="12" y1="17" x2="12.01" y2="17" />
+                            </svg>
+                        </div>
+                        <div class="space-y-1">
+                            <h3 class="text-xl font-black">Finaliser l'embarquement</h3>
+                            <p class="text-[11px] font-medium text-white/60 max-w-sm leading-relaxed">Une fois tous vos
+                                documents certifiés et envoyés, transmettez votre dossier complet pour examen final par
+                                nos experts RH.</p>
+                        </div>
+                    </div>
+                    <button type="button" id="btn-submit-rh" onclick="finalizeProcess()"
+                        class="px-8 py-5 bg-white text-[#001a4d] rounded-2xl flex items-center gap-4 border border-white/10 relative z-10 hover:bg-white/90 transition shadow-lg group font-black">
+                        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
+                        </svg>
+                        <span class="text-[11px] font-black uppercase tracking-[0.2em]">Envoyer le dossier au RH</span>
+                    </button>
+                    <!-- Background accent -->
+                    <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-blue-500/20 blur-[80px] rounded-full"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VUE DASHBOARD : visible uniquement après envoi complet au RH -->
+        <div id="dashboard-view" class="{% if mode_vue != 'dashboard' %}hidden{% endif %} space-y-8 animate-in fade-in duration-500">
+            <div class="bg-white rounded-[24px] px-8 py-6 border border-[#e5eef7] shadow-sm">
+                <h2 class="text-2xl font-black text-[#001a4d]">Tableau de bord</h2>
+                <p class="text-sm text-slate-500 font-medium mt-1">Votre dossier est lié à votre compte — suivez le statut, les messages RH et vos documents.</p>
+            </div>
+            <div class="grid lg:grid-cols-3 gap-8">
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white rounded-[32px] p-8 border border-[#e5eef7] shadow-sm">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Statut du dossier</p>
+                        {% if candidat %}
+                        <p id="dash-status" class="text-2xl font-black text-[#001a4d] mb-2">{{ candidat.status }}</p>
+                        <p class="text-xs font-medium text-slate-500">Soumis le {{ candidat.submittedAtFormatted or '—' }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="bg-white rounded-[32px] p-8 border border-[#e5eef7] shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Notifications RH</p>
+                            {% if candidat and candidat.notifications and candidat.notifications|length > 0 %}
+                            <button onclick="markAllNotificationsAsRead()" class="text-[8px] font-black text-[#003399] uppercase tracking-wider hover:underline">Tout lu</button>
+                            {% endif %}
+                        </div>
+                        <div id="dash-notifications" class="space-y-3 text-sm max-h-[300px] overflow-y-auto pr-1">
+                            {% if candidat and candidat.notifications and candidat.notifications|length > 0 %}
+                                {% for notif in candidat.notifications|reverse %}
+                                <div class="p-4 rounded-2xl border text-xs leading-relaxed {% if not notif.read %}bg-blue-50/50 border-blue-100/50{% else %}bg-slate-50 border-slate-100{% endif %}">
+                                    <div class="flex justify-between items-center mb-1">
+                                        <span class="text-[8px] font-bold text-slate-400 uppercase">{{ notif.date | truncate(10, true, '') }}</span>
+                                        {% if not notif.read %}
+                                        <span class="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
+                                        {% endif %}
+                                    </div>
+                                    <p class="{% if not notif.read %}text-slate-800 font-bold{% else %}text-slate-500 font-medium{% endif %}">{{ notif.text }}</p>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                {% if candidat and candidat.status == 'Action Requise' %}
+                                <div class="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+                                    <p class="font-black text-amber-800 text-[9px] uppercase tracking-widest mb-1">Action requise</p>
+                                    <p class="text-amber-900 font-medium">Un document manquant a été signalé par le RH.</p>
+                                </div>
+                                {% elif candidat and candidat.status == 'Accepté' %}
+                                <div class="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
+                                    <p class="font-black text-emerald-800 text-[9px] uppercase">Félicitations</p>
+                                    <p class="text-emerald-900">Votre candidature a été acceptée.</p>
+                                </div>
+                                {% elif candidat and candidat.status == 'Refusé' %}
+                                <div class="p-4 bg-rose-50 border border-rose-100 rounded-2xl">
+                                    <p class="font-black text-rose-800 text-[9px] uppercase">Dossier refusé</p>
+                                    <p class="text-rose-900">Contactez le service RH pour plus d'informations.</p>
+                                </div>
+                                {% else %}
+                                <p class="text-slate-500 font-medium">Votre dossier est en cours d'examen par le RH.</p>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Section Documents Officiels -->
+                    <div id="official-docs-container" class="space-y-4">
+                        {% set docs_finaux = candidat and candidat.status == 'Accepté' and candidat.evaluation_status == 'Accepté' %}
+                        {% if candidat and (candidat.fiche_accueil_pdf or (candidat.status == 'Accepté' and candidat.intern_report_path) or docs_finaux) %}
+                        <div class="bg-white rounded-[32px] p-8 border border-[#e5eef7] shadow-sm space-y-6">
+                            <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Mes Documents Officiels</p>
+                            
+                            <div class="space-y-4">
+                                <!-- Fiche d'Accueil -->
+                                {% if candidat.fiche_accueil_pdf %}
+                                <div class="flex flex-col items-start p-4 bg-white border border-[#e5eef7] rounded-2xl gap-4 w-full overflow-hidden">                                    <div class="space-y-0.5 text-left">
+                                        <p class="text-xs font-black text-[#001a4d] uppercase">Fiche d'Accueil</p>
+                                        <p class="text-[10px] text-slate-400 font-bold">Document d'affectation officiel</p>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2 w-full">                                        <button onclick="previewDocument('fiche', '{{ candidat.fiche_accueil_pdf }}')"
+                                                class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-[#001a4d] text-white px-3 py-2 rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-[#001133] transition">
+                                            Aperçu
+                                        </button>
+                                        <a href="/download/fiche_accueil/{{ candidat.fiche_accueil_pdf }}"
+                                           class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-white border border-[#e5eef7] text-[#003399] px-3 py-2 rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-slate-50 transition">
+                                            Télécharger
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Rapport de Stage (déposé) -->
+                                {% if candidat.status == 'Accepté' and candidat.intern_report_path %}
+                                <div class="flex flex-col items-start p-4 bg-white border border-[#e5eef7] rounded-2xl gap-4 w-full overflow-hidden">                                    <div class="space-y-0.5 text-left">
+                                        <p class="text-xs font-black text-[#001a4d] uppercase">Rapport de Stage</p>
+                                        <p class="text-[10px] text-slate-400 font-bold">
+                                            {% if candidat.intern_report_status == 'Validé' %}Validé par l'affectation{% elif candidat.intern_report_status == 'En attente' %}En attente de validation{% else %}Déposé{% endif %}
+                                        </p>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2 w-full">                                        <button onclick="previewReport('{{ candidat.intern_report_path }}')"
+                                                class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-[#001a4d] text-white px-3 py-2 rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-[#001133] transition">
+                                            Aperçu
+                                        </button>
+                                        <a href="/download/report/{{ candidat.intern_report_path }}"
+                                           class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-white border border-[#e5eef7] text-[#003399] px-3 py-2 rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-slate-50 transition">
+                                            Télécharger
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Fiche d'Évaluation (visible après acceptation RH) -->
+                                {% if docs_finaux and candidat.evaluation_pdf %}
+                               <div class="flex flex-col items-start p-4 bg-white border border-[#e5eef7] rounded-2xl gap-4 w-full overflow-hidden">
+                                    <div class="space-y-0.5 text-left">
+                                        <p class="text-xs font-black text-[#001a4d] uppercase">Fiche d'Évaluation</p>
+                                        <div class="flex items-center gap-1.5">
+                                            <p class="text-[10px] text-slate-400 font-bold">Évaluation de fin de stage</p>
+                                            {% if candidat.evaluation_status == 'Accepté' %}
+                                            <span class="text-[8px] font-black text-emerald-600 uppercase bg-emerald-50 px-1.5 py-0.5 rounded">Validé</span>
+                                            {% elif candidat.evaluation_status == 'Refusé' %}
+                                            <span class="text-[8px] font-black text-rose-600 uppercase bg-rose-50 px-1.5 py-0.5 rounded">Refusé</span>
+                                            {% else %}
+                                            <span class="text-[8px] font-black text-amber-600 uppercase bg-amber-50 px-1.5 py-0.5 rounded">En attente</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2 w-full">
+                                        <button onclick="previewDocument('evaluation', '{{ candidat.evaluation_pdf }}')"
+                                                class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-[#001a4d] text-white px-3 py-2 rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-[#001133] transition">
+                                            Aperçu
+                                        </button>
+                                       <a href="/download/evaluation/{{ candidat.evaluation_pdf }}"
+                                            class="flex-1 sm:flex-initial min-w-0 max-w-full inline-flex items-center justify-center gap-1.5 bg-white border border-[#e5eef7] text-[#003399] px-3 py-2 rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-slate-50 transition">
+                                            Télécharger
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                               <!-- Attestation de Stage (après acceptation RH) -->
+                            {% if docs_finaux and candidat.attestation_pdf %}
+
+                            <div class="flex flex-col items-start p-4 bg-white border border-[#e5eef7] rounded-2xl gap-4 w-full overflow-hidden">
+
+                                <div class="space-y-0.5 text-left">
+                                    <p class="text-xs font-black text-[#001a4d] uppercase">
+                                        Attestation de Stage
+                                    </p>
+
+                                    <p class="text-[10px] text-slate-400 font-bold">
+                                        Attestation officielle signée
+                                    </p>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-2 w-full">
+                                    <button
+                                        type="button"
+                                        onclick="previewDocument('attestation', '{{ candidat.attestation_pdf }}')"
+                                        class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-[#001a4d] text-white px-3 py-2 rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-[#001133] transition">
+                                        Aperçu
+                                    </button>
+
+                                    <a
+                                        href="/download/attestation/{{ candidat.attestation_pdf }}"
+                                        class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-white border border-[#e5eef7] text-[#003399] px-3 py-2 rounded-xl font-black uppercase tracking-widest text-[9px] hover:bg-slate-50 transition">
+                                        Télécharger
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                            {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 space-y-6">
+                    {% if candidat and candidat.status == 'Action Requise' and candidat.remark %}
+                    <div class="bg-amber-50 border border-amber-200 rounded-[24px] p-8">
+                        <p class="text-[9px] font-black text-amber-700 uppercase tracking-widest mb-3">Message du RH</p>
+                        <p class="text-sm font-semibold text-amber-900 italic">« {{ candidat.remark }} »</p>
+                        {% if candidat.requested_doc_type %}
+                        <p class="text-[11px] font-bold text-amber-800 mt-4">
+                            Document demandé : {{ doc_labels[candidat.requested_doc_type] }}
+                        </p>
+                        {% endif %}
+                    </div>
+
+                    <div class="bg-white rounded-[32px] p-8 border border-[#e5eef7] shadow-sm">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Téléverser le document demandé</p>
+                        <p class="text-sm text-slate-600 mb-6">Seul le PDF demandé par le RH peut être envoyé ici.</p>
+                        <input type="file" id="reupload-input" class="hidden" accept=".pdf" onchange="handleReupload()">
+                        <button type="button" onclick="document.getElementById('reupload-input').click()"
+                            class="w-full py-4 bg-[#003399] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-blue-800 transition">
+                            Choisir le PDF — {{ doc_labels.get(candidat.requested_doc_type, 'Document') }}
+                        </button>
+                        <p id="reupload-feedback" class="text-[11px] font-bold mt-3 text-slate-400"></p>
+                    </div>
+                    {% endif %}
+
+                    {% if candidat and (candidat.status == 'Accepté' or candidat.status == 'Attente Affectation') %}
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-[32px] p-10 shadow-sm space-y-6">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white shrink-0 shadow-md shadow-emerald-500/20">
+                                <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                    <polyline points="22 4 12 14.01 9 11.01" />
+                                </svg>
+                            </div>
+                            <h2 class="text-xl font-black text-[#001a4d]">Affectation & Encadrement</h2>
+                        </div>
+                        <div class="grid md:grid-cols-2 gap-6 bg-white/60 backdrop-blur p-6 rounded-2xl border border-emerald-100">
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Direction / Pôle</p>
+                                <p class="text-sm font-black text-[#001a4d]">{{ candidat.department or 'En cours d\'affectation...' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Lieu / Zone</p>
+                                <p class="text-sm font-black text-[#001a4d]">{{ candidat.zone or '—' }}</p>
+                            </div>
+                            <div class="space-y-1 mt-4 md:mt-0">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Encadrant / Mentor</p>
+                                <p class="text-sm font-black text-[#001a4d]">{{ candidat.mentor or 'En cours de désignation...' }}</p>
+                            </div>
+                            <div class="space-y-1 mt-4 md:mt-0">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Sujet / Projet de Stage</p>
+                                <p class="text-sm font-black text-[#001a4d]">{{ candidat.project or 'En cours de définition...' }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Chat / Message Section -->
+                    <div class="bg-white rounded-[32px] p-8 border border-[#e5eef7] shadow-sm flex flex-col h-[500px]">
+                        <div class="flex items-center gap-3 pb-4 border-b border-slate-100 shrink-0">
+                            <div class="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center">
+                                <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                </svg>
+                            </div>
+                            <div class="text-left">
+                                <h3 class="text-md font-black text-[#001a4d] uppercase tracking-wide">Discussion avec l'Administration</h3>
+                                <p class="text-[10px] font-bold text-slate-400">Échangez directement avec le service d'affectation</p>
+                            </div>
+                        </div>
+                        
+                        <div id="dash-chat-history" class="flex-1 w-full mt-4 p-4 rounded-2xl overflow-y-auto bg-slate-50 border border-slate-100 space-y-4">
+                            <!-- Messages loaded dynamically -->
+                        </div>
+                        
+                        <div class="mt-4 pt-4 border-t border-slate-100 flex gap-2 shrink-0">
+                            <input type="text" id="dash-chat-input" placeholder="Écrivez votre message ici..." class="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:outline-none focus:border-blue-500 transition" onkeydown="if(event.key === 'Enter') sendDashChatMessage()">
+                            <button onclick="sendDashChatMessage()" class="bg-blue-600 text-white px-5 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-blue-700 transition">
+                                Envoyer
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Rapport de Stage Card -->
+                    {% if candidat and candidat.status == 'Accepté' %}
+                    <div class="bg-white rounded-[32px] p-8 border border-[#e5eef7] shadow-sm">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div class="w-8 h-8 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center">
+                                <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                </svg>
+                            </div>
+                            <div class="text-left">
+                                <h3 class="text-md font-black text-[#001a4d] uppercase tracking-wide">Rapport de Stage</h3>
+                                <p class="text-[10px] font-bold text-slate-400">Étape obligatoire avant la fiche d'évaluation — format PDF uniquement</p>
+                            </div>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div id="report-upload-status-box" class="p-4 rounded-2xl border text-xs font-medium flex items-center justify-between {% if candidat and candidat.intern_report_path %}border-emerald-100 bg-emerald-50/50 text-emerald-800{% else %}border-slate-100 bg-slate-50 text-slate-500{% endif %}">
+                                <div class="text-left">
+                                    <span class="font-black uppercase text-[9px] block mb-0.5">Statut du dépôt</span>
+                                    <span id="report-status-text">
+                                        {% if candidat and candidat.intern_report_path %}
+                                        Rapport soumis (Format PDF)
+                                        {% else %}
+                                        Aucun rapport déposé pour le moment.
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                {% if candidat and candidat.intern_report_path %}
+                                <span class="text-[9px] font-black text-emerald-600 bg-emerald-100 px-2 py-1 rounded uppercase">Disponible</span>
+                                {% else %}
+                                <span class="text-[9px] font-black text-slate-400 bg-slate-200 px-2 py-1 rounded uppercase">Manquant</span>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="flex items-center gap-3">
+                                <input type="file" id="intern-report-input" class="hidden" accept=".pdf" onchange="handleReportUpload()">
+                                <button type="button" onclick="document.getElementById('intern-report-input').click()" class="flex-1 py-4 bg-[#001a4d] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-blue-950 transition flex items-center justify-center gap-2">
+                                    <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                        <polyline points="17 8 12 3 7 8"/>
+                                        <line x1="12" y1="3" x2="12" y2="15"/>
+                                    </svg>
+                                    Déposer Rapport
+                                </button>
+                                
+                                {% if candidat and candidat.intern_report_path %}
+                                <button type="button" onclick="previewReport('{{ candidat.intern_report_path }}')" class="py-4 px-5 bg-white border border-[#e5eef7] text-[#003399] rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition">
+                                    Voir le rapport
+                                </button>
+                                <a id="intern-report-download-btn" href="/download/report/{{ candidat.intern_report_path }}" class="py-4 px-5 bg-white border border-[#e5eef7] text-[#003399] rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition flex items-center justify-center gap-2">
+                                    Télécharger
+                                </a>
+                                {% endif %}
+                            </div>
+                            <p id="report-upload-feedback" class="text-[10px] font-bold text-slate-400 mt-2 text-left"></p>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="bg-white rounded-[32px] p-10 border border-[#e5eef7] shadow-sm">
+                        <h2 class="text-xl font-black text-[#001a4d] mb-6">Documents envoyés</h2>
+                        <div class="grid md:grid-cols-2 gap-4" id="dash-documents-list">
+                            {% for doc in documents_requis %}
+                            {% set uploaded = candidat and candidat.documents and candidat.documents[doc].uploaded %}
+                            <div class="flex items-center justify-between p-4 rounded-xl border {% if uploaded %}border-emerald-100 bg-emerald-50/50{% else %}border-slate-100 bg-slate-50{% endif %}">
+                                <span class="text-[12px] font-black text-[#001a4d]">{{ doc_labels[doc] }}</span>
+                                {% if uploaded %}
+                                <span class="text-[9px] font-black text-emerald-600 uppercase">Envoyé</span>
+                                {% else %}
+                                <span class="text-[9px] font-black text-slate-400 uppercase">Manquant</span>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        window.currentCandidateName = "{{ candidat.name if candidat else user }}";
+        window.currentCandidateId = "{{ candidat.id if candidat else '' }}";
+        window.modeVue = "{{ mode_vue }}";
+        window.requestedDocType = "{{ candidat.requested_doc_type if candidat else '' }}";
+
+        function submitApplication() {
+            const formView = document.getElementById('form-view');
+            const docsView = document.getElementById('docs-view');
+            const statusBadge = document.getElementById('status-badge');
+
+            const nom = document.getElementById('app-nom').value.trim();
+            const prenom = document.getElementById('app-prenom').value.trim();
+            const phone = document.getElementById('app-phone').value.trim();
+            const school = document.getElementById('app-school').value.trim();
+            const specialty = document.getElementById('app-specialty').value.trim();
+            const level = document.getElementById('app-level').value;
+            const type = document.getElementById('app-type').value;
+            const zone = document.getElementById('app-zone').value;
+            const start = document.getElementById('app-start').value;
+            const end = document.getElementById('app-end').value;
+
+            if (!nom || !prenom || !phone || !school || !specialty || !zone || !start || !end || level === 'Choisir') {
+                alert("Veuillez remplir tous les champs obligatoires, y compris la zone d'affectation et le niveau.");
+                return;
+            }
+
+            const payload = {
+                first_name: prenom,
+                last_name: nom,
+                name: `${prenom} ${nom}`,
+                phone,
+                school,
+                specialty,
+                level,
+                type,
+                zone,
+                start,
+                end
+            };
+
+            fetch('/api/apply', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json().then(data => ({ ok: res.ok, data })))
+            .then(({ ok, data }) => {
+                if (ok && data.success) {
+                    window.currentCandidateId = data.id || '';
+                    window.currentCandidateName = data.name || '';
+
+                    formView.classList.add('hidden');
+                    docsView.classList.remove('hidden');
+                    statusBadge.classList.remove('hidden');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    if (!window.currentCandidateId) {
+                        alert('Candidature enregistrée mais identifiant manquant. Rechargez la page.');
+                        location.reload();
+                    }
+                } else {
+                    const err = data.error;
+                    let msg = typeof err === 'string' ? err : (err?.message || '');
+                    if (!msg && err && typeof err === 'object') {
+                        msg = err.message || err.hint || JSON.stringify(err);
+                    }
+                    alert("Erreur lors de l'enregistrement :\n" + (msg || 'Erreur inconnue'));
+                }
+            })
+            .catch(err => {
+                console.error("API error:", err);
+                alert("Erreur de connexion au serveur.");
+            });
+        }
+
+        function triggerUpload(type) {
+            document.getElementById(type + '-input').click();
+        }
+
+        function handleFile(type) {
+            const input = document.getElementById(type + '-input');
+            const status = document.getElementById(type + '-status');
+            const iconContainer = document.getElementById(type + '-icon');
+
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const fileName = file.name;
+                
+                const candidateId = window.currentCandidateId;
+                const candidateName = window.currentCandidateName;
+                
+                if (!candidateId && !candidateName) {
+                    alert("Erreur: Candidature non trouvée. Veuillez d'abord valider le dossier.");
+                    return;
+                }
+
+                status.innerText = 'Téléversement...';
+                status.className = 'text-[10px] font-black text-amber-500 uppercase tracking-widest';
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('type', type);
+                if (candidateId) formData.append('candidate_id', candidateId);
+                if (candidateName) formData.append('candidate_name', candidateName);
+
+                fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        status.innerText = 'Valide';
+                        status.className = 'text-[10px] font-black text-emerald-500 uppercase tracking-widest';
+                        
+                        iconContainer.className = 'w-12 h-12 bg-emerald-50 text-emerald-500 transition rounded-xl flex items-center justify-center';
+                        console.log(`Document ${type} téléversé avec succès`);
+                    } else {
+                        status.innerText = 'Erreur';
+                        status.className = 'text-[10px] font-black text-rose-500 uppercase tracking-widest';
+                        alert("Erreur lors de l'upload : " + data.error);
+                    }
+                })
+                .catch(err => {
+                    status.innerText = 'Erreur';
+                    status.className = 'text-[10px] font-black text-rose-500 uppercase tracking-widest';
+                    console.error("Upload error:", err);
+                    alert("Erreur de connexion lors du téléversement.");
+                });
+            }
+        }
+
+        function handleReupload() {
+            const input = document.getElementById('reupload-input');
+            const feedback = document.getElementById('reupload-feedback');
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const type = window.requestedDocType;
+                
+                if (!type) {
+                    alert("Aucun document demandé par le RH.");
+                    return;
+                }
+                
+                feedback.innerText = 'Téléversement en cours...';
+                feedback.className = 'text-[11px] font-bold mt-3 text-amber-500';
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('type', type);
+
+                fetch('/reupload-document', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        feedback.innerText = data.message || 'Document téléversé avec succès. Rechargement...';
+                        feedback.className = 'text-[11px] font-bold mt-3 text-emerald-500';
+                        setTimeout(() => {
+                            location.reload();
+                        }, 2000);
+                    } else {
+                        feedback.innerText = 'Erreur : ' + data.error;
+                        feedback.className = 'text-[11px] font-bold mt-3 text-rose-500';
+                        alert("Erreur lors du téléversement : " + data.error);
+                    }
+                })
+                .catch(err => {
+                    feedback.innerText = 'Erreur de connexion.';
+                    feedback.className = 'text-[11px] font-bold mt-3 text-rose-500';
+                    console.error("Reupload error:", err);
+                    alert("Erreur de connexion lors du téléversement.");
+                });
+            }
+        }
+
+        function finalizeProcess() {
+            const docsView = document.getElementById('docs-view');
+            const successView = document.getElementById('success-view');
+            const statusBadge = document.getElementById('status-badge');
+
+            // Enforce all 5 required documents are uploaded
+            const cvUploaded = document.getElementById('cv-status')?.classList.contains('text-emerald-500');
+            const cinUploaded = document.getElementById('cin-status')?.classList.contains('text-emerald-500');
+            const assuranceUploaded = document.getElementById('assurance-status')?.classList.contains('text-emerald-500');
+            const conventionUploaded = document.getElementById('convention-status')?.classList.contains('text-emerald-500');
+            const demandeUploaded = document.getElementById('demande-status')?.classList.contains('text-emerald-500');
+
+            if (!(cvUploaded && cinUploaded && assuranceUploaded && conventionUploaded && demandeUploaded)) {
+                alert('Veuillez télécharger les 5 documents obligatoires avant de finaliser.');
+                return;
+            }
+
+            fetch('/api/submit-dossier', {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    docsView.classList.add('hidden');
+                    const dashView = document.getElementById('dashboard-view');
+                    if (dashView) dashView.classList.remove('hidden');
+                    successView.classList.remove('hidden');
+
+                    if (statusBadge) {
+                        const statusText = statusBadge.querySelector('p.text-sm, p:last-child');
+                        if (statusText) {
+                            statusText.innerText = 'En attente';
+                            statusText.className = 'text-sm font-black text-[#001a4d]';
+                        }
+                    }
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2200);
+                } else {
+                    alert("Erreur lors de la transmission du dossier : " + data.error);
+                }
+            })
+            .catch(err => {
+                console.error("Submit dossier error:", err);
+                alert("Erreur de connexion lors de la validation du dossier.");
+            });
+        }
+
+        function previewReport(filename) {
+            document.getElementById('pdf-preview-iframe').src = `/preview/report/${filename}`;
+            const titleEl = document.querySelector('#pdf-preview-modal h3');
+            if (titleEl) titleEl.innerText = "Rapport de Stage — Aperçu";
+            document.getElementById('pdf-preview-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function previewDocument(docType, filename) {
+            let pdfUrl = `/pdf/${filename}`;
+            
+            const titleMap = {
+                'fiche': "Fiche d'Accueil — Aperçu",
+                'evaluation': "Fiche d'Évaluation — Aperçu",
+                'attestation': "Attestation de Stage — Aperçu"
+            };
+            const titleEl = document.querySelector('#pdf-preview-modal h3');
+            if (titleEl && titleMap[docType]) {
+                titleEl.innerText = titleMap[docType];
+            }
+
+            document.getElementById('pdf-preview-iframe').src = pdfUrl;
+            document.getElementById('pdf-preview-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePdfPreviewModal() {
+            document.getElementById('pdf-preview-modal').classList.add('hidden');
+            document.getElementById('pdf-preview-iframe').src = '';
+            document.body.style.overflow = 'auto';
+        }
+
+        function markAllNotificationsAsRead() {
+            fetch('/api/notifications/read', {
+                method: 'POST'
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            })
+            .catch(err => console.error("Error reading notifications:", err));
+        }
+
+        // Auto-refresh / polling for status & notifications in real time
+        setInterval(() => {
+            fetch(window.location.href)
+            .then(res => res.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Update notifications block
+                const oldNotifs = document.getElementById('dash-notifications');
+                const newNotifs = doc.getElementById('dash-notifications');
+                if (oldNotifs && newNotifs && oldNotifs.innerHTML.trim() !== newNotifs.innerHTML.trim()) {
+                    oldNotifs.innerHTML = newNotifs.innerHTML;
+                    
+                    // Show browser desktop notification if permission is granted
+                    if ("Notification" in window && Notification.permission === "granted") {
+                        new Notification("Nouveau document ou message RH !", {
+                            body: "Votre dossier a été mis à jour par l'équipe RH.",
+                            icon: "/static/favicon.ico"
+                        });
+                    }
+                }
+                
+                // Update documents section (container around 'Mes Documents Officiels')
+                const oldDocs = document.getElementById('official-docs-container');
+                const newDocs = doc.getElementById('official-docs-container');
+                if (oldDocs && newDocs && oldDocs.innerHTML.trim() !== newDocs.innerHTML.trim()) {
+                    oldDocs.innerHTML = newDocs.innerHTML;
+                }
+            })
+            .catch(err => console.error("Polling error:", err));
+        }, 10000);
+
+        // Chat & Report JS Logic for Stagiaire
+        function fetchDashChatMessages() {
+            const candidateId = window.currentCandidateId;
+            if (!candidateId) return;
+            
+            fetch(`/api/chat/messages/${candidateId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    renderDashChatMessages(data.messages);
+                }
+            })
+            .catch(err => console.error("Error fetching dash chat:", err));
+        }
+
+        function renderDashChatMessages(messages) {
+            const container = document.getElementById('dash-chat-history');
+            if (!container) return;
+            const atBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 40;
+            
+            if (messages.length === 0) {
+                container.innerHTML = '<div class="text-slate-400 text-xs text-center py-8">Aucun message pour le moment. Posez vos questions ici !</div>';
+                return;
+            }
+            
+            container.innerHTML = messages.map(msg => {
+                const isMe = msg.sender === 'stagiaire';
+                const senderName = isMe ? 'Moi (Stagiaire)' : 'Affectation';
+                const alignment = isMe ? 'justify-end' : 'justify-start';
+                const bubbleColor = isMe ? 'bg-blue-600 text-white rounded-tr-none' : 'bg-slate-200 text-[#001a4d] rounded-tl-none';
+                const dateStr = new Date(msg.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                
+                return `
+                    <div class="flex ${alignment}">
+                        <div class="max-w-[80%] flex flex-col ${isMe ? 'items-end' : 'items-start'}">
+                            <span class="text-[9px] font-bold text-slate-400 uppercase mb-1">${senderName} • ${dateStr}</span>
+                            <div class="px-4 py-3 rounded-2xl text-sm font-medium ${bubbleColor} shadow-sm break-words text-left">
+                                ${escapeHTML(msg.text)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            if (atBottom) {
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag] || tag)
+            );
+        }
+
+        function sendDashChatMessage() {
+            const input = document.getElementById('dash-chat-input');
+            const text = input.value.trim();
+            const candidateId = window.currentCandidateId;
+            if (!text || !candidateId) return;
+            
+            const payload = {
+                candidate_id: candidateId,
+                text: text,
+                sender: 'stagiaire'
+            };
+            
+            input.value = '';
+            
+            fetch('/api/chat/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    renderDashChatMessages(data.messages);
+                    const container = document.getElementById('dash-chat-history');
+                    container.scrollTop = container.scrollHeight;
+                }
+            })
+            .catch(err => console.error("Error sending dash chat message:", err));
+        }
+
+        function handleReportUpload() {
+            const input = document.getElementById('intern-report-input');
+            const feedback = document.getElementById('report-upload-feedback');
+            const statusBox = document.getElementById('report-upload-status-box');
+            const statusText = document.getElementById('report-status-text');
+            
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                if (!file.name.toLowerCase().endsWith('.pdf')) {
+                    alert("Veuillez sélectionner un fichier au format PDF.");
+                    return;
+                }
+                
+                feedback.innerText = 'Téléchargement en cours...';
+                feedback.className = 'text-[10px] font-bold mt-2 text-amber-500 text-left';
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                fetch('/api/report/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        feedback.innerText = 'Rapport téléversé avec succès !';
+                        feedback.className = 'text-[10px] font-bold mt-2 text-emerald-500 text-left';
+                        
+                        if (statusBox) {
+                            statusBox.className = 'p-4 rounded-2xl border text-xs font-medium flex items-center justify-between border-emerald-100 bg-emerald-50/50 text-emerald-800';
+                        }
+                        if (statusText) {
+                            statusText.innerText = 'Rapport soumis (Format PDF)';
+                        }
+                        
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        feedback.innerText = 'Erreur : ' + data.error;
+                        feedback.className = 'text-[10px] font-bold mt-2 text-rose-500 text-left';
+                    }
+                })
+                .catch(err => {
+                    feedback.innerText = 'Erreur de connexion.';
+                    feedback.className = 'text-[10px] font-bold mt-2 text-rose-500 text-left';
+                    console.error("Report upload error:", err);
+                });
+            }
+        }
+
+        // Request browser notifications permissions on load
+        document.addEventListener('DOMContentLoaded', () => {
+            if ("Notification" in window && Notification.permission === "default") {
+                Notification.requestPermission();
+            }
+            
+            if (window.currentCandidateId) {
+                fetchDashChatMessages();
+                setInterval(fetchDashChatMessages, 4000);
+            }
+        });
+    </script>
+
+
+    <!-- VIEW 3: Final Success View -->
+    <div id="success-view" class="hidden animate-in zoom-in duration-500">
+        <div
+            class="bg-white rounded-[32px] p-20 border border-[#e5eef7] shadow-sm flex flex-col items-center text-center">
+            <div
+                class="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center text-emerald-500 mb-8 relative">
+                <svg viewBox="0 0 24 24" class="w-12 h-12" fill="none" stroke="currentColor" stroke-width="3">
+                    <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <div class="absolute inset-0 bg-emerald-400 rounded-full animate-ping opacity-20"></div>
+            </div>
+            <h2 class="text-3xl font-black text-[#001a4d] mb-4">Dossier transmis avec succès</h2>
+            <p class="text-slate-400 font-medium max-w-md leading-relaxed mb-10">
+                Votre dossier complet a été envoyé au service RH. Le tableau de bord s'affichera après rechargement.
+            </p>
+            <div class="flex flex-col sm:flex-row gap-4 w-full max-w-md">
+                <button onclick="location.reload()"
+                    class="flex-1 py-4 bg-[#001a4d] text-white rounded-2xl font-black uppercase tracking-widest text-[11px] shadow-xl shadow-blue-900/20 hover:scale-[1.02] transition">
+                    Tableau de bord
+                </button>
+                <button onclick="window.print()"
+                    class="flex-1 py-4 bg-slate-50 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-[11px] border border-slate-100 hover:bg-slate-100 transition">
+                    Imprimer le Récépissé
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="max-w-7xl mx-auto px-8 py-10 text-center border-t border-slate-100 mt-10">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">© 2024 Direction du Capital Humain -
+            Marsa Maroc</p>
+    </footer>
+
+    <!-- PDF Preview Modal -->
+    <div id="pdf-preview-modal" class="fixed inset-0 z-[120] hidden">
+        <div class="absolute inset-0 bg-[#001a4d]/50 backdrop-blur-md" onclick="closePdfPreviewModal()"></div>
+        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl h-[85vh] bg-white rounded-[32px] shadow-2xl overflow-hidden flex flex-col p-6 border border-[#e5eef7]">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-blue-50 text-[#003399] rounded-lg flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                        </svg>
+                    </div>
+                    <h3 class="text-md font-black text-[#001a4d] uppercase tracking-wide">Fiche d'Accueil — Aperçu</h3>
+                </div>
+                <button onclick="closePdfPreviewModal()" class="text-slate-400 hover:text-red-500 transition p-2">
+                    <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <div class="flex-1 w-full mt-4 rounded-2xl overflow-hidden bg-slate-50 border border-slate-100">
+                <iframe id="pdf-preview-iframe" src="" class="w-full h-full border-none"></iframe>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

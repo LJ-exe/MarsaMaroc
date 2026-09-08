@@ -1,0 +1,19 @@
+To: mostaphaelfaris@gmail.com
+Subject: Dossier incomplet — action requise | Marsa Maroc
+
+Bonjour Mostafa El Faris,
+
+Votre dossier nécessite une action de votre part.
+
+Document manquant : CV (Curriculum Vitae)
+
+Message du service RH :
+« hello mostapha el faris whre are you from 
+ »
+
+Connectez-vous à votre espace stagiaire pour téléverser uniquement le document demandé :
+http://127.0.0.1:5000/stagiaire
+
+---
+Direction du Capital Humain
+Marsa Maroc

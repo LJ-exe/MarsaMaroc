@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Direction RH | Marsa Maroc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --marsa-blue: #003399;
+            --marsa-dark: #001a4d;
+            --marsa-bg: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--marsa-bg);
+            color: var(--marsa-dark);
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        .heading {
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .navbar-top {
+            background: white;
+            border-bottom: 2px solid #edf2f7;
+        }
+
+        .card-stat {
+            background: white;
+            border: 1px solid #edf2f7;
+            transition: all 0.3s ease;
+        }
+
+        .table-row-hover:hover {
+            background-color: #f8fafc;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen bg-slate-50">
+
+    <!-- Top Navigation -->
+    <nav class="navbar-top sticky top-0 z-50 w-full px-6 py-4 flex items-center justify-between shadow-sm">
+        <div class="flex items-center gap-4">
+            <img src="/static/logo_marsa.png" alt="Marsa Maroc" class="w-10 h-10 rounded-lg object-contain">
+            <div>
+                <a href="/" class="font-bold text-lg tracking-tight text-[#003399] uppercase">Marsa Maroc</a>
+                <span
+                    class="text-[10px] block font-medium text-slate-400 uppercase tracking-widest leading-none">Management
+                    RH</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-6 md:gap-10 overflow-x-auto max-w-[55vw] md:max-w-none whitespace-nowrap">
+            <a href="#overview-section" onclick="focusRhSection('overview-section')" class="rh-nav-link text-sm font-bold text-[#003399] border-b-2 border-[#003399] pb-1">Vue d'ensemble</a>
+            <a href="#candidates-section" onclick="focusRhSection('candidates-section', 'Tous')" class="rh-nav-link text-sm font-medium text-slate-500 hover:text-blue-900 transition">Vivier Candidats</a>
+            <a href="#assignments-section" onclick="focusRhSection('assignments-section', 'Refusé')" class="rh-nav-link text-sm font-medium text-slate-500 hover:text-blue-900 transition">Affectations</a>
+            <a href="#analytics-section" onclick="focusRhSection('analytics-section')" class="rh-nav-link text-sm font-medium text-slate-500 hover:text-blue-900 transition">Analytiques</a>
+        </div>
+
+        <div class="flex items-center gap-3 pr-6 border-r border-slate-100">
+            <div class="text-right hidden sm:block">
+                <p class="text-sm font-bold text-slate-800 leading-none">{{ user }}</p>
+                <p class="text-[10px] font-medium text-slate-400 uppercase tracking-tighter mt-1">Directeur RH</p>
+            </div>
+            <div class="w-10 h-10 bg-blue-50 text-[#003399] rounded-full flex items-center justify-center font-bold">
+                {{ user[0]|upper }}
+            </div>
+        </div>
+        <a href="/logout" class="text-slate-400 hover:text-red-500 transition">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+            </svg>
+        </a>
+        </div>
+    </nav>
+
+    <main id="overview-section" class="max-w-7xl mx-auto p-8 space-y-6">
+        {% if db_error %}
+        <div class="bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl px-6 py-4 text-sm font-semibold">
+            Impossible de charger les candidatures : {{ db_error }}
+            <span class="block text-xs font-medium mt-1 text-rose-600">Vérifiez Supabase (table applications, colonnes,
+                politiques RLS) et exécutez supabase_migration.sql</span>
+        </div>
+        {% endif %}
+
+        <!-- Banner Header -->
+        <div class="bg-white rounded-[24px] p-8 relative overflow-hidden shadow-sm border border-[#e5eef7]">
+            <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
+                <div class="space-y-1 text-center md:text-left">
+                    <h1 class="text-3xl font-black text-[#001a4d]">Ressources Humaines</h1>
+                    <div class="flex items-center gap-3 justify-center md:justify-start">
+                        <p class="text-slate-500 font-medium">Contrôle et validation des candidatures portuaires.</p>
+                    </div>
+                </div>
+
+                <div class="bg-[#f3f7fb] rounded-full px-6 py-3 flex items-center gap-6 border border-[#e5eef7]">
+                    <div class="flex items-center gap-2">
+                        <div class="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest"><span
+                                class="text-[#001a4d]">{{ candidates|length }}</span> Total</span>
+                    </div>
+                    <div class="w-px h-3 bg-slate-200"></div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-1.5 h-1.5 bg-amber-500 rounded-full"></div>
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest"><span
+                                class="text-[#001a4d]">{{ (candidates|selectattr('status', 'equalto', 'En
+                                attente')|list|length) + (candidates|selectattr('status', 'equalto', 'Action
+                                Requise')|list|length) }}</span> À traiter</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Decorative background element -->
+            <div class="absolute -right-10 -bottom-10 opacity-[0.03] pointer-events-none">
+                <svg viewBox="0 0 500 500" class="w-72 h-72">
+                    <path d="M250 50 L450 150 L450 350 L250 450 L50 350 L50 150 Z" fill="currentColor" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- Filters & Search -->
+        <div id="candidates-section" class="flex flex-col md:flex-row items-center justify-between gap-6 overflow-x-auto pb-2 scroll-mt-28">
+            <div class="relative w-full max-w-md">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                    <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.3-4.3" />
+                    </svg>
+                </span>
+                <input type="text" id="rh-search-input" onkeyup="filterTable()"
+                    placeholder="Rechercher par nom, école, filière..."
+                    class="w-full bg-white border border-[#e5eef7] rounded-full py-3 pl-12 pr-6 text-xs font-semibold text-[#001a4d] focus:outline-none focus:border-blue-400 placeholder:text-slate-300">
+            </div>
+
+            <div class="flex items-center gap-2" id="filter-container">
+                <button onclick="applyFilter('Tous', this)"
+                    class="filter-btn bg-[#001a4d] text-white px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition">Tous</button>
+                <button onclick="applyFilter('En attente', this)"
+                    class="filter-btn bg-white text-slate-500 border border-[#e5eef7] px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:border-blue-200 transition">En
+                    attente</button>
+                <button onclick="applyFilter('Accepté', this)"
+                    class="filter-btn bg-white text-slate-500 border border-[#e5eef7] px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:border-blue-200 transition">Accepté</button>
+                <button onclick="applyFilter('Refusé', this)"
+                    class="filter-btn bg-white text-slate-500 border border-[#e5eef7] px-5 py-2 rounded-full text-[10px] font-black uppercase tracking-widest hover:border-blue-200 transition">Refusées</button>
+            </div>
+        </div>
+
+        <!-- Main Table Content -->
+        <div id="assignments-section" class="bg-white rounded-[24px] shadow-sm border border-[#e5eef7] overflow-hidden scroll-mt-28">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left bg-white">
+                    <thead class="bg-[#f8fafc]/50 border-b border-[#e5eef7]">
+                        <tr class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                            <th class="px-8 py-4">Candidat</th>
+                            <th class="px-8 py-4">Date de soumission</th>
+                            <th class="px-8 py-4">Zone souhaitée</th>
+                            <th class="px-8 py-4">Établissement & Filière</th>
+                            <th class="px-8 py-4">Type & Période</th>
+                            <th class="px-8 py-4">Statut</th>
+                            <th class="px-8 py-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-[#e5eef7]">
+                        {% for candidate in candidates %}
+                        <tr class="table-row-hover transition-colors group" data-status="{{ candidate.status }}">
+                            <td class="px-8 py-5">
+                                <p class="text-sm font-black text-[#001a4d]">{{ candidate.name }}</p>
+                                <p class="text-[11px] font-bold text-slate-400">{{ candidate.phone }}</p>
+                            </td>
+                            <script>console.log('[RH CANDIDATE] ID: {{ candidate.id }}, Name: {{ candidate.name }}, evaluation_pdf: {{ candidate.evaluation_pdf }}, evaluation_status: {{ candidate.evaluation_status }}');</script>
+                            <td class="px-8 py-5">
+                                <p class="text-sm font-black text-[#001a4d]">{{ candidate.submittedAtFormatted }}</p>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Dossier
+                                    transmis</p>
+                            </td>
+                            <td class="px-8 py-5">
+                                <p class="text-sm font-bold text-slate-600">{{ candidate.zone or '—' }}</p>
+                            </td>
+                            <td class="px-8 py-5">
+                                <p class="text-sm font-black text-[#001a4d]">{{ candidate.school }}</p>
+                                <p class="text-[10px] font-bold text-slate-400 italic">{{ candidate.specialty }}{% if
+                                    candidate.level and candidate.level != 'N/A' %} · {{ candidate.level }}{% endif %}
+                                </p>
+                            </td>
+                            <td class="px-8 py-5">
+                                <span
+                                    class="bg-blue-50 text-[#003399] text-[9px] font-black px-2 py-0.5 rounded uppercase">{{
+                                    candidate.type or '—' }}</span>
+                                <p class="text-[10px] font-bold text-slate-400 mt-1">{{ candidate.period or '—' }}</p>
+                            </td>
+                            <td class="px-8 py-5">
+                                {% if candidate.status == 'Accepté' %}
+                                <span
+                                    class="bg-emerald-50 text-emerald-600 text-[9px] font-black px-3 py-1 rounded-full uppercase border border-emerald-100/50">Accepté</span>
+                                {% elif candidate.status == 'Refusé' %}
+                                <span
+                                    class="bg-rose-50 text-rose-600 text-[9px] font-black px-3 py-1 rounded-full uppercase border border-rose-100/50">Refusé</span>
+                                {% elif candidate.status == 'Action Requise' %}
+                                <span
+                                    class="bg-amber-50 text-amber-600 text-[9px] font-black px-3 py-1 rounded-full uppercase border border-amber-100/50">Action
+                                    Requise</span>
+                                {% elif candidate.status == 'Attente Affectation' %}
+                                <span
+                                    class="bg-blue-50 text-blue-600 text-[9px] font-black px-3 py-1 rounded-full uppercase border border-blue-100/50">Affecté</span>
+                                {% else %}
+                                <span
+                                    class="bg-amber-50 text-amber-600 text-[9px] font-black px-3 py-1 rounded-full uppercase border border-amber-100/50">En
+                                    attente</span>
+                                {% endif %}
+
+                                {% if candidate.evaluation_pdf and candidate.evaluation_status == 'En attente' %}
+                                <span
+                                    class="block mt-1 bg-amber-50 text-amber-600 text-[8px] font-black px-2 py-0.5 rounded uppercase border border-amber-100/50 w-max">Éval
+                                    à Valider</span>
+                                {% endif %}
+
+                                {% if candidate.rh_status_submessage %}
+                                <div class="mt-1.5 max-w-[200px]">
+                                    <span class="text-[8px] font-bold text-slate-600 leading-tight block">
+                                        {{ candidate.rh_status_submessage }}
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td class="px-8 py-5 text-right">
+                                {% if candidate.status == 'En attente' or candidate.status == 'Action Requise' %}
+                                <button type="button" onclick="examinerDossier(this)" data-id="{{ candidate.id }}"
+                                    data-name="{{ candidate.name }}" data-date="{{ candidate.submittedAtFormatted }}"
+                                    data-zone="{{ candidate.zone or '' }}"
+                                    data-department="{{ candidate.department or '' }}"
+                                    class="inline-flex items-center gap-2 text-[10px] font-black text-[#003399] uppercase tracking-widest hover:translate-x-1 transition-transform">
+                                    <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                        stroke-width="3">
+                                        <circle cx="12" cy="12" r="3" />
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    </svg>
+                                    Examiner
+                                </button>
+                                {% elif candidate.evaluation_pdf and candidate.evaluation_status == 'En attente' %}
+                                <button type="button" id="btn-eval-{{ candidate.id }}"
+                                    onclick="console.log('[RH BUTTON] Clicked - ID: {{ candidate.id }}, Name: {{ candidate.name }}, PDF: {{ candidate.evaluation_pdf }}'); openValiderEvaluationModal('{{ candidate.id }}', '{{ candidate.name }}', '{{ candidate.evaluation_pdf }}')"
+                                    class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md hover:scale-[1.03] transition">
+                                    Fiche d'Évaluation
+                                </button>
+                                <script>
+                                    console.log('[RH RENDER] Button rendered for candidate {{ candidate.id }}');
+                                    console.log('[RH RENDER] evaluation_pdf: "{{ candidate.evaluation_pdf }}"');
+                                    console.log('[RH RENDER] evaluation_status: "{{ candidate.evaluation_status }}"');
+                                    console.log('[RH RENDER] evaluation_pdf is truthy: {{ candidate.evaluation_pdf is not none and candidate.evaluation_pdf != "" }}');
+                                    console.log('[RH RENDER] evaluation_status == "En attente": {{ candidate.evaluation_status == "En attente" }}');
+                                </script>
+                                {% elif candidate.evaluation_status == 'Accepté' %}
+                                <div class="flex flex-col items-end gap-1">
+                                    <span class="text-[9px] font-black text-emerald-600 uppercase">Éval Validée</span>
+                                    {% if candidate.attestation_pdf %}
+                                    <a href="/download/attestation/{{ candidate.attestation_pdf }}"
+                                        class="text-[9px] font-black text-[#003399] uppercase hover:underline flex items-center gap-1">
+                                        Attestation 📥
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                {% elif candidate.evaluation_status == 'Refusé' %}
+                                <span class="text-[9px] font-black text-rose-600 uppercase">Éval Refusée</span>
+                                {% else %}
+                                <span class="text-xs text-slate-400 font-bold">Traité (Affecté)</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="px-8 py-16 text-center">
+                                <p class="text-lg font-black text-slate-400">Aucune candidature pour le moment</p>
+                                <p class="text-sm font-medium text-slate-400 mt-2">Les stagiaires apparaîtront ici après
+                                    avoir envoyé le formulaire sur l'espace Stagiaire.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <section id="analytics-section" class="bg-white rounded-[24px] shadow-sm border border-[#e5eef7] p-8 scroll-mt-28">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h2 class="text-xl font-black text-[#001a4d]">Analytiques</h2>
+                    <p class="text-sm text-slate-500 font-medium">Répartition actuelle des candidatures.</p>
+                </div>
+                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ candidates|length }} dossiers</span>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="rounded-2xl bg-amber-50 border border-amber-100 p-5">
+                    <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest">En attente</p>
+                    <p class="text-3xl font-black text-amber-800 mt-2">{{ candidates|selectattr('status', 'equalto', 'En attente')|list|length }}</p>
+                </div>
+                <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-5">
+                    <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Acceptées</p>
+                    <p class="text-3xl font-black text-emerald-800 mt-2">{{ candidates|selectattr('status', 'equalto', 'Accepté')|list|length }}</p>
+                </div>
+                <div class="rounded-2xl bg-blue-50 border border-blue-100 p-5">
+                    <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Affectées</p>
+                    <p class="text-3xl font-black text-blue-800 mt-2">{{ candidates|selectattr('status', 'equalto', 'Attente Affectation')|list|length }}</p>
+                </div>
+                <div class="rounded-2xl bg-rose-50 border border-rose-100 p-5">
+                    <p class="text-[10px] font-black text-rose-600 uppercase tracking-widest">Refusées</p>
+                    <p class="text-3xl font-black text-rose-800 mt-2">{{ candidates|selectattr('status', 'equalto', 'Refusé')|list|length }}</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Left Side PDF Preview Panel -->
+    <div id="left-pdf-preview-panel"
+        class="fixed left-0 top-0 bottom-0 w-1/2 bg-white shadow-2xl z-[200] hidden transform -translate-x-full transition-transform duration-300">
+        <div class="flex flex-col h-full">
+            <!-- Header -->
+            <div class="flex items-center justify-between p-4 border-b border-[#e5eef7]">
+                <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Prévisualisation</p>
+                <button onclick="closeLeftPdfPreview()" class="text-slate-400 hover:text-slate-900 transition">
+                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+            <!-- PDF Content -->
+            <div class="flex-1 p-4">
+                <div id="left-pdf-container"
+                    class="w-full h-full bg-[#f8fafc] rounded-xl border border-[#e5eef7] overflow-hidden">
+                    <div id="left-pdf-placeholder" class="flex items-center justify-center h-full text-slate-400">
+                        <div class="text-center">
+                            <svg viewBox="0 0 24 24" class="w-16 h-16 mx-auto mb-3 text-slate-300" fill="none"
+                                stroke="currentColor" stroke-width="1.5">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                                <line x1="16" y1="13" x2="8" y2="13"></line>
+                                <line x1="16" y1="17" x2="8" y2="17"></line>
+                                <polyline points="10 9 9 9 8 9"></polyline>
+                            </svg>
+                            <p class="text-sm font-medium">Chargement...</p>
+                        </div>
+                    </div>
+                    <iframe id="left-pdf-frame" class="w-full h-full hidden" frameborder="0"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed View Modal -->
+    <div id="examiner-modal" class="fixed inset-0 z-[100] hidden">
+        <div class="absolute inset-0 bg-[#001a4d]/40 backdrop-blur-sm" onclick="closeModal()"></div>
+        <div
+            class="absolute right-0 top-0 bottom-0 w-1/2 bg-white shadow-2xl flex flex-col p-10 animate-in slide-in-from-right duration-500">
+            <div class="flex items-center justify-between mb-10">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-[#003399]">
+                        <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                            <circle cx="8.5" cy="7" r="4" />
+                            <polyline points="17 11 19 13 23 9" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 id="modal-name" class="text-2xl font-black text-[#001a4d]">Candidat Name</h2>
+                        <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">Examen du Dossier</p>
+                        <p id="modal-date-soumission" class="text-[11px] font-bold text-[#003399] mt-2"></p>
+                    </div>
+                </div>
+                <button onclick="closeModal()" class="text-slate-300 hover:text-slate-900 transition">
+                    <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="flex flex-col gap-6 flex-1 overflow-y-auto">
+                <!-- Document List -->
+                <div class="bg-[#f3f7fb] p-6 rounded-2xl border border-[#e5eef7]">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Documents</p>
+                    <div id="modal-documents-list" class="space-y-2">
+                        <!-- CV -->
+                        <div id="doc-row-cv" class="p-3 bg-white rounded-xl shadow-sm hover:bg-slate-50 transition">
+                            <div class="flex items-center justify-between cursor-pointer"
+                                onclick="openPdfPreview('cv')">
+                                <span class="text-[11px] font-black text-[#001a4d]">CV</span>
+                                <span class="doc-status text-[9px] font-black uppercase text-slate-400">En
+                                    attente</span>
+                            </div>
+                            <a id="download-cv" href="#" target="_blank"
+                                class="doc-download hidden mt-2 block text-[9px] font-black text-[#003399] hover:underline">Télécharger</a>
+                        </div>
+                        <!-- CIN -->
+                        <div id="doc-row-cin" class="p-3 bg-white rounded-xl shadow-sm hover:bg-slate-50 transition">
+                            <div class="flex items-center justify-between cursor-pointer"
+                                onclick="openPdfPreview('cin')">
+                                <span class="text-[11px] font-black text-[#001a4d]">CIN</span>
+                                <span class="doc-status text-[9px] font-black uppercase text-slate-400">En
+                                    attente</span>
+                            </div>
+                            <a id="download-cin" href="#" target="_blank"
+                                class="doc-download hidden mt-2 block text-[9px] font-black text-[#003399] hover:underline">Télécharger</a>
+                        </div>
+                        <!-- Assurance -->
+                        <div id="doc-row-assurance"
+                            class="p-3 bg-white rounded-xl shadow-sm hover:bg-slate-50 transition">
+                            <div class="flex items-center justify-between cursor-pointer"
+                                onclick="openPdfPreview('assurance')">
+                                <span class="text-[11px] font-black text-[#001a4d]">Assurance</span>
+                                <span class="doc-status text-[9px] font-black uppercase text-slate-400">En
+                                    attente</span>
+                            </div>
+                            <a id="download-assurance" href="#" target="_blank"
+                                class="doc-download hidden mt-2 block text-[9px] font-black text-[#003399] hover:underline">Télécharger</a>
+                        </div>
+                        <!-- Convention -->
+                        <div id="doc-row-convention"
+                            class="p-3 bg-white rounded-xl shadow-sm hover:bg-slate-50 transition">
+                            <div class="flex items-center justify-between cursor-pointer"
+                                onclick="openPdfPreview('convention')">
+                                <span class="text-[11px] font-black text-[#001a4d]">Convention</span>
+                                <span class="doc-status text-[9px] font-black uppercase text-slate-400">En
+                                    attente</span>
+                            </div>
+                            <a id="download-convention" href="#" target="_blank"
+                                class="doc-download hidden mt-2 block text-[9px] font-black text-[#003399] hover:underline">Télécharger</a>
+                        </div>
+                        <!-- Demande -->
+                        <div id="doc-row-demande"
+                            class="p-3 bg-white rounded-xl shadow-sm hover:bg-slate-50 transition">
+                            <div class="flex items-center justify-between cursor-pointer"
+                                onclick="openPdfPreview('demande')">
+                                <span class="text-[11px] font-black text-[#001a4d]">Demande</span>
+                                <span class="doc-status text-[9px] font-black uppercase text-slate-400">En
+                                    attente</span>
+                            </div>
+                            <a id="download-demande" href="#" target="_blank"
+                                class="doc-download hidden mt-2 block text-[9px] font-black text-[#003399] hover:underline">Télécharger</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Decision Section -->
+                <div class="bg-[#f3f7fb] p-5 rounded-2xl border border-[#e5eef7] space-y-4">
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Décision RH</p>
+                    <div class="space-y-2">
+                        <label for="modal-pole-select"
+                            class="text-[10px] font-black text-[#001a4d] uppercase tracking-widest">Direction /
+                            Pôle</label>
+                        <select id="modal-pole-select"
+                            class="w-full bg-white border border-[#e5eef7] rounded-xl py-3 px-4 text-xs font-bold text-[#001a4d] focus:outline-none focus:border-blue-400">
+                            <option value="">— Choisir la direction / pôle —</option>
+                            {% for pole in poles %}
+                            <option value="{{ pole }}">{{ pole }}</option>
+                            {% endfor %}
+                        </select>
+                        <p class="text-[10px] font-medium text-slate-400">Obligatoire pour accepter le dossier.</p>
+                    </div>
+                    <p class="text-xs font-bold text-slate-500"><span class="text-slate-400">Zone souhaitée :</span>
+                        <span id="modal-zone">—</span>
+                    </p>
+                    <div class="flex gap-3">
+                        <button onclick="updateStatus('Accepté')"
+                            class="flex-1 bg-emerald-500 text-white py-3 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-emerald-500/20 hover:scale-[1.02] transition">Accepter</button>
+                        <button onclick="updateStatus('Refusé')"
+                            class="flex-1 bg-rose-500 text-white py-3 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-rose-500/20 hover:scale-[1.02] transition">Refuser</button>
+                        <button onclick="openMissingDocModal()"
+                            class="flex-1 bg-white text-amber-500 border border-amber-200 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] hover:bg-amber-50 transition">Manquant</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-auto border-t border-slate-100 pt-8">
+                <p class="text-[10px] font-bold text-slate-400 mb-4 uppercase tracking-widest italic">Commentaire
+                    Interne RH</p>
+                <textarea
+                    class="w-full h-32 bg-[#f8fafc] border border-slate-200 rounded-2xl p-4 text-xs font-semibold focus:outline-none focus:border-blue-400"
+                    placeholder="Ajouter une note sur ce candidat..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Missing Document Modal -->
+    <div id="missing-doc-modal" class="fixed inset-0 z-[110] hidden">
+        <div class="absolute inset-0 bg-[#001a4d]/50 backdrop-blur-sm" onclick="closeMissingDocModal()"></div>
+        <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-3xl p-8 shadow-2xl space-y-6">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-black text-[#001a4d]">Signaler un élément manquant</h3>
+                <button onclick="closeMissingDocModal()" class="text-slate-300 hover:text-slate-900 transition">
+                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18" stroke-linecap="round" stroke-linejoin="round" />
+                        <line x1="6" y1="6" x2="18" y2="18" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-[#001a4d] uppercase tracking-widest block">Document
+                        Manquant</label>
+                    <select id="missing-doc-type"
+                        class="w-full bg-slate-50 border border-[#e5eef7] rounded-xl py-3 px-4 text-xs font-bold text-[#001a4d] focus:outline-none focus:border-blue-400">
+                        <option value="cv">CV (Curriculum Vitae)</option>
+                        <option value="cin">CIN (Carte d'Identité)</option>
+                        <option value="assurance">Attestation d'Assurance</option>
+                        <option value="convention">Convention de Stage</option>
+                        <option value="demande">Demande de Stage</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-[#001a4d] uppercase tracking-widest block">Message / Note
+                        pour le stagiaire</label>
+                    <textarea id="missing-doc-remark"
+                        class="w-full h-28 bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs font-semibold focus:outline-none focus:border-blue-400"
+                        placeholder="Ex: Veuillez ajouter la demande de stage signée par votre établissement."></textarea>
+                </div>
+            </div>
+
+            <button onclick="submitMissingDocRequest()"
+                class="w-full bg-amber-500 text-white py-4 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-amber-500/20 hover:scale-[1.02] transition">
+                Confirmer et Envoyer
+            </button>
+        </div>
+    </div>
+    <!-- END missing-doc-modal -->
+
+    <!-- Validation Evaluation Modal -->
+    <div id="valider-evaluation-modal" class="fixed inset-0 z-[100] hidden overflow-y-auto">
+        <div class="fixed inset-0 bg-[#001a4d]/40 backdrop-blur-sm" onclick="closeValiderEvaluationModal()"></div>
+        <div
+            class="relative my-8 mx-auto w-full max-w-6xl bg-white rounded-[40px] shadow-2xl p-10 animate-in zoom-in duration-300 flex flex-col md:flex-row gap-8">
+            <button onclick="closeValiderEvaluationModal()"
+                class="absolute right-8 top-8 text-slate-400 hover:text-slate-900 transition">
+                <svg viewBox="0 0 24 24" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+            </button>
+
+            <!-- Left column: PDF preview (iframe) -->
+            <div class="w-full md:w-1/2 flex flex-col space-y-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-sm font-black text-[#001a4d] uppercase tracking-wider">Aperçu de la fiche
+                        d'évaluation</h3>
+                    <a id="val-download-btn" href="#" target="_blank"
+                        class="text-[10px] font-black text-[#003399] uppercase hover:underline flex items-center gap-1">
+                        Télécharger 📥
+                    </a>
+                </div>
+                <div class="flex-1 min-h-[500px] bg-slate-50 border border-slate-100 rounded-2xl overflow-hidden">
+                    <iframe id="eval-pdf-preview" src="" class="w-full h-full border-none"></iframe>
+                </div>
+            </div>
+
+            <!-- Right column: Validation & Signatures form -->
+            <div class="w-full md:w-1/2 flex flex-col justify-between space-y-6">
+                <div>
+                    <div class="space-y-2 mb-6">
+                        <h2 class="text-xl font-black text-[#001a4d] uppercase">Validation de l'Évaluation</h2>
+                        <p id="val-eval-candidate-name"
+                            class="text-slate-400 font-bold uppercase tracking-widest text-xs">Candidat: ...</p>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Directeur RH Name -->
+                        <div class="space-y-2">
+                            <label class="text-[10px] font-black text-[#001a4d] uppercase tracking-widest">Directeur
+                                RH</label>
+                            <input type="text" id="val-directeur-rh" value="M. El Hachimi"
+                                class="w-full bg-[#f8fafc] border border-[#e5eef7] rounded-xl py-3 px-4 text-xs font-bold text-[#001a4d] focus:outline-none focus:border-blue-400">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Motif de refus -->
+                <div id="val-reject-reason-block" class="space-y-2 hidden">
+                    <label class="text-[10px] font-black text-rose-600 uppercase tracking-widest">Motif du refus
+                        (obligatoire)</label>
+                    <textarea id="val-reject-reason" rows="3" placeholder="Indiquez le motif renvoyé à l'affectation..."
+                        class="w-full bg-rose-50/50 border border-rose-100 rounded-xl py-3 px-4 text-xs font-bold text-[#001a4d] focus:outline-none focus:border-rose-300"></textarea>
+                </div>
+
+                <!-- Status & Action Buttons -->
+                <div class="space-y-4">
+                    <div id="val-status-message"
+                        class="hidden p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-800 text-[11px] font-bold text-center">
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button type="button" onclick="validerEvaluation('Refusé')"
+                            class="w-1/3 bg-rose-500 hover:bg-rose-600 text-white py-4 rounded-xl font-black uppercase tracking-widest text-[9px] shadow-lg shadow-rose-500/20 hover:scale-[1.01] transition">
+                            Refuser
+                        </button>
+                        <button type="button" onclick="validerEvaluation('Accepté')"
+                            class="w-2/3 bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-xl font-black uppercase tracking-widest text-[9px] shadow-lg shadow-emerald-500/20 hover:scale-[1.01] transition">
+                            Accepter & Générer l'Attestation
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('[RH INIT] Dashboard script loaded');
+        let currentFilter = 'Tous';
+        let currentCandidateId = null;
+
+        function focusRhSection(sectionId, filter) {
+            if (filter) {
+                const filterButton = Array.from(document.querySelectorAll('.filter-btn'))
+                    .find(button => button.textContent.trim().replace(/\s+/g, ' ') === filter);
+                if (filterButton) applyFilter(filter, filterButton);
+            }
+            document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // Initialize table with persisted statuses
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('[RH INIT] DOMContentLoaded');
+            console.log('[RH INIT] openValiderEvaluationModal function exists:', typeof openValiderEvaluationModal !== 'undefined');
+            filterTable();
+        });
+
+        function examinerDossier(btn) {
+            const id = btn.dataset.id;
+            currentCandidateId = id;
+            const name = btn.dataset.name;
+            const dateSoumission = btn.dataset.date;
+            const zone = btn.dataset.zone;
+            const department = btn.dataset.department;
+
+            document.getElementById('modal-name').innerText = name;
+            const dateEl = document.getElementById('modal-date-soumission');
+            dateEl.innerText = dateSoumission
+                ? 'Soumis le : ' + dateSoumission
+                : 'Date de soumission : non renseignée';
+
+            document.getElementById('modal-zone').innerText = zone || 'Non renseignée';
+            document.getElementById('modal-pole-select').value = department || '';
+
+            // Reset all statuses in modal before fetching
+            const docs = ["cv", "cin", "assurance", "convention", "demande"];
+            docs.forEach(doc => {
+                const row = document.getElementById(`doc-row-${doc}`);
+                const statusSpan = row.querySelector('.doc-status');
+                const downloadLink = document.getElementById(`download-${doc}`);
+
+                statusSpan.innerText = 'Chargement...';
+                statusSpan.className = 'doc-status text-[9px] font-black text-amber-500 uppercase';
+                downloadLink.classList.add('hidden');
+                downloadLink.href = '#';
+            });
+
+            // Fetch the documents status from the server
+            const identifier = id || name;
+            fetch(`/api/candidates/${identifier}/documents`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success && data.documents) {
+                        docs.forEach(doc => {
+                            const docData = data.documents[doc];
+                            const row = document.getElementById(`doc-row-${doc}`);
+                            const statusSpan = row.querySelector('.doc-status');
+                            const downloadLink = document.getElementById(`download-${doc}`);
+
+                            if (docData && docData.uploaded) {
+                                statusSpan.innerText = 'Valide';
+                                statusSpan.className = 'doc-status text-[9px] font-black text-emerald-500 uppercase';
+                                downloadLink.classList.remove('hidden');
+                                downloadLink.href = docData.download_url;
+                            } else {
+                                statusSpan.innerText = 'En attente';
+                                statusSpan.className = 'doc-status text-[9px] font-black text-slate-400 uppercase';
+                                downloadLink.classList.add('hidden');
+                            }
+                        });
+
+                        // Store document URLs for preview
+                        window.currentDocuments = data.documents;
+                    } else {
+                        console.error("Failed to load documents status:", data.error);
+                    }
+                })
+                .catch(err => {
+                    console.error("Error fetching documents status:", err);
+                    docs.forEach(doc => {
+                        const row = document.getElementById(`doc-row-${doc}`);
+                        const statusSpan = row.querySelector('.doc-status');
+                        statusSpan.innerText = 'Erreur';
+                        statusSpan.className = 'doc-status text-[9px] font-black text-rose-500 uppercase';
+                    });
+                });
+
+            document.getElementById('examiner-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function previewSelectedDocument() {
+            const placeholder = document.getElementById('pdf-placeholder');
+            const iframe = document.getElementById('pdf-preview-frame');
+
+            if (!window.currentDocuments) {
+                placeholder.classList.remove('hidden');
+                iframe.classList.add('hidden');
+                iframe.src = '';
+                return;
+            }
+        }
+
+        function previewDocumentFromRow(docType) {
+            const placeholder = document.getElementById('pdf-placeholder');
+            const iframe = document.getElementById('pdf-preview-frame');
+
+            if (!window.currentDocuments) {
+                return;
+            }
+
+            const docData = window.currentDocuments[docType];
+
+            if (docData && docData.uploaded && docData.url) {
+                placeholder.classList.add('hidden');
+                iframe.classList.remove('hidden');
+                iframe.src = docData.url;
+            } else {
+                placeholder.classList.remove('hidden');
+                iframe.classList.add('hidden');
+                iframe.src = '';
+
+                // Show message that document is not available
+                placeholder.innerHTML = `
+                        <div class="text-center">
+                            <svg viewBox="0 0 24 24" class="w-16 h-16 mx-auto mb-3 text-amber-400" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <p class="text-xs font-medium text-amber-600">Document non disponible</p>
+                            <p class="text-[10px] text-slate-400 mt-1">Ce document n'a pas encore été envoyé par le stagiaire</p>
+                        </div>
+                    `;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('examiner-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            closeLeftPdfPreview();
+        }
+
+        function openPdfPreview(docType) {
+            if (!window.currentDocuments) {
+                return;
+            }
+
+            const docData = window.currentDocuments[docType];
+            const panel = document.getElementById('left-pdf-preview-panel');
+            const placeholder = document.getElementById('left-pdf-placeholder');
+            const iframe = document.getElementById('left-pdf-frame');
+
+            if (docData && docData.uploaded && docData.url) {
+                placeholder.classList.add('hidden');
+                iframe.classList.remove('hidden');
+                iframe.src = docData.url;
+                panel.classList.remove('hidden');
+                setTimeout(() => {
+                    panel.classList.remove('-translate-x-full');
+                }, 10);
+            } else {
+                placeholder.classList.remove('hidden');
+                iframe.classList.add('hidden');
+                iframe.src = '';
+
+                placeholder.innerHTML = `
+                        <div class="text-center">
+                            <svg viewBox="0 0 24 24" class="w-16 h-16 mx-auto mb-3 text-amber-400" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <p class="text-xs font-medium text-amber-600">Document non disponible</p>
+                            <p class="text-[10px] text-slate-400 mt-1">Ce document n'a pas encore été envoyé par le stagiaire</p>
+                        </div>
+                    `;
+                panel.classList.remove('hidden');
+                setTimeout(() => {
+                    panel.classList.remove('-translate-x-full');
+                }, 10);
+            }
+        }
+
+        function closeLeftPdfPreview() {
+            const panel = document.getElementById('left-pdf-preview-panel');
+            panel.classList.add('-translate-x-full');
+            setTimeout(() => {
+                panel.classList.add('hidden');
+            }, 300);
+        }
+
+        function updateStatus(status) {
+            const name = document.getElementById('modal-name').innerText;
+            const department = document.getElementById('modal-pole-select').value;
+
+            if (status === 'Accepté' && !department) {
+                alert('Veuillez choisir une Direction / Pôle avant d\'accepter le dossier.');
+                return;
+            }
+
+            fetch('/api/candidates/status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: currentCandidateId,
+                    name,
+                    status,
+                    department: department || null
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        closeModal();
+                        location.reload();
+                    } else {
+                        alert("Erreur lors de la mise à jour : " + (data.error || "Erreur inconnue"));
+                    }
+                })
+                .catch(err => {
+                    console.error("API error:", err);
+                    alert("Erreur de connexion au serveur.");
+                });
+        }
+
+        function applyFilter(filter, btn) {
+            currentFilter = filter;
+
+            // Update button styles
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('bg-[#001a4d]', 'text-white');
+                b.classList.add('bg-white', 'text-slate-500', 'border-[#e5eef7]');
+            });
+
+            btn.classList.add('bg-[#001a4d]', 'text-white');
+            btn.classList.remove('bg-white', 'text-slate-500', 'border-[#e5eef7]');
+
+            filterTable();
+        }
+
+        function filterTable() {
+            const searchText = document.getElementById('rh-search-input').value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                const status = row.dataset.status || '';
+
+                const matchesSearch = text.includes(searchText);
+                const matchesFilter = currentFilter === 'Tous' || status === currentFilter;
+
+                if (matchesSearch && matchesFilter) {
+                    row.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+        }
+
+        function openMissingDocModal() {
+            document.getElementById('missing-doc-modal').classList.remove('hidden');
+        }
+
+        function closeMissingDocModal() {
+            document.getElementById('missing-doc-modal').classList.add('hidden');
+        }
+
+        function submitMissingDocRequest() {
+            const name = document.getElementById('modal-name').innerText;
+            const id = currentCandidateId;
+            const docType = document.getElementById('missing-doc-type').value;
+            const remark = document.getElementById('missing-doc-remark').value;
+
+            if (!remark.trim()) {
+                alert('Veuillez ajouter une remarque.');
+                return;
+            }
+
+            fetch('/request-documents', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ id, name, doc_type: docType, remark })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        closeMissingDocModal();
+                        closeModal();
+                        location.reload();
+                    } else {
+                        alert("Erreur : " + (data.error || "Erreur inconnue"));
+                    }
+                })
+                .catch(err => {
+                    console.error("API error:", err);
+                    alert("Erreur de connexion au serveur.");
+                });
+        }
+
+        // --- Evaluation Validation & Attestation Flow ---
+        let valCanvasDirecteur = null, valCanvasResponsable = null;
+        let valCtxDirecteur = null, valCtxResponsable = null;
+        let valDrawingDirecteur = false, valDrawingResponsable = false;
+        let valDrawnDirecteur = false, valDrawnResponsable = false;
+        let currentValCandidateId = null;
+
+        function openValiderEvaluationModal(id, name, pdfPath) {
+            console.log('[RH EVAL] ========== Opening validation modal ==========');
+            console.log('[RH EVAL] Parameter id:', id, '(type:', typeof id, ')');
+            console.log('[RH EVAL] Parameter name:', name, '(type:', typeof name, ')');
+            console.log('[RH EVAL] Parameter pdfPath:', pdfPath, '(type:', typeof pdfPath, ')');
+            console.log('[RH EVAL] id is truthy:', !!id);
+            console.log('[RH EVAL] name is truthy:', !!name);
+            console.log('[RH EVAL] pdfPath is truthy:', !!pdfPath);
+
+            if (!id) {
+                console.error('[RH EVAL] ERROR: id is empty or null!');
+                alert('Erreur: ID du candidat manquant');
+                return;
+            }
+            if (!pdfPath) {
+                console.error('[RH EVAL] ERROR: pdfPath is empty or null!');
+                alert('Erreur: Chemin du PDF manquant');
+                return;
+            }
+
+            currentValCandidateId = id;
+            document.getElementById('val-eval-candidate-name').innerText = 'Candidat: ' + name;
+
+            // Preview the evaluation PDF in the iframe
+            const previewUrl = `/preview/evaluation/${pdfPath}`;
+            const downloadUrl = `/download/evaluation/${pdfPath}`;
+            console.log('[RH EVAL] Preview URL:', previewUrl);
+            console.log('[RH EVAL] Download URL:', downloadUrl);
+            document.getElementById('eval-pdf-preview').src = previewUrl;
+            document.getElementById('val-download-btn').href = downloadUrl;
+
+            // Check modal element existence
+            const modal = document.getElementById('valider-evaluation-modal');
+            console.log('[RH EVAL] Modal element:', modal);
+            console.log('[RH EVAL] Modal classes before:', modal ? modal.className : 'modal not found');
+
+            if (!modal) {
+                console.error('[RH EVAL] ERROR: Modal element not found in DOM!');
+                alert('Erreur: Modal introuvable');
+                return;
+            }
+
+            // Show modal
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            console.log('[RH EVAL] Modal classes after:', modal.className);
+            console.log('[RH EVAL] Modal opened successfully');
+
+            // Reset message
+            document.getElementById('val-status-message').classList.add('hidden');
+            document.getElementById('val-reject-reason-block').classList.add('hidden');
+            document.getElementById('val-reject-reason').value = '';
+        }
+
+        function closeValiderEvaluationModal() {
+            document.getElementById('valider-evaluation-modal').classList.add('hidden');
+            document.getElementById('eval-pdf-preview').src = '';
+            document.body.style.overflow = 'auto';
+        }
+
+        function initValCanvas(canvasId, isDirecteur) {
+            const canvas = document.getElementById(canvasId);
+            const ctx = canvas.getContext('2d');
+
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width || 250;
+            canvas.height = rect.height || 90;
+
+            ctx.strokeStyle = '#001a4d';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            function getPos(e) {
+                const r = canvas.getBoundingClientRect();
+                if (e.touches && e.touches.length > 0) {
+                    return {
+                        x: e.touches[0].clientX - r.left,
+                        y: e.touches[0].clientY - r.top
+                    };
+                }
+                return {
+                    x: e.clientX - r.left,
+                    y: e.clientY - r.top
+                };
+            }
+
+            function startDrawing(e) {
+                e.preventDefault();
+                const pos = getPos(e);
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+                if (isDirecteur) {
+                    valDrawingDirecteur = true;
+                    valDrawnDirecteur = true;
+                } else {
+                    valDrawingResponsable = true;
+                    valDrawnResponsable = true;
+                }
+            }
+
+            function draw(e) {
+                const isDrawing = isDirecteur ? valDrawingDirecteur : valDrawingResponsable;
+                if (!isDrawing) return;
+                e.preventDefault();
+                const pos = getPos(e);
+                ctx.lineTo(pos.x, pos.y);
+                ctx.stroke();
+            }
+
+            function stopDrawing() {
+                if (isDirecteur) valDrawingDirecteur = false;
+                else valDrawingResponsable = false;
+            }
+
+            canvas.addEventListener('mousedown', startDrawing);
+            canvas.addEventListener('mousemove', draw);
+            canvas.addEventListener('mouseup', stopDrawing);
+            canvas.addEventListener('mouseleave', stopDrawing);
+
+            canvas.addEventListener('touchstart', startDrawing, { passive: false });
+            canvas.addEventListener('touchmove', draw, { passive: false });
+            canvas.addEventListener('touchend', stopDrawing);
+
+            if (isDirecteur) {
+                valCanvasDirecteur = canvas;
+                valCtxDirecteur = ctx;
+            } else {
+                valCanvasResponsable = canvas;
+                valCtxResponsable = ctx;
+            }
+        }
+
+        function clearValSignature(canvasId, isDirecteur) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (isDirecteur) {
+                valDrawnDirecteur = false;
+                const fileInput = document.getElementById('upload-sig-directeur');
+                if (fileInput) fileInput.value = '';
+            } else {
+                valDrawnResponsable = false;
+                const fileInput = document.getElementById('upload-sig-responsable');
+                if (fileInput) fileInput.value = '';
+            }
+        }
+
+        function loadValSignatureImage(input, canvasId) {
+            const isDirecteur = canvasId.includes('directeur');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = new Image();
+                    img.onload = function () {
+                        const canvas = document.getElementById(canvasId);
+                        const ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                        const ratio = Math.min(canvas.width / img.width, canvas.height / img.height);
+                        const w = img.width * ratio;
+                        const h = img.height * ratio;
+                        const x = (canvas.width - w) / 2;
+                        const y = (canvas.height - h) / 2;
+                        ctx.drawImage(img, x, y, w, h);
+
+                        if (isDirecteur) {
+                            valDrawnDirecteur = true;
+                        } else {
+                            valDrawnResponsable = true;
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function validerEvaluation(decision) {
+            if (!currentValCandidateId) {
+                alert("Erreur: Candidat non sélectionné.");
+                return;
+            }
+
+            const statusMsg = document.getElementById('val-status-message');
+            statusMsg.classList.remove('hidden');
+
+            const payload = {
+                id: currentValCandidateId,
+                decision: decision
+            };
+
+            if (decision === 'Accepté') {
+                const directeur = document.getElementById('val-directeur-rh').value.trim();
+
+                if (!directeur) {
+                    alert("Le nom du Directeur RH est requis.");
+                    statusMsg.classList.add('hidden');
+                    return;
+                }
+
+                payload.directeur_rh = directeur;
+                statusMsg.innerText = "Validation de l'évaluation et génération de l'attestation en cours...";
+            } else {
+                const motif = document.getElementById('val-reject-reason').value.trim();
+                if (!motif) {
+                    document.getElementById('val-reject-reason-block').classList.remove('hidden');
+                    alert("Veuillez indiquer le motif de refus (visible par l'affectation).");
+                    statusMsg.classList.add('hidden');
+                    return;
+                }
+                payload.reject_reason = motif;
+                statusMsg.innerText = "Refus de l'évaluation en cours...";
+            }
+
+            fetch('/api/candidates/evaluation/valider', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        statusMsg.innerText = decision === 'Accepté'
+                            ? "Évaluation acceptée et attestation générée avec succès !"
+                            : "Évaluation refusée avec succès.";
+
+                        // Auto-download the attestation PDF if available
+                        if (data.attestation_pdf && decision === 'Accepté') {
+                            window.open(`/download/attestation/${data.attestation_pdf}`, '_blank');
+                        }
+
+                        setTimeout(() => {
+                            closeValiderEvaluationModal();
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        statusMsg.classList.add('hidden');
+                        alert("Erreur: " + (data.error || "Une erreur est survenue."));
+                    }
+                })
+                .catch(err => {
+                    console.error("Validation error:", err);
+                    statusMsg.classList.add('hidden');
+                    alert("Erreur lors de la communication avec le serveur.");
+                });
+        }
+
+        // Additional initialization
+        document.addEventListener('DOMContentLoaded', () => {
+            const clearDirBtn = document.getElementById('clear-sig-directeur');
+            if (clearDirBtn) {
+                clearDirBtn.addEventListener('click', () => clearValSignature('canvas-sig-directeur', true));
+            }
+            const clearRespBtn = document.getElementById('clear-sig-responsable');
+            if (clearRespBtn) {
+                clearRespBtn.addEventListener('click', () => clearValSignature('canvas-sig-responsable', false));
+            }
+        });
+    </script>
+
+    <footer class="max-w-7xl mx-auto px-8 py-10 text-center border-t border-slate-100 mt-10">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.4em]">© 2024 Direction du Capital
+            Humain -
+            Marsa Maroc</p>
+    </footer>
+
+</body>
+
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S'inscrire | Marsa Maroc</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --marsa-blue: #003399;
+            --marsa-dark: #001a4d;
+            --marsa-bg: #f8fafc;
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: radial-gradient(circle at top right, #f0f4ff, #ffffff);
+            color: var(--marsa-dark);
+        }
+        h1, .heading { font-family: 'Outfit', sans-serif; }
+        
+        .input-premium {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s ease;
+        }
+        .input-premium:focus {
+            border-color: var(--marsa-blue);
+            ring: 2px solid rgba(0, 51, 153, 0.1);
+            outline: none;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-6">
+
+    <div class="w-full max-w-lg p-10 bg-white rounded-3xl shadow-2xl border border-slate-100 flex flex-col items-center">
+        <!-- Logo -->
+        <div class="flex flex-col items-center mb-10">
+            <img src="/static/logo_marsa.png" alt="Marsa Maroc" class="w-14 h-14 rounded-2xl object-contain mb-4 shadow-lg shadow-blue-900/20">
+            <h1 class="text-2xl font-extrabold text-[#003399] tracking-tight uppercase">Inscription Stagiaire</h1>
+            <p class="text-[10px] font-bold text-slate-400 tracking-[0.4em] uppercase mt-1">Réservée aux candidats stagiaires</p>
+        </div>
+
+        {% if error %}
+        <div class="w-full bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm mb-4">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        <p class="w-full text-xs text-slate-500 text-center mb-4 leading-relaxed">
+            Les comptes <strong>RH</strong> et <strong>Affectation</strong> sont créés par l'administrateur.
+            <a href="/login" class="text-[#003399] font-bold hover:underline">Connexion personnel</a>
+        </p>
+
+        <!-- Form -->
+        <form action="/register" method="POST" class="w-full space-y-6">
+            <input type="hidden" name="role" value="stagiaire">
+            <div class="space-y-4">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Nom Complet</label>
+                    <input type="text" name="name" required class="input-premium w-full px-5 py-3.5 rounded-xl text-sm font-medium" placeholder="Ex: Jawad Satori">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Adresse Email</label>
+                    <input type="email" name="email" required class="input-premium w-full px-5 py-3.5 rounded-xl text-sm font-medium" placeholder="votre@email.com">
+                </div>
+                <div class="space-y-2">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Mot de passe</label>
+                    <input type="password" name="password" required minlength="6" class="input-premium w-full px-5 py-3.5 rounded-xl text-sm font-medium" placeholder="••••••••">
+                    <p class="text-[10px] text-slate-400 ml-1">Minimum 6 caractères</p>
+                </div>
+            </div>
+
+            <div class="pt-4 space-y-6">
+                <button type="submit" class="w-full bg-[#003399] text-white py-4 rounded-xl font-bold text-sm uppercase tracking-widest hover:bg-blue-800 transition shadow-lg shadow-blue-900/10">
+                    S'inscrire
+                </button>
+                
+                <div class="flex items-center justify-center gap-2">
+                    <span class="text-xs text-slate-400">Déjà inscrit ?</span>
+                    <a href="/login" class="text-xs font-bold text-[#003399] hover:underline">Se connecter</a>
+                </div>
+            </div>
+        </form>
+
+        <!-- Alternative Auth Links -->
+        <div class="mt-10 pt-8 border-t border-slate-50 w-full flex justify-center">
+            <p class="text-[9px] font-bold text-slate-300 uppercase tracking-widest">© 2024 MARSA MAROC Recrutement</p>
+        </div>
+    </div>
+
+</body>
+</html>
