@@ -121,6 +121,38 @@ def enrichir_candidats(candidats):
         ligne["evaluation_submitted_at"] = c.get("evaluation_submitted_at")
         ligne["evaluation_reject_reason"] = c.get("evaluation_reject_reason")
 
+        #decision de stage
+        
+        ligne["decision_pdf"] = c.get(
+            "decision_pdf"
+        )
+
+        ligne["decision_numero"] = c.get(
+            "decision_numero"
+        )
+
+        ligne["decision_reference"] = c.get(
+            "decision_reference"
+        )
+
+        ligne["decision_status"] = (
+            c.get("decision_status")
+            or ""
+        )
+
+        ligne["decision_generated_at"] = c.get(
+            "decision_generated_at"
+        )
+        
+        ligne["decision_data"] = (
+            c.get("decision_data")
+            or {}
+        )
+
+        ligne["decision_updated_at"] = c.get(
+            "decision_updated_at"
+        )
+        
         # True dès que la fiche a été soumise ou validée par la RH
         ligne["evaluation_deja_soumise"] = bool(
             c.get("evaluation_pdf")
@@ -804,6 +836,1705 @@ def generer_fiche_accueil_pdf_filled(stagiaire: dict, affectation: dict) -> str:
         import traceback
         traceback.print_exc()
         return None
+    
+# Point important : si on régénère la décision du même stagiaire, on réutilisera son ancien numéro. On ne demandera un nouveau numéro que pour une nouvelle décision.
+
+def get_next_decision_stage_number():
+    if not supabase:
+        raise RuntimeError("Supabase non configuré")
+
+    result = (
+        supabase
+        .rpc("next_decision_stage_number")
+        .execute()
+    )
+
+    value = result.data
+
+    if isinstance(value, list):
+        if not value:
+            raise RuntimeError(
+                "Impossible de récupérer le numéro de décision"
+            )
+
+        value = value[0]
+
+        if isinstance(value, dict):
+            value = next(iter(value.values()))
+
+    return int(value)
+
+def generer_decision_stage_pdf(
+    stagiaire: dict,
+    affectation: dict,
+    decision_info: dict
+) -> str:
+
+    import os
+    import re
+    import base64
+
+    from io import BytesIO
+    from datetime import datetime,timezone
+
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.colors import black, white
+    from reportlab.lib.utils import ImageReader
+
+    from pdfrw import (
+        PdfReader,
+        PdfWriter,
+        PageMerge
+    )
+
+    try:
+
+        # =====================================================
+        # DOSSIERS
+        # =====================================================
+
+        output_dir = os.path.join(
+            app.root_path,
+            "generated_pdfs"
+        )
+
+        os.makedirs(
+            output_dir,
+            exist_ok=True
+        )
+
+        base_dir = os.path.dirname(
+            os.path.abspath(__file__)
+        )
+
+        template_path = os.path.join(
+            base_dir,
+            "pdf",
+            "Decision de stage.pdf"
+        )
+
+        if not os.path.exists(template_path):
+            print(
+                f"[DECISION] Modèle introuvable : "
+                f"{template_path}"
+            )
+            return None
+
+
+        # =====================================================
+        # STAGIAIRE
+        # =====================================================
+
+        candidat = normaliser_candidat(
+            stagiaire
+        )
+
+        prenom = (
+            stagiaire.get("first_name")
+            or stagiaire.get("prenom")
+            or ""
+        ).strip()
+
+        nom = (
+            stagiaire.get("last_name")
+            or stagiaire.get("nom")
+            or ""
+        ).strip()
+
+
+        # Fallback si first_name / last_name absents
+        if not prenom or not nom:
+
+            full_name = (
+                candidat.get("name")
+                or ""
+            ).strip()
+
+            parties = full_name.split(
+                None,
+                1
+            )
+
+            if not prenom and parties:
+                prenom = parties[0]
+
+            if not nom and len(parties) > 1:
+                nom = parties[1]
+
+
+        # Exemple :
+        # Monsieur LARAQUI Jad
+
+        nom_decision = (
+            f"Monsieur {nom.upper()} "
+            f"{prenom.capitalize()}"
+        ).strip()
+        nom_decision = (
+            decision_info.get("nom_stagiaire")
+            or nom_decision
+        ).strip()
+
+
+        # =====================================================
+        # PÉRIODE
+        # =====================================================
+
+        period = (
+            candidat.get("period")
+            or ""
+        ).strip()
+
+        start_date = ""
+        end_date = ""
+
+        if " - " in period:
+
+            parts = period.split(
+                " - ",
+                1
+            )
+
+            start_date = parts[0].strip()
+            end_date = parts[1].strip()
+
+
+        def date_fr(value):
+
+            if not value:
+                return ""
+
+            value = str(value).strip()
+
+            try:
+
+                dt = datetime.strptime(
+                    value,
+                    "%Y-%m-%d"
+                )
+
+                return dt.strftime(
+                    "%d/%m/%Y"
+                )
+
+            except Exception:
+                return value
+
+
+        date_debut = date_fr(
+            start_date
+        )
+        
+        date_debut = (
+            decision_info.get("date_debut")
+            or date_debut
+        ).strip()
+
+
+        # =====================================================
+        # DURÉE DU STAGE
+        # =====================================================
+
+        # Tu as déjà cette fonction dans ton projet.
+        # Elle donne par exemple :
+        # d'un mois
+        # de deux mois
+        # de trois mois
+
+        duree_stage = duree_stage_en_mois(
+            period
+        )
+        
+        duree_stage = (
+            decision_info.get("duree")
+            or duree_stage
+        ).strip()
+
+
+        # =====================================================
+        # AFFECTATION
+        # =====================================================
+
+        department = (
+            affectation.get("department")
+            or candidat.get("department")
+            or ""
+        ).strip()
+
+
+        # Pour ton exemple DSI
+        division_mapping = {
+            "DSI - Direction Systèmes d'Information":
+                "Division Systèmes d'Information"
+        }
+
+        division = division_mapping.get(
+            department,
+            department
+        )
+        
+        division = (
+            decision_info.get("division")
+            or division
+        ).strip()
+
+
+        responsable = (
+            affectation.get("mentor_function")
+            or candidat.get("mentor_function")
+            or ""
+        ).strip()
+        
+        responsable = (
+            decision_info.get("responsable")
+            or responsable
+        ).strip()
+
+
+        # =====================================================
+        # INFORMATIONS DÉCISION
+        # =====================================================
+
+        numero = str(
+            decision_info.get("numero")
+            or ""
+        )
+
+        reference = (
+            decision_info.get("reference")
+            or ""
+        )
+
+        date_decision = (
+            decision_info.get("date_decision")
+            or ""
+        )
+
+        direction = (
+            decision_info.get("direction")
+            or ""
+        )
+
+        pole = (
+            decision_info.get("pole")
+            or ""
+        )
+
+        entite_header = (
+            decision_info.get("entite_header")
+            or ""
+        )
+
+
+        # =====================================================
+        # OVERLAY
+        # =====================================================
+
+        candidate_id = (
+            candidat.get("id")
+            or stagiaire.get("id")
+            or "temp"
+        )
+
+        temp_filename = (
+            f"temp_decision_"
+            f"{candidate_id}.pdf"
+        )
+
+        temp_path = os.path.join(
+            output_dir,
+            temp_filename
+        )
+
+
+        PAGE_W = 612
+        PAGE_H = 792
+
+        c = canvas.Canvas(
+            temp_path,
+            pagesize=(
+                PAGE_W,
+                PAGE_H
+            )
+        )
+
+
+        # =====================================================
+        # HELPER POUR LE TEXTE
+        # =====================================================
+
+        def draw_fit(
+            text,
+            x,
+            y,
+            max_width,
+            size=9,
+            font="Times-Bold"
+        ):
+
+            text = str(
+                text or ""
+            ).strip()
+
+            font_size = size
+
+            while (
+                font_size > 5
+                and
+                c.stringWidth(
+                    text,
+                    font,
+                    font_size
+                ) > max_width
+            ):
+                font_size -= 0.25
+
+            c.setFillColor(
+                black
+            )
+
+            c.setFont(
+                font,
+                font_size
+            )
+
+            c.drawString(
+                x,
+                y,
+                text
+            )
+
+
+             # =====================================================
+        # EN-TÊTE SUPÉRIEUR
+        # =====================================================
+
+        # Complète :
+        # "Direction de l'Exploitation ..."
+        draw_fit(
+            entite_header,
+            411,
+            746,
+            150,
+            6.3,
+            "Helvetica"
+        )
+
+
+        # =====================================================
+        # LIGNE DECISION
+        # DECISION N° [173] /DAF/DRH/DEPC-[TCR/2026].
+        # =====================================================
+
+        draw_fit(
+            numero,
+            149,
+            668,
+            16,
+            8,
+            "Times-Bold"
+        )
+
+        draw_fit(
+            reference,
+            255,
+            668,
+            42,
+            8,
+            "Times-Bold"
+        )
+
+
+        # =====================================================
+        # DATE EN HAUT A DROITE
+        # Casablanca - Maroc     09/09/2026
+        # =====================================================
+
+        draw_fit(
+            date_decision,
+            486,
+            729,
+            50,
+            7.5,
+            "Times-Bold"
+        )
+
+
+        # =====================================================
+        # LE DIRECTEUR DES RESSOURCES HUMAINES AU ...
+        # =====================================================
+
+        # Blanc entre "au" et "-"
+        draw_fit(
+            direction,
+            308,
+            628,
+            108,
+            8.2,
+            "Times-Bold"
+        )
+
+        # Blanc entre "-" et ":"
+        draw_fit(
+            pole,
+            430,
+            628,
+            145,
+            8.2,
+            "Times-Bold"
+        )
+
+
+        # =====================================================
+        # VU LA DEMANDE DE STAGE DE ...
+        # =====================================================
+
+        draw_fit(
+            nom_decision,
+            228,
+            600,
+            142,
+            8.5,
+            "Times-Bold"
+        )
+
+
+        # =====================================================
+        # VU L'ACCORD PREALABLE DE STAGE DU ...
+        # =====================================================
+
+        draw_fit(
+            responsable,
+            262,
+            572,
+            190,
+            8.5,
+            "Times-Bold"
+        )
+
+
+        # =====================================================
+        # ARTICLE 1 - NOM DU STAGIAIRE
+        #
+        # [Monsieur ...] est autorisé à effectuer...
+        # =====================================================
+
+        draw_fit(
+            nom_decision,
+            72,
+            470,
+            132,
+            8.5,
+            "Times-Bold"
+        )
+
+
+        # =====================================================
+        # ARTICLE 1 - DUREE
+        #
+        # stage [de six mois] à la...
+        # =====================================================
+
+        # Effacer le "d'" déjà présent dans le modèle.
+        c.setFillColor(white)
+
+        c.rect(
+            365,
+            466,
+            48,
+            15,
+            fill=1,
+            stroke=0
+        )
+
+        draw_fit(
+            duree_stage,
+            368,
+            470,
+            44,
+            8,
+            "Times-Bold"
+        )
+
+
+        # =====================================================
+        # ARTICLE 1 - DIVISION
+        # =====================================================
+
+        mots = division.split()
+
+        ligne1 = ""
+        ligne2 = ""
+
+        for mot in mots:
+
+            tentative = (
+                f"{ligne1} {mot}"
+            ).strip()
+
+            largeur = c.stringWidth(
+                tentative,
+                "Times-Bold",
+                8
+            )
+
+            if largeur <= 98:
+                ligne1 = tentative
+
+            else:
+                ligne2 = (
+                    f"{ligne2} {mot}"
+                ).strip()
+
+
+        # Première partie après "à la"
+        draw_fit(
+            ligne1,
+            440,
+            470,
+            100,
+            8,
+            "Times-Bold"
+        )
+
+        # Suite éventuelle au début de la deuxième ligne
+        if ligne2:
+
+            draw_fit(
+                ligne2,
+                72,
+                456,
+                82,
+                8,
+                "Times-Bold"
+            )
+
+
+        # =====================================================
+        # DATE DEBUT
+        #
+        # et ce à compter du [01/09/2026].
+        # =====================================================
+
+        draw_fit(
+            date_debut,
+            241,
+            456,
+            65,
+            8.5,
+            "Times-Bold"
+        )
+
+
+        # =====================================================
+        # DATE DÉBUT
+        # =====================================================
+
+        draw_fit(
+            date_debut,
+            241,
+            506,
+            58,
+            9
+        )
+
+
+        # =====================================================
+        # SIGNATURE RH
+        # =====================================================
+
+        signature = (
+            decision_info.get("signature")
+            or ""
+        )
+
+        if signature:
+
+            try:
+
+                if "," in signature:
+                    signature = signature.split(
+                        ",",
+                        1
+                    )[1]
+
+                image_bytes = base64.b64decode(
+                    signature
+                )
+
+                image = ImageReader(
+                    BytesIO(
+                        image_bytes
+                    )
+                )
+
+                c.drawImage(
+                    image,
+                    333,
+                    158,
+                    width=79,
+                    height=45,
+                    preserveAspectRatio=True,
+                    mask="auto"
+                )
+
+            except Exception as exc:
+
+                print(
+                    "[DECISION] Signature error:",
+                    exc
+                )
+
+
+        # =====================================================
+        # SAUVEGARDE OVERLAY
+        # =====================================================
+
+        c.save()
+
+
+        # =====================================================
+        # FUSION AVEC LE MODÈLE
+        # =====================================================
+
+        template_pdf = PdfReader(
+            template_path
+        )
+
+        overlay_pdf = PdfReader(
+            temp_path
+        )
+
+        PageMerge(
+            template_pdf.pages[0]
+        ).add(
+            overlay_pdf.pages[0]
+        ).render()
+
+
+        # =====================================================
+        # NOM PDF FINAL
+        # =====================================================
+
+        safe_name = re.sub(
+            r"[^A-Za-z0-9_-]",
+            "_",
+            f"{nom}_{prenom}"
+        )
+
+        pdf_filename = (
+            f"decision_stage_"
+            f"{safe_name}_"
+            f"{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            f".pdf"
+        )
+
+        pdf_path = os.path.join(
+            output_dir,
+            pdf_filename
+        )
+
+        PdfWriter(
+            pdf_path,
+            trailer=template_pdf
+        ).write()
+
+
+        # Nettoyer overlay temporaire
+        try:
+            os.remove(
+                temp_path
+            )
+        except Exception:
+            pass
+
+
+        print(
+            f"[DECISION] Générée : "
+            f"{pdf_filename}"
+        )
+
+        return pdf_filename
+
+
+    except Exception as exc:
+
+        print(
+            "[DECISION] Erreur :",
+            exc
+        )
+
+        import traceback
+        traceback.print_exc()
+
+        return None
+    
+ 
+DECISION_AFFECTATION_MAP = {
+
+    "DSI - Direction Systèmes d'Information": {
+        "direction": "Port de Casablanca",
+        "pole": "Trafics Conteneur et Roulier",
+        "entite_header": (
+            "au Port de Casablanca "
+            "Trafic Conteneur & Roulier"
+        ),
+        "division": "Division Systèmes d'Information",
+    },
+
+    "DCH - Capital Humain": {
+        "direction": "Port de Casablanca",
+        "pole": "Capital Humain",
+        "entite_header": (
+            "au Port de Casablanca "
+            "Capital Humain"
+        ),
+        "division": "Division Capital Humain",
+    },
+
+    "DAF - Finance & Contrôle": {
+        "direction": "Port de Casablanca",
+        "pole": "Finance & Contrôle",
+        "entite_header": (
+            "au Port de Casablanca "
+            "Finance & Contrôle"
+        ),
+        "division": "Division Finance & Contrôle",
+    },
+
+    "DOF - Opérations Portuaires": {
+        "direction": "Port de Casablanca",
+        "pole": "Opérations Portuaires",
+        "entite_header": (
+            "au Port de Casablanca "
+            "Opérations Portuaires"
+        ),
+        "division": "Division Opérations Portuaires",
+    },
+}   
+    
+def construire_decision_auto(stagiaire: dict) -> dict:
+    """
+    Construit automatiquement les champs de la décision
+    à partir :
+    - du formulaire stagiaire
+    - de la direction choisie par RH
+    - de l'affectation
+    """
+
+    import re
+    
+
+    candidat = normaliser_candidat(stagiaire)
+
+    # =====================================================
+    # 1. NOM / PRENOM - FORMULAIRE STAGIAIRE
+    # =====================================================
+
+    prenom = (
+        stagiaire.get("first_name")
+        or stagiaire.get("prenom")
+        or ""
+    ).strip()
+
+    nom = (
+        stagiaire.get("last_name")
+        or stagiaire.get("nom")
+        or ""
+    ).strip()
+
+    # Fallback sur name
+    if not prenom or not nom:
+
+        full_name = (
+            candidat.get("name")
+            or ""
+        ).strip()
+
+        parties = full_name.split(None, 1)
+
+        if not prenom and parties:
+            prenom = parties[0]
+
+        if not nom and len(parties) > 1:
+            nom = parties[1]
+
+    nom_stagiaire = (
+        f"Monsieur {nom.upper()} {prenom.capitalize()}"
+    ).strip()
+
+
+    # =====================================================
+    # 2. PERIODE - FORMULAIRE STAGIAIRE
+    # =====================================================
+
+    period = (
+        stagiaire.get("period")
+        or candidat.get("period")
+        or ""
+    ).strip()
+
+    dates = re.findall(
+        r"\d{4}-\d{2}-\d{2}",
+        period
+    )
+
+    date_debut = ""
+
+    if dates:
+
+        try:
+
+            date_debut = datetime.strptime(
+                dates[0],
+                "%Y-%m-%d"
+            ).strftime(
+                "%d/%m/%Y"
+            )
+
+        except ValueError:
+            pass
+
+
+    duree = duree_stage_en_mois(
+        period
+    )
+
+
+    # =====================================================
+    # 3. ZONE - FORMULAIRE STAGIAIRE
+    # =====================================================
+
+    zone = (
+        stagiaire.get("zone")
+        or candidat.get("zone")
+        or ""
+    ).strip()
+
+
+    # =====================================================
+    # 4. DIRECTION / POLE - AFFECTATION RH
+    # =====================================================
+
+    department = (
+        stagiaire.get("department")
+        or candidat.get("department")
+        or ""
+    ).strip()
+
+
+    # Exemple :
+    # DSI - Direction Systèmes d'Information
+    #
+    # code_department = DSI
+    # libelle_department = Direction Systèmes d'Information
+
+    # =====================================================
+    # 4. AFFECTATION
+    # =====================================================
+
+    department = (
+        stagiaire.get("department")
+        or candidat.get("department")
+        or ""
+    ).strip()
+
+
+    affectation_config = (
+        DECISION_AFFECTATION_MAP.get(
+            department,
+            {}
+        )
+    )
+
+
+    # Direction officielle de la décision
+   # =====================================================
+# DIRECTION / POLE / DIVISION / ZONE
+# =====================================================
+
+    department = (
+        stagiaire.get("department")
+        or candidat.get("department")
+        or ""
+    ).strip()
+
+    affectation_config = (
+        DECISION_AFFECTATION_MAP.get(
+            department,
+            {}
+        )
+    )
+
+    # Zone choisie par le stagiaire dans son formulaire
+    zone_decision = (
+        stagiaire.get("zone")
+        or candidat.get("zone")
+        or ""
+    ).strip()
+
+    if not zone_decision:
+        zone_decision = "Port de Casablanca"
+
+
+    # La zone est dynamique
+    direction = zone_decision
+
+
+    # Le pôle vient de l'affectation RH
+    pole = (
+        affectation_config.get("pole")
+        or department
+        or ""
+    )
+
+
+    # La division vient de l'affectation
+    division = (
+        affectation_config.get("division")
+        or department
+        or ""
+    )
+
+
+    # En-tête dynamique
+    entite_header = (
+        f"au {zone_decision}"
+    )
+
+
+    
+
+       # =====================================================
+    # 5. RESPONSABLE / ENCADRANT
+    # =====================================================
+
+    mentor = (
+        stagiaire.get("mentor")
+        or candidat.get("mentor")
+        or ""
+    ).strip()
+
+
+    mentor_function = (
+        stagiaire.get("mentor_function")
+        or candidat.get("mentor_function")
+        or ""
+    ).strip()
+
+
+    if mentor_function:
+        responsable = mentor_function
+
+    elif mentor:
+        responsable = mentor
+
+    else:
+        responsable = ""
+
+    # =====================================================
+    # 7. THEME DE STAGE - AFFECTATION
+    # =====================================================
+
+    project = (
+        stagiaire.get("project")
+        or candidat.get("project")
+        or ""
+    ).strip()
+
+
+    # =====================================================
+    # 8. DATE DECISION
+    # =====================================================
+
+    now_ma = datetime.now()
+
+
+    # =====================================================
+    # 9. EN-TETE
+    # =====================================================
+
+    # if zone:
+
+    #     if zone.lower().startswith("port "):
+    #         entite_header = f"au {zone}"
+
+    #     elif "casablanca" in zone.lower():
+    #         entite_header = (
+    #             f"à {zone}"
+    #         )
+
+    #     else:
+    #         entite_header = zone
+
+    # else:
+
+    #     entite_header = (
+    #         libelle_department
+    #     )
+
+
+    # =====================================================
+    # 10. RESULTAT
+    # =====================================================
+
+    resultat = {
+
+    "reference":
+        f"TCR/{now_ma.year}",
+
+    "date_decision":
+        now_ma.strftime("%d/%m/%Y"),
+
+    "direction":
+        direction,
+
+    "pole":
+        pole,
+
+    "entite_header":
+        entite_header,
+
+    "nom_stagiaire":
+        nom_stagiaire,
+
+    "responsable":
+        responsable,
+
+    "division":
+        division,
+
+    "duree":
+        duree,
+
+    "date_debut":
+        date_debut,
+
+    "zone":
+        zone_decision,
+
+    "project":
+        project,
+
+    "mentor":
+        mentor,
+
+    "mentor_function":
+        mentor_function,
+}
+
+
+    print(
+        "[DECISION AUTO]",
+        {
+            "nom": nom_stagiaire,
+            "period": period,
+            "department": department,
+            "zone": zone,
+            "mentor": mentor,
+            "project": project,
+            "resultat": resultat,
+        }
+    )
+
+
+    return resultat
+    
+@app.get("/api/candidates/decision/<candidate_id>")
+@login_required("rh")
+def api_get_decision_stage(candidate_id):
+
+    if not supabase:
+        return jsonify(
+            success=False,
+            error="Supabase non configuré"
+        ), 500
+
+    try:
+
+        result = (
+            supabase
+            .table(TABLE_APPLICATIONS)
+            .select("*")
+            .eq("id", candidate_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not result.data:
+            return jsonify(
+                success=False,
+                error="Stagiaire introuvable"
+            ), 404
+
+
+        stagiaire = result.data[0]
+
+        candidat = normaliser_candidat(
+            stagiaire
+        )
+
+
+        # ==========================================
+        # NOM
+        # ==========================================
+
+        prenom = (
+            stagiaire.get("first_name")
+            or stagiaire.get("prenom")
+            or ""
+        ).strip()
+
+        nom = (
+            stagiaire.get("last_name")
+            or stagiaire.get("nom")
+            or ""
+        ).strip()
+
+        if not prenom or not nom:
+
+            full_name = (
+                candidat.get("name")
+                or ""
+            ).strip()
+
+            parts = full_name.split(None, 1)
+
+            if not prenom and parts:
+                prenom = parts[0]
+
+            if not nom and len(parts) > 1:
+                nom = parts[1]
+
+
+        nom_decision = (
+            f"Monsieur {nom.upper()} "
+            f"{prenom.capitalize()}"
+        ).strip()
+
+
+        # ==========================================
+        # PÉRIODE
+        # ==========================================
+
+        period = (
+            candidat.get("period")
+            or ""
+        )
+
+        date_debut = ""
+
+        import re
+
+        dates = re.findall(
+            r"\d{4}-\d{2}-\d{2}",
+            period
+        )
+
+        if dates:
+            try:
+
+                date_debut = datetime.strptime(
+                    dates[0],
+                    "%Y-%m-%d"
+                ).strftime(
+                    "%d/%m/%Y"
+                )
+
+            except Exception:
+                pass
+
+
+        duree = duree_stage_en_mois(
+            period
+        )
+
+
+        # ==========================================
+        # AFFECTATION
+        # ==========================================
+
+        department = (
+            stagiaire.get("department")
+            or candidat.get("department")
+            or ""
+        ).strip()
+
+        division_mapping = {
+
+            "DSI - Direction Systèmes d'Information":
+                "Division Systèmes d'Information",
+
+        }
+
+        division = division_mapping.get(
+            department,
+            department
+        )
+
+
+        responsable = (
+            stagiaire.get("mentor_function")
+            or candidat.get("mentor_function")
+            or ""
+        ).strip()
+
+        if (
+            not responsable
+            and department.startswith("DSI")
+        ):
+            responsable = (
+                "Responsable Systèmes d'Information"
+            )
+
+
+        # ==========================================
+        # VALEURS PAR DÉFAUT
+        # ==========================================
+
+        now = datetime.now()
+
+        defaults = {
+
+            "reference":
+                f"TCR/{now.year}",
+
+            "date_decision":
+                now.strftime("%d/%m/%Y"),
+
+            "direction":
+                "Port de Casablanca",
+
+            "pole":
+                "Trafics Conteneur et Roulier",
+
+            "entite_header":
+                "au Port de Casablanca "
+                "Trafic Conteneur & Roulier",
+
+            "nom_stagiaire":
+                nom_decision,
+
+            "responsable":
+                responsable,
+
+            "division":
+                division,
+
+            "duree":
+                duree,
+
+            "date_debut":
+                date_debut,
+        }
+
+
+            # ==========================================
+        # VALEURS DÉJÀ CORRIGÉES PAR LE RH
+        # ==========================================
+
+        saved_data = (
+            stagiaire.get("decision_data")
+            or {}
+        )
+
+        # Ne pas laisser une ancienne valeur vide
+        # remplacer une valeur automatique correcte
+        saved_data = {
+            key: value
+            for key, value in saved_data.items()
+            if value not in (None, "")
+        }
+
+        data = {
+            **defaults,
+            **saved_data
+        }
+
+        return jsonify(
+            success=True,
+            numero=stagiaire.get(
+                "decision_numero"
+            ),
+            decision_pdf=stagiaire.get(
+                "decision_pdf"
+            ),
+            data=data
+        )
+
+    except Exception as exc:
+
+        import traceback
+        traceback.print_exc()
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
+        
+    except Exception as exc:
+
+        import traceback
+        traceback.print_exc()
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500    
+    
+@app.post("/api/candidates/decision/generer")
+@login_required("rh")
+def api_generer_decision_stage():
+
+    if not supabase:
+        return jsonify(
+            success=False,
+            error="Supabase non configuré"
+        ), 500
+
+
+    corps = request.get_json(
+        silent=True
+    ) or {}
+
+    candidate_id = corps.get("id")
+    signature = corps.get("signature")
+
+
+    if not candidate_id:
+        return jsonify(
+            success=False,
+            error="ID du stagiaire manquant"
+        ), 400
+
+
+    if not signature:
+        return jsonify(
+            success=False,
+            error="La signature RH est obligatoire"
+        ), 400
+
+
+    try:
+
+        result = (
+            supabase
+            .table(TABLE_APPLICATIONS)
+            .select("*")
+            .eq("id", candidate_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not result.data:
+
+            return jsonify(
+                success=False,
+                error="Stagiaire introuvable"
+            ), 404
+
+
+        stagiaire = result.data[0]
+
+        candidat = normaliser_candidat(
+            stagiaire
+        )
+
+
+        # ==============================================
+        # Vérifier que l'affectation existe
+        # ==============================================
+
+        deja_affecte = bool(
+        stagiaire.get("fiche_accueil_pdf")
+        or stagiaire.get("mentor")
+        or stagiaire.get("encadrant_id")
+        or stagiaire.get("project")
+        )
+
+        if not deja_affecte:
+
+            return jsonify(
+                success=False,
+                error=(
+                    "Le stagiaire doit d'abord "
+                    "être affecté."
+                )
+            ), 403
+
+
+        # ==============================================
+        # NUMÉRO AUTOMATIQUE
+        # ==============================================
+
+        # Important :
+        # si la décision existe déjà,
+        # on garde son numéro.
+
+        numero = stagiaire.get(
+            "decision_numero"
+        )
+
+        if not numero:
+
+            numero = (
+                get_next_decision_stage_number()
+            )
+
+
+               # ==============================================
+        # DONNÉES AUTOMATIQUES
+        # ==============================================
+
+        auto_data = (
+            construire_decision_auto(
+                stagiaire
+            )
+        )
+
+
+        # ==============================================
+        # DONNÉES FINALES
+        # ==============================================
+
+        decision_info = {
+
+            "numero":
+                numero,
+
+            "reference":
+                corps.get("reference")
+                or auto_data["reference"],
+
+            "date_decision":
+                corps.get("date_decision")
+                or auto_data["date_decision"],
+
+            "direction":
+                corps.get("direction")
+                or auto_data["direction"],
+
+            "pole":
+                corps.get("pole")
+                or auto_data["pole"],
+
+            "entite_header":
+                corps.get("entite_header")
+                or auto_data["entite_header"],
+
+            "nom_stagiaire":
+                corps.get("nom_stagiaire")
+                or auto_data["nom_stagiaire"],
+
+            "responsable":
+                corps.get("responsable")
+                or auto_data["responsable"],
+
+            "division":
+                corps.get("division")
+                or auto_data["division"],
+
+            "duree":
+                corps.get("duree")
+                or auto_data["duree"],
+
+            "date_debut":
+                corps.get("date_debut")
+                or auto_data["date_debut"],
+
+            "signature":
+                signature,
+        }
+
+
+        affectation = {
+
+            "department":
+                stagiaire.get("department")
+                or candidat.get("department")
+                or "",
+
+            "mentor":
+                stagiaire.get("mentor")
+                or candidat.get("mentor")
+                or "",
+
+            "mentor_function":
+                stagiaire.get("mentor_function")
+                or candidat.get("mentor_function")
+                or "",
+
+            "project":
+                stagiaire.get("project")
+                or candidat.get("project")
+                or "",
+        }
+
+
+        # ==============================================
+        # GÉNÉRER
+        # ==============================================
+
+        pdf_filename = (
+            generer_decision_stage_pdf(
+                stagiaire,
+                affectation,
+                decision_info
+            )
+        )
+
+
+        if not pdf_filename:
+
+            return jsonify(
+                success=False,
+                error=(
+                    "Erreur lors de la "
+                    "génération de la décision"
+                )
+            ), 500
+
+
+        # ==============================================
+        # SAUVEGARDE SUPABASE
+        # ==============================================
+
+        decision_data = {
+        "reference": decision_info["reference"],
+        "date_decision": decision_info["date_decision"],
+        "direction": decision_info["direction"],
+        "pole": decision_info["pole"],
+        "entite_header": decision_info["entite_header"],
+        "nom_stagiaire": decision_info["nom_stagiaire"],
+        "responsable": decision_info["responsable"],
+        "division": decision_info["division"],
+        "duree": decision_info["duree"],
+        "date_debut": decision_info["date_debut"],
+        }
+
+        decision_data = {
+            key: value
+            for key, value in decision_data.items()
+            if value not in (None, "")
+        }
+
+        update_payload = {
+
+            "decision_pdf":
+                pdf_filename,
+
+            "decision_numero":
+                numero,
+
+            "decision_reference":
+                decision_info["reference"],
+
+            "decision_status":
+                "Généré",
+
+            "decision_data":
+                decision_data,
+
+            "decision_generated_at":
+                stagiaire.get("decision_generated_at")
+                or datetime.now(timezone.utc).isoformat(),
+
+            "decision_updated_at":
+                datetime.now(timezone.utc).isoformat(),
+        }
+
+
+        supabase_executer_update_eq(
+            supabase,
+            TABLE_APPLICATIONS,
+            update_payload,
+            "id",
+            candidate_id
+        )
+
+
+        # ==============================================
+        # NOTIFICATION STAGIAIRE
+        # ==============================================
+
+        notifications = ajouter_notification(
+            stagiaire,
+            (
+                "Votre décision de stage "
+                "officielle est maintenant disponible."
+            )
+        )
+
+        supabase_executer_update_eq(
+            supabase,
+            TABLE_APPLICATIONS,
+            {
+                "notifications":
+                    notifications
+            },
+            "id",
+            candidate_id
+        )
+
+
+        return jsonify(
+
+            success=True,
+
+            decision_pdf=
+                pdf_filename,
+
+            decision_numero=
+                numero,
+
+            decision_reference=
+            decision_info["reference"],
+
+            message=(
+                "Décision de stage "
+                "générée avec succès."
+            )
+        )
+
+
+    except Exception as exc:
+
+        import traceback
+        traceback.print_exc()
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
+
+
+@app.route(
+    "/download/decision/<path:filename>"
+)
+def download_decision(filename):
+
+    try:
+
+        base_filename = os.path.basename(
+            filename
+        )
+
+        return send_file(
+            os.path.join(
+                app.root_path,
+                "generated_pdfs",
+                base_filename
+            ),
+            as_attachment=True,
+            mimetype="application/pdf"
+        )
+
+    except Exception as exc:
+
+        return (
+            f"Erreur lors du téléchargement: "
+            f"{str(exc)}"
+        ), 404
+        
 
 
 def generer_evaluation_pdf(stagiaire: dict, evaluation: dict, signatures: dict) -> str:
@@ -1542,9 +3273,10 @@ def api_affect():
         # =====================================================
 
         update_data = {
-            "project": corps.get("project") or "",
-            "mentor": corps.get("mentor") or "",
-        }
+        "project": corps.get("project") or "",
+        "mentor": corps.get("mentor") or "",
+        "mentor_function": corps.get("mentor_function") or "",
+    }
 
         if corps.get("mentor_id"):
             update_data["encadrant_id"] = corps.get(
@@ -1584,17 +3316,26 @@ def api_affect():
 
         stagiaire["project"] = update_data["project"]
         stagiaire["mentor"] = update_data["mentor"]
+        stagiaire["mentor_function"] = (
+            update_data["mentor_function"]
+        )
 
         # =====================================================
         # 4. GENERATE FICHE ACCUEIL
         # =====================================================
 
         affectation_data = {
-            "project": update_data["project"],
-            "mentor": update_data["mentor"],
-            "department": (
-                stagiaire.get("department") or ""
-            ),
+            "project":
+                update_data["project"],
+
+            "mentor":
+                update_data["mentor"],
+
+            "mentor_function":
+                update_data["mentor_function"],
+
+            "department":
+                stagiaire.get("department") or "",
         }
 
         print(
@@ -1724,8 +3465,7 @@ def api_affect():
             supabase
             .table(TABLE_APPLICATIONS)
             .select(
-                "id,fiche_accueil_pdf,"
-                "project,mentor"
+                "id,fiche_accueil_pdf,project,mentor,mentor_function"
             )
             .eq("id", candidate_id)
             .limit(1)
@@ -1853,6 +3593,10 @@ def add_encadrant():
     nom = (
         corps.get("nom") or ""
     ).strip()
+    
+    fonction = (
+        corps.get("fonction") or ""
+    ).strip()
 
     if not nom:
         return jsonify(
@@ -1880,7 +3624,8 @@ def add_encadrant():
             supabase
             .table("encadrants")
             .insert({
-                "nom": nom
+                "nom": nom,
+                "fonction": fonction
             })
             .execute()
         )

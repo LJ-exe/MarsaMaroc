@@ -678,6 +678,84 @@
                                 </div>
                                 {% endif %}
 
+                            <!-- Decsion de stage  -->
+
+
+                           {% if candidat and candidat.decision_pdf %}
+
+                        <div class="rounded-[20px] border border-[#e5eef7] bg-white px-5 py-5">
+
+                            <!-- TITRE -->
+                            <h3 class="text-[14px] font-black uppercase text-[#001a4d] leading-tight">
+                                DÉCISION DE STAGE
+                            </h3>
+
+                            <!-- SOUS-TITRE -->
+                            <p class="text-[11px] font-semibold text-slate-400 mt-1">
+                                Document officiel de décision
+                            </p>
+
+                            <!-- NUMÉRO / RÉFÉRENCE -->
+                            {% if candidat.decision_numero or candidat.decision_reference %}
+                            <div class="flex items-center gap-3 mt-2">
+
+                                {% if candidat.decision_numero %}
+                                <span class="text-[10px] font-black text-emerald-600">
+                                    N°{{ candidat.decision_numero }}
+                                </span>
+                                {% endif %}
+
+                                {% if candidat.decision_reference %}
+                                <span class="text-[10px] font-bold text-slate-400">
+                                    {{ candidat.decision_reference }}
+                                </span>
+                                {% endif %}
+
+                            </div>
+                            {% endif %}
+
+                            <!-- BOUTONS -->
+                            <div class="flex items-center gap-2 mt-5">
+
+                                <a
+                                    href="/pdf/{{ candidat.decision_pdf }}"
+                                    target="_blank"
+                                    class="flex-1 text-center
+                                        bg-[#001a4d] text-white
+                                        rounded-xl
+                                        py-3
+                                        text-[10px] font-black uppercase
+                                        tracking-wide
+                                        hover:bg-[#001a4d]
+                                        transition">
+
+                                    APERÇU
+
+                                </a>
+
+                                <a
+                                    href="/download/decision/{{ candidat.decision_pdf }}"
+                                    class="flex-1 text-center
+                                        bg-white text-[#003399]
+                                        border border-[#dce5f0]
+                                        rounded-xl
+                                        py-3
+                                        text-[10px] font-black uppercase
+                                        tracking-wide
+                                        hover:bg-slate-50
+                                        transition">
+
+                                    TÉLÉCHARGER
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                        {% endif %}
+                                                
+
                                 <!-- Rapport de Stage (déposé) -->
                                 {% if candidat.status == 'Accepté' and candidat.intern_report_path %}
                                 <div class="flex flex-col items-start p-4 bg-white border border-[#e5eef7] rounded-2xl gap-4 w-full overflow-hidden">                                    <div class="space-y-0.5 text-left">

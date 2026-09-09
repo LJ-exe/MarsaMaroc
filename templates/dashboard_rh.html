@@ -235,115 +235,229 @@
                                 {% endif %}
                             </td>
                             <td class="px-8 py-5 text-right">
-                                {% if candidate.status == 'En attente' or candidate.status == 'Action Requise' %}
-                                <button type="button" onclick="examinerDossier(this)" data-id="{{ candidate.id }}"
-                                    data-name="{{ candidate.name }}" data-date="{{ candidate.submittedAtFormatted }}"
-                                    data-zone="{{ candidate.zone or '' }}"
-                                    data-department="{{ candidate.department or '' }}"
-                                    class="inline-flex items-center gap-2 text-[10px] font-black text-[#003399] uppercase tracking-widest hover:translate-x-1 transition-transform">
-                                    <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                        stroke-width="3">
-                                        <circle cx="12" cy="12" r="3" />
-                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                                    </svg>
-                                    Examiner
-                                </button>
-                                {% elif candidate.evaluation_pdf and candidate.evaluation_status == 'En attente' %}
-                                <button type="button" id="btn-eval-{{ candidate.id }}"
-                                    onclick="console.log('[RH BUTTON] Clicked - ID: {{ candidate.id }}, Name: {{ candidate.name }}, PDF: {{ candidate.evaluation_pdf }}'); openValiderEvaluationModal('{{ candidate.id }}', '{{ candidate.name }}', '{{ candidate.evaluation_pdf }}')"
-                                    class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-md hover:scale-[1.03] transition">
-                                    Fiche d'Évaluation
-                                </button>
-                                <script>
-                                    console.log('[RH RENDER] Button rendered for candidate {{ candidate.id }}');
-                                    console.log('[RH RENDER] evaluation_pdf: "{{ candidate.evaluation_pdf }}"');
-                                    console.log('[RH RENDER] evaluation_status: "{{ candidate.evaluation_status }}"');
-                                    console.log('[RH RENDER] evaluation_pdf is truthy: {{ candidate.evaluation_pdf is not none and candidate.evaluation_pdf != "" }}');
-                                    console.log('[RH RENDER] evaluation_status == "En attente": {{ candidate.evaluation_status == "En attente" }}');
-                                </script>
-                               
-                                <!-- <div class="flex flex-col items-end gap-1">
-                                    <span class="text-[9px] font-black text-emerald-600 uppercase">Éval Validée</span>
-                                    {% if candidate.attestation_pdf %}
-                                    <a href="/download/attestation/{{ candidate.attestation_pdf }}"
-                                        class="text-[9px] font-black text-[#003399] uppercase hover:underline flex items-center gap-1">
-                                        Telecharger l'attestation de stage 📥
+
+                            <!-- ========================================== -->
+                            <!-- DÉCISION DE STAGE -->
+                            <!-- ========================================== -->
+
+                            {% if candidate.fiche_accueil_pdf %}
+
+                            <div class="flex flex-col items-end gap-1.5 mb-3">
+
+                                {% if candidate.decision_pdf %}
+
+                                <span
+                                    class="text-[8px] font-black text-emerald-600 uppercase
+                                        bg-emerald-50 border border-emerald-100
+                                        px-2 py-0.5 rounded-full">
+                                    Décision N°{{ candidate.decision_numero }}
+                                </span>
+
+                                <div class="flex items-center gap-2">
+
+                                    <a
+                                        href="/pdf/{{ candidate.decision_pdf }}"
+                                        target="_blank"
+                                        class="text-[9px] font-black text-[#003399] hover:underline">
+                                        Voir la décision
                                     </a>
-                                    {% endif %}
-                                </div> -->
-
-                              {% elif candidate.evaluation_status == 'Accepté' %}
-
-                                <div class="flex flex-col items-end gap-2">
-
-                                    <span class="text-[9px] font-black text-emerald-600 uppercase">
-                                        Éval Validée
-                                    </span>
-
-
-                                    <!-- ========================================== -->
-                                    <!-- BOUTON TÉLÉCHARGER SI ATTESTATION EXISTE -->
-                                    <!-- ========================================== -->
-
-                                    {% if candidate.attestation_pdf %}
-                                    <span
-                                        class="text-[8px] font-black text-emerald-600 uppercase bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
-                                        Attestation envoyée
-                                    </span>
-                                    <a href="/download/attestation/{{ candidate.attestation_pdf }}"
-                                        class="text-[9px] font-black text-[#003399] uppercase hover:underline flex items-center gap-1">
-                                       Telecharger l'attestation de stage 📥
-                                    </a>
-
-                                    {% endif %}
-
-
-                                    <!-- ========================================== -->
-                                    <!-- INPUT UPLOAD TOUJOURS DISPONIBLE -->
-                                    <!-- ========================================== -->
-
-                                    <input
-                                        type="file"
-                                        id="attestation-file-{{ candidate.id }}"
-                                        accept=".pdf,application/pdf"
-                                        class="hidden"
-                                        onchange="uploadAttestation('{{ candidate.id }}', this)"
-                                    >
-
-
-                                    <!-- ========================================== -->
-                                    <!-- AJOUTER OU REMPLACER -->
-                                    <!-- ========================================== -->
 
                                     <button
                                         type="button"
-                                        id="attestation-btn-{{ candidate.id }}"
-                                        onclick="document.getElementById('attestation-file-{{ candidate.id }}').click()"
-                                        class="bg-[#003399] hover:bg-[#001a4d] text-white px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition">
-
-                                        {% if candidate.attestation_pdf %}
-                                            Remplacer l'attestation
-                                        {% else %}
-                                            Ajouter l'attestation
-                                        {% endif %}
-
+                                        onclick="openDecisionModal('{{ candidate.id }}')"
+                                        class="text-[9px] font-black text-amber-600 hover:underline">
+                                        Modifier
                                     </button>
 
-
-                                    <!-- Message upload -->
-
-                                    <span
-                                        id="attestation-status-{{ candidate.id }}"
-                                        class="text-[8px] font-bold text-slate-400">
-                                    </span>
-
                                 </div>
-                                {% elif candidate.evaluation_status == 'Refusé' %}
-                                <span class="text-[9px] font-black text-rose-600 uppercase">Éval Refusée</span>
+
                                 {% else %}
-                                <span class="text-xs text-slate-400 font-bold">Traité (Affecté)</span>
+
+                                <button
+                                    type="button"
+                                    onclick="openDecisionModal('{{ candidate.id }}')"
+                                    class="bg-[#003399] hover:bg-[#001a4d]
+                                        text-white px-4 py-2 rounded-xl
+                                        text-[9px] font-black uppercase
+                                        tracking-widest transition">
+
+                                    Générer la décision
+
+                                </button>
+
                                 {% endif %}
-                            </td>
+
+                            </div>
+
+                            {% endif %}
+
+
+                            <!-- ========================================== -->
+                            <!-- DOSSIER À EXAMINER -->
+                            <!-- ========================================== -->
+
+                            {% if candidate.status == 'En attente'
+                            or candidate.status == 'Action Requise' %}
+
+                            <button
+                                type="button"
+                                onclick="examinerDossier(this)"
+                                data-id="{{ candidate.id }}"
+                                data-name="{{ candidate.name }}"
+                                data-date="{{ candidate.submittedAtFormatted }}"
+                                data-zone="{{ candidate.zone or '' }}"
+                                data-department="{{ candidate.department or '' }}"
+                                class="inline-flex items-center gap-2
+                                    text-[10px] font-black text-[#003399]
+                                    uppercase tracking-widest
+                                    hover:translate-x-1 transition-transform">
+
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    class="w-3.5 h-3.5"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="3">
+
+                                    <circle cx="12" cy="12" r="3" />
+
+                                    <path
+                                        d="M1 12s4-8 11-8
+                                        11 8 11 8-4 8-11 8
+                                        -11-8-11-8z" />
+
+                                </svg>
+
+                                Examiner
+
+                            </button>
+
+
+                            <!-- ========================================== -->
+                            <!-- ÉVALUATION À VALIDER -->
+                            <!-- ========================================== -->
+
+                            {% elif candidate.evaluation_pdf
+                            and candidate.evaluation_status == 'En attente' %}
+
+                            <button
+                                type="button"
+                                id="btn-eval-{{ candidate.id }}"
+                                onclick="openValiderEvaluationModal(
+                                    '{{ candidate.id }}',
+                                    '{{ candidate.name }}',
+                                    '{{ candidate.evaluation_pdf }}'
+                                )"
+                                class="bg-amber-500 hover:bg-amber-600
+                                    text-white px-4 py-2 rounded-xl
+                                    text-[9px] font-black uppercase
+                                    tracking-widest shadow-md
+                                    hover:scale-[1.03] transition">
+
+                                Fiche d'Évaluation
+
+                            </button>
+
+
+                            <!-- ========================================== -->
+                            <!-- ÉVALUATION VALIDÉE -->
+                            <!-- ========================================== -->
+
+                            {% elif candidate.evaluation_status == 'Accepté' %}
+
+                            <div class="flex flex-col items-end gap-2">
+
+                                <span
+                                    class="text-[9px] font-black
+                                        text-emerald-600 uppercase">
+                                    Éval Validée
+                                </span>
+
+
+                                {% if candidate.attestation_pdf %}
+
+                                <span
+                                    class="text-[8px] font-black text-emerald-600
+                                        uppercase bg-emerald-50
+                                        border border-emerald-100
+                                        px-2 py-0.5 rounded-full">
+                                    Attestation envoyée
+                                </span>
+
+                                <a
+                                    href="/download/attestation/{{ candidate.attestation_pdf }}"
+                                    class="text-[9px] font-black text-[#003399]
+                                        uppercase hover:underline flex items-center gap-1">
+                                    Télécharger l'attestation de stage 📥
+                                </a>
+
+                                {% endif %}
+
+
+                                <input
+                                    type="file"
+                                    id="attestation-file-{{ candidate.id }}"
+                                    accept=".pdf,application/pdf"
+                                    class="hidden"
+                                    onchange="uploadAttestation('{{ candidate.id }}', this)"
+                                >
+
+
+                                <button
+                                    type="button"
+                                    id="attestation-btn-{{ candidate.id }}"
+                                    onclick="document.getElementById(
+                                        'attestation-file-{{ candidate.id }}'
+                                    ).click()"
+                                    class="bg-[#003399] hover:bg-[#001a4d]
+                                        text-white px-4 py-2 rounded-xl
+                                        text-[9px] font-black uppercase
+                                        tracking-widest transition">
+
+                                    {% if candidate.attestation_pdf %}
+                                        Remplacer l'attestation
+                                    {% else %}
+                                        Ajouter l'attestation
+                                    {% endif %}
+
+                                </button>
+
+
+                                <span
+                                    id="attestation-status-{{ candidate.id }}"
+                                    class="text-[8px] font-bold text-slate-400">
+                                </span>
+
+                            </div>
+
+
+                            <!-- ========================================== -->
+                            <!-- ÉVALUATION REFUSÉE -->
+                            <!-- ========================================== -->
+
+                            {% elif candidate.evaluation_status == 'Refusé' %}
+
+                            <span
+                                class="text-[9px] font-black
+                                    text-rose-600 uppercase">
+                                Éval Refusée
+                            </span>
+
+
+                            <!-- ========================================== -->
+                            <!-- CANDIDAT TRAITÉ -->
+                            <!-- ========================================== -->
+
+                            {% else %}
+
+                            <span
+                                class="text-xs text-slate-400 font-bold">
+                                Traité (Affecté)
+                            </span>
+
+                            {% endif %}
+
+                        </td>
                         </tr>
                         {% else %}
                         <tr>
@@ -606,6 +720,440 @@
     <!-- END missing-doc-modal -->
 
     <!-- Validation Evaluation Modal -->
+
+    <!-- ========================================== -->
+<!-- MODAL DÉCISION DE STAGE -->
+<!-- ========================================== -->
+
+<div
+    id="decision-modal"
+    class="fixed inset-0 z-[160] hidden overflow-y-auto">
+
+    <div
+        class="fixed inset-0 bg-[#001a4d]/50 backdrop-blur-sm"
+        onclick="closeDecisionModal()">
+    </div>
+
+    <div
+        class="relative my-8 mx-auto
+               w-[95%] max-w-6xl
+               bg-white rounded-[32px]
+               shadow-2xl p-8">
+
+        <!-- HEADER -->
+        <div class="flex items-center justify-between mb-8">
+
+            <div>
+                <p
+                    class="text-[9px] font-black
+                           text-slate-400 uppercase tracking-widest">
+                    Ressources Humaines
+                </p>
+
+                <h2
+                    class="text-2xl font-black text-[#001a4d]">
+                    Décision de Stage
+                </h2>
+
+                <p
+                    id="decision-modal-subtitle"
+                    class="text-xs font-bold text-slate-400 mt-1">
+                    Génération de la décision officielle
+                </p>
+            </div>
+
+            <button
+                type="button"
+                onclick="closeDecisionModal()"
+                class="text-slate-300 hover:text-slate-900">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    class="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.5">
+
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+
+                </svg>
+
+            </button>
+
+        </div>
+
+
+        <input
+            type="hidden"
+            id="decision-candidate-id">
+
+
+        <div class="grid lg:grid-cols-2 gap-8">
+
+            <!-- ========================================== -->
+            <!-- COLONNE GAUCHE : CHAMPS -->
+            <!-- ========================================== -->
+
+            <div class="space-y-5">
+
+                <div class="grid grid-cols-2 gap-4">
+
+                    <!-- Numéro -->
+                    <div>
+                        <label
+                            class="text-[9px] font-black
+                                   text-slate-400 uppercase tracking-widest">
+
+                            Numéro décision
+
+                        </label>
+
+                        <input
+                            id="decision-numero"
+                            type="text"
+                            readonly
+                            placeholder="Automatique"
+                            class="w-full mt-2 p-3
+                                   bg-slate-100 border border-slate-200
+                                   rounded-xl text-xs font-black
+                                   text-[#001a4d]">
+                    </div>
+
+
+                    <!-- Référence -->
+                    <div>
+                        <label
+                            class="text-[9px] font-black
+                                   text-slate-400 uppercase tracking-widest">
+                            Référence
+                        </label>
+
+                        <input
+                            id="decision-reference"
+                            type="text"
+                            placeholder="TCR/2026"
+                            class="w-full mt-2 p-3
+                                   border border-slate-200
+                                   rounded-xl text-xs font-bold
+                                   focus:outline-none focus:border-blue-400">
+                    </div>
+
+                </div>
+
+
+                <div class="grid grid-cols-2 gap-4">
+
+                    <!-- Date décision -->
+                    <div>
+                        <label
+                            class="text-[9px] font-black
+                                   text-slate-400 uppercase tracking-widest">
+                            Date décision
+                        </label>
+
+                        <input
+                            id="decision-date"
+                            type="text"
+                            placeholder="18/08/2026"
+                            class="w-full mt-2 p-3
+                                   border border-slate-200
+                                   rounded-xl text-xs font-bold
+                                   focus:outline-none focus:border-blue-400">
+                    </div>
+
+
+                    <!-- Direction -->
+                    <div>
+                        <label
+                            class="text-[9px] font-black
+                                   text-slate-400 uppercase tracking-widest">
+                            Direction
+                        </label>
+
+                        <input
+                            id="decision-direction"
+                            type="text"
+                            class="w-full mt-2 p-3
+                                   border border-slate-200
+                                   rounded-xl text-xs font-bold
+                                   focus:outline-none focus:border-blue-400">
+                    </div>
+
+                </div>
+
+
+                <!-- Pôle -->
+                <div>
+                    <label
+                        class="text-[9px] font-black
+                               text-slate-400 uppercase tracking-widest">
+                        Pôle
+                    </label>
+
+                    <input
+                        id="decision-pole"
+                        type="text"
+                        class="w-full mt-2 p-3
+                               border border-slate-200
+                               rounded-xl text-xs font-bold">
+                </div>
+
+
+                <!-- En-tête -->
+                <div>
+                    <label
+                        class="text-[9px] font-black
+                               text-slate-400 uppercase tracking-widest">
+                        Entité en haut du document
+                    </label>
+
+                    <input
+                        id="decision-entite-header"
+                        type="text"
+                        class="w-full mt-2 p-3
+                               border border-slate-200
+                               rounded-xl text-xs font-bold">
+                </div>
+
+
+                <!-- Stagiaire -->
+                <div>
+                    <label
+                        class="text-[9px] font-black
+                               text-slate-400 uppercase tracking-widest">
+                        Nom affiché du stagiaire
+                    </label>
+
+                    <input
+                        id="decision-nom-stagiaire"
+                        type="text"
+                        placeholder="Monsieur LARAQUI Jad"
+                        class="w-full mt-2 p-3
+                               border border-slate-200
+                               rounded-xl text-xs font-bold">
+                </div>
+
+
+                <!-- Responsable -->
+                <div>
+                    <label
+                        class="text-[9px] font-black
+                               text-slate-400 uppercase tracking-widest">
+                        Responsable
+                    </label>
+
+                    <input
+                        id="decision-responsable"
+                        type="text"
+                        placeholder="Responsable Systèmes d'Information"
+                        class="w-full mt-2 p-3
+                               border border-slate-200
+                               rounded-xl text-xs font-bold">
+                </div>
+
+
+                <!-- Division -->
+                <div>
+                    <label
+                        class="text-[9px] font-black
+                               text-slate-400 uppercase tracking-widest">
+                        Division
+                    </label>
+
+                    <input
+                        id="decision-division"
+                        type="text"
+                        placeholder="Division Systèmes d'Information"
+                        class="w-full mt-2 p-3
+                               border border-slate-200
+                               rounded-xl text-xs font-bold">
+                </div>
+
+
+                <div class="grid grid-cols-2 gap-4">
+
+                    <!-- Durée -->
+                    <div>
+                        <label
+                            class="text-[9px] font-black
+                                   text-slate-400 uppercase tracking-widest">
+                            Durée
+                        </label>
+
+                        <input
+                            id="decision-duree"
+                            type="text"
+                            placeholder="d'un mois"
+                            class="w-full mt-2 p-3
+                                   border border-slate-200
+                                   rounded-xl text-xs font-bold">
+                    </div>
+
+
+                    <!-- Date début -->
+                    <div>
+                        <label
+                            class="text-[9px] font-black
+                                   text-slate-400 uppercase tracking-widest">
+                            Date début
+                        </label>
+
+                        <input
+                            id="decision-date-debut"
+                            type="text"
+                            placeholder="01/09/2026"
+                            class="w-full mt-2 p-3
+                                   border border-slate-200
+                                   rounded-xl text-xs font-bold">
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- ========================================== -->
+            <!-- COLONNE DROITE -->
+            <!-- ========================================== -->
+
+            <div class="space-y-6">
+
+                <!-- PDF existant -->
+                <div
+                    id="decision-preview-block"
+                    class="hidden">
+
+                    <div
+                        class="flex items-center justify-between mb-3">
+
+                        <p
+                            class="text-[9px] font-black
+                                   text-slate-400 uppercase tracking-widest">
+                            Décision actuelle
+                        </p>
+
+                        <a
+                            id="decision-download-link"
+                            href="#"
+                            target="_blank"
+                            class="text-[9px] font-black
+                                   text-[#003399] hover:underline">
+                            Ouvrir le PDF
+                        </a>
+
+                    </div>
+
+                    <div
+                        class="h-[350px]
+                               bg-slate-50
+                               border border-slate-200
+                               rounded-2xl overflow-hidden">
+
+                        <iframe
+                            id="decision-preview-frame"
+                            class="w-full h-full border-none">
+                        </iframe>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Signature -->
+                <div>
+
+                    <div
+                        class="flex justify-between items-center mb-2">
+
+                        <div>
+                            <p
+                                class="text-[9px] font-black
+                                       text-slate-400 uppercase tracking-widest">
+                                Signature RH
+                            </p>
+
+                            <p
+                                class="text-[10px]
+                                       font-medium text-slate-400 mt-1">
+                                Signez dans la zone ci-dessous.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            onclick="clearDecisionSignature()"
+                            class="text-[9px] font-black
+                                   text-rose-500 hover:underline">
+                            Effacer
+                        </button>
+
+                    </div>
+
+
+                    <canvas
+                        id="decision-signature-canvas"
+                        width="600"
+                        height="150"
+                        class="w-full h-[150px]
+                               bg-white
+                               border-2 border-dashed
+                               border-slate-200
+                               rounded-2xl
+                               cursor-crosshair">
+                    </canvas>
+
+                </div>
+
+
+                <!-- Message -->
+                <div
+                    id="decision-feedback"
+                    class="hidden rounded-xl p-3
+                           text-[10px] font-bold">
+                </div>
+
+
+                <!-- Boutons -->
+                <div class="flex gap-3">
+
+                    <button
+                        type="button"
+                        onclick="closeDecisionModal()"
+                        class="w-1/3
+                               py-4 rounded-xl
+                               bg-slate-100
+                               text-slate-500
+                               text-[9px] font-black uppercase">
+                        Annuler
+                    </button>
+
+                    <button
+                        type="button"
+                        id="decision-save-btn"
+                        onclick="saveDecision()"
+                        class="w-2/3
+                               py-4 rounded-xl
+                               bg-[#003399]
+                               hover:bg-[#001a4d]
+                               text-white
+                               text-[9px] font-black uppercase
+                               tracking-widest transition">
+
+                        Générer la décision
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
     <div id="valider-evaluation-modal" class="fixed inset-0 z-[100] hidden overflow-y-auto">
         <div class="fixed inset-0 bg-[#001a4d]/40 backdrop-blur-sm" onclick="closeValiderEvaluationModal()"></div>
         <div
@@ -688,6 +1236,15 @@
         console.log('[RH INIT] Dashboard script loaded');
         let currentFilter = 'Tous';
         let currentCandidateId = null;
+        // ==========================================
+        // DÉCISION DE STAGE
+        // ==========================================
+
+        let decisionCanvas = null;
+        let decisionCtx = null;
+
+        let decisionDrawing = false;
+        let decisionSigned = false;
 
         function focusRhSection(sectionId, filter) {
             if (filter) {
@@ -1285,6 +1842,648 @@
                 clearRespBtn.addEventListener('click', () => clearValSignature('canvas-sig-responsable', false));
             }
         });
+
+        async function openDecisionModal(candidateId) {
+
+    const modal =
+        document.getElementById(
+            'decision-modal'
+        );
+
+    const feedback =
+        document.getElementById(
+            'decision-feedback'
+        );
+
+    feedback.classList.add('hidden');
+
+    document.getElementById(
+        'decision-candidate-id'
+    ).value = candidateId;
+
+
+    try {
+
+        const response = await fetch(
+            `/api/candidates/decision/${candidateId}`
+        );
+
+        const result =
+            await response.json();
+
+
+        if (!response.ok || !result.success) {
+
+            throw new Error(
+                result.error ||
+                "Impossible de charger la décision."
+            );
+        }
+
+
+        const data =
+            result.data || {};
+
+
+        // ======================================
+        // CHAMPS
+        // ======================================
+
+        document.getElementById(
+            'decision-numero'
+        ).value =
+            result.numero || 'Automatique';
+
+
+        document.getElementById(
+            'decision-reference'
+        ).value =
+            data.reference || '';
+
+
+        document.getElementById(
+            'decision-date'
+        ).value =
+            data.date_decision || '';
+
+
+        document.getElementById(
+            'decision-direction'
+        ).value =
+            data.direction || '';
+
+
+        document.getElementById(
+            'decision-pole'
+        ).value =
+            data.pole || '';
+
+
+        document.getElementById(
+            'decision-entite-header'
+        ).value =
+            data.entite_header || '';
+
+
+        document.getElementById(
+            'decision-nom-stagiaire'
+        ).value =
+            data.nom_stagiaire || '';
+
+
+        document.getElementById(
+            'decision-responsable'
+        ).value =
+            data.responsable || '';
+
+
+        document.getElementById(
+            'decision-division'
+        ).value =
+            data.division || '';
+
+
+        document.getElementById(
+            'decision-duree'
+        ).value =
+            data.duree || '';
+
+
+        document.getElementById(
+            'decision-date-debut'
+        ).value =
+            data.date_debut || '';
+
+
+        // ======================================
+        // PDF ACTUEL
+        // ======================================
+
+        const previewBlock =
+            document.getElementById(
+                'decision-preview-block'
+            );
+
+        const iframe =
+            document.getElementById(
+                'decision-preview-frame'
+            );
+
+        const link =
+            document.getElementById(
+                'decision-download-link'
+            );
+
+
+        if (result.decision_pdf) {
+
+            previewBlock.classList.remove(
+                'hidden'
+            );
+
+            iframe.src =
+                `/pdf/${result.decision_pdf}`;
+
+            link.href =
+                `/download/decision/${result.decision_pdf}`;
+
+        } else {
+
+            previewBlock.classList.add(
+                'hidden'
+            );
+
+            iframe.src = '';
+            link.href = '#';
+        }
+
+
+        // ======================================
+        // TITRE BOUTON
+        // ======================================
+
+        const saveBtn =
+            document.getElementById(
+                'decision-save-btn'
+            );
+
+        const subtitle =
+            document.getElementById(
+                'decision-modal-subtitle'
+            );
+
+
+        if (result.decision_pdf) {
+
+            saveBtn.innerText =
+                "Enregistrer les modifications";
+
+            subtitle.innerText =
+                `Modification de la décision N°${result.numero}`;
+
+        } else {
+
+            saveBtn.innerText =
+                "Générer la décision";
+
+            subtitle.innerText =
+                "Nouvelle décision de stage";
+        }
+
+
+        // ======================================
+        // OUVRIR
+        // ======================================
+
+        modal.classList.remove(
+            'hidden'
+        );
+
+        document.body.style.overflow =
+            'hidden';
+
+
+        setTimeout(() => {
+
+            initDecisionCanvas();
+
+            clearDecisionSignature();
+
+        }, 50);
+
+
+    } catch (error) {
+
+        console.error(
+            "[DECISION]",
+            error
+        );
+
+        alert(
+            error.message
+        );
+    }
+}
+
+function initDecisionCanvas() {
+
+    decisionCanvas =
+        document.getElementById(
+            'decision-signature-canvas'
+        );
+
+    if (!decisionCanvas) {
+        return;
+    }
+
+    decisionCtx =
+        decisionCanvas.getContext('2d');
+
+
+    decisionCtx.strokeStyle =
+        '#001a4d';
+
+    decisionCtx.lineWidth = 2.5;
+
+    decisionCtx.lineCap =
+        'round';
+
+    decisionCtx.lineJoin =
+        'round';
+
+
+    function position(event) {
+
+        const rect =
+            decisionCanvas
+                .getBoundingClientRect();
+
+        if (
+            event.touches &&
+            event.touches.length
+        ) {
+
+            return {
+
+                x:
+                    (
+                        event.touches[0].clientX
+                        - rect.left
+                    )
+                    * (
+                        decisionCanvas.width
+                        / rect.width
+                    ),
+
+                y:
+                    (
+                        event.touches[0].clientY
+                        - rect.top
+                    )
+                    * (
+                        decisionCanvas.height
+                        / rect.height
+                    )
+            };
+        }
+
+
+        return {
+
+            x:
+                (
+                    event.clientX
+                    - rect.left
+                )
+                * (
+                    decisionCanvas.width
+                    / rect.width
+                ),
+
+            y:
+                (
+                    event.clientY
+                    - rect.top
+                )
+                * (
+                    decisionCanvas.height
+                    / rect.height
+                )
+        };
+    }
+
+
+    decisionCanvas.onmousedown =
+        function (event) {
+
+            const pos =
+                position(event);
+
+            decisionDrawing = true;
+            decisionSigned = true;
+
+            decisionCtx.beginPath();
+
+            decisionCtx.moveTo(
+                pos.x,
+                pos.y
+            );
+        };
+
+
+    decisionCanvas.onmousemove =
+        function (event) {
+
+            if (!decisionDrawing) {
+                return;
+            }
+
+            const pos =
+                position(event);
+
+            decisionCtx.lineTo(
+                pos.x,
+                pos.y
+            );
+
+            decisionCtx.stroke();
+        };
+
+
+    decisionCanvas.onmouseup =
+        function () {
+
+            decisionDrawing = false;
+        };
+
+
+    decisionCanvas.onmouseleave =
+        function () {
+
+            decisionDrawing = false;
+        };
+
+
+    decisionCanvas.ontouchstart =
+        function (event) {
+
+            event.preventDefault();
+
+            const pos =
+                position(event);
+
+            decisionDrawing = true;
+            decisionSigned = true;
+
+            decisionCtx.beginPath();
+
+            decisionCtx.moveTo(
+                pos.x,
+                pos.y
+            );
+        };
+
+
+    decisionCanvas.ontouchmove =
+        function (event) {
+
+            event.preventDefault();
+
+            if (!decisionDrawing) {
+                return;
+            }
+
+            const pos =
+                position(event);
+
+            decisionCtx.lineTo(
+                pos.x,
+                pos.y
+            );
+
+            decisionCtx.stroke();
+        };
+
+
+    decisionCanvas.ontouchend =
+        function () {
+
+            decisionDrawing = false;
+        };
+}
+
+function clearDecisionSignature() {
+
+    if (
+        !decisionCanvas ||
+        !decisionCtx
+    ) {
+        return;
+    }
+
+    decisionCtx.clearRect(
+        0,
+        0,
+        decisionCanvas.width,
+        decisionCanvas.height
+    );
+
+    decisionSigned = false;
+}
+
+
+function closeDecisionModal() {
+
+    document.getElementById(
+        'decision-modal'
+    ).classList.add(
+        'hidden'
+    );
+
+    document.getElementById(
+        'decision-preview-frame'
+    ).src = '';
+
+    document.body.style.overflow =
+        'auto';
+
+    decisionSigned = false;
+}
+
+async function saveDecision() {
+
+    const candidateId =
+        document.getElementById(
+            'decision-candidate-id'
+        ).value;
+
+
+    if (!candidateId) {
+
+        alert(
+            "Stagiaire non sélectionné."
+        );
+
+        return;
+    }
+
+
+    if (!decisionSigned) {
+
+        alert(
+            "Veuillez signer la décision avant de l'enregistrer."
+        );
+
+        return;
+    }
+
+
+    const payload = {
+
+        id: candidateId,
+
+        reference:
+            document.getElementById(
+                'decision-reference'
+            ).value.trim(),
+
+        date_decision:
+            document.getElementById(
+                'decision-date'
+            ).value.trim(),
+
+        direction:
+            document.getElementById(
+                'decision-direction'
+            ).value.trim(),
+
+        pole:
+            document.getElementById(
+                'decision-pole'
+            ).value.trim(),
+
+        entite_header:
+            document.getElementById(
+                'decision-entite-header'
+            ).value.trim(),
+
+        nom_stagiaire:
+            document.getElementById(
+                'decision-nom-stagiaire'
+            ).value.trim(),
+
+        responsable:
+            document.getElementById(
+                'decision-responsable'
+            ).value.trim(),
+
+        division:
+            document.getElementById(
+                'decision-division'
+            ).value.trim(),
+
+        duree:
+            document.getElementById(
+                'decision-duree'
+            ).value.trim(),
+
+        date_debut:
+            document.getElementById(
+                'decision-date-debut'
+            ).value.trim(),
+
+        signature:
+            decisionCanvas.toDataURL(
+                'image/png'
+            )
+    };
+
+
+    const feedback =
+        document.getElementById(
+            'decision-feedback'
+        );
+
+    const saveBtn =
+        document.getElementById(
+            'decision-save-btn'
+        );
+
+
+    try {
+
+        saveBtn.disabled = true;
+
+        saveBtn.classList.add(
+            'opacity-60',
+            'cursor-not-allowed'
+        );
+
+        feedback.innerText =
+            "Génération du PDF en cours...";
+
+        feedback.className =
+            "rounded-xl p-3 text-[10px] font-bold bg-blue-50 text-blue-600";
+
+
+        const response = await fetch(
+
+            '/api/candidates/decision/generer',
+
+            {
+                method: 'POST',
+
+                headers: {
+                    'Content-Type':
+                        'application/json'
+                },
+
+                body:
+                    JSON.stringify(
+                        payload
+                    )
+            }
+        );
+
+
+        const result =
+            await response.json();
+
+
+        if (
+            !response.ok ||
+            !result.success
+        ) {
+
+            throw new Error(
+                result.error ||
+                "Erreur lors de la génération."
+            );
+        }
+
+
+        feedback.innerText =
+            result.decision_numero
+                ? `Décision N°${result.decision_numero} enregistrée avec succès.`
+                : "Décision enregistrée avec succès.";
+
+        feedback.className =
+            "rounded-xl p-3 text-[10px] font-bold bg-emerald-50 text-emerald-600";
+
+
+        setTimeout(() => {
+
+            closeDecisionModal();
+
+            location.reload();
+
+        }, 1200);
+
+
+    } catch (error) {
+
+        console.error(
+            "[DECISION SAVE]",
+            error
+        );
+
+        feedback.innerText =
+            error.message;
+
+        feedback.className =
+            "rounded-xl p-3 text-[10px] font-bold bg-rose-50 text-rose-600";
+
+
+        saveBtn.disabled = false;
+
+        saveBtn.classList.remove(
+            'opacity-60',
+            'cursor-not-allowed'
+        );
+    }
+}
+
+
 
         async function uploadAttestation(candidateId, input) {
             

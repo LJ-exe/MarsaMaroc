@@ -481,6 +481,27 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="space-y-2">
+
+                            <div class="space-y-2">
+
+                        <label class="label-premium">
+                            Fonction de l'encadrant
+                        </label>
+
+                        <input
+                            type="text"
+                            id="mentor-function-input"
+                            placeholder="Ex : Responsable Systèmes d'Information"
+                            class="w-full bg-[#f8fafc]
+                                border border-[#e5eef7]
+                                rounded-xl py-3 px-4
+                                text-sm font-bold text-[#001a4d]
+                                focus:outline-none
+                                focus:border-blue-400">
+
+                    </div>
                 </div>
 
                 <div class="pt-6">
@@ -792,6 +813,9 @@
             // Reset encadrant search
             document.getElementById('mentor-input').value = '';
             document.getElementById('mentor-id').value = '';
+            document.getElementById(
+                'mentor-function-input'
+            ).value = '';
             document.getElementById('encadrant-dropdown').classList.add('hidden');
 
             // Load encadrants list
@@ -830,9 +854,22 @@
                 return allEncadrants;
             }
             const term = searchTerm.toLowerCase().trim();
-            return allEncadrants.filter(enc =>
-                enc.nom.toLowerCase().includes(term)
-            );
+            return allEncadrants.filter(enc => {
+
+                const nom =
+                    (enc.nom || '')
+                        .toLowerCase();
+
+                const fonction =
+                    (enc.fonction || '')
+                        .toLowerCase();
+
+                return (
+                    nom.includes(term)
+                    ||
+                    fonction.includes(term)
+                );
+            });
         }
 
         function showEncadrantDropdown(results, searchTerm) {
@@ -856,16 +893,42 @@
             } else if (results.length > 0) {
                 // Show matching encadrants
                 resultsContainer.innerHTML = results.map(enc => `
-                    <div class="p-3 hover:bg-slate-50 cursor-pointer rounded-lg transition" 
-                         onclick="selectEncadrant('${enc.id}', '${enc.nom.replace(/'/g, "\\'")}')">
+
+                    <div
+                        class="p-3 hover:bg-slate-50
+                            cursor-pointer rounded-lg transition"
+                        onclick="selectEncadrant('${enc.id}')">
+
                         <div class="flex items-center gap-2">
-                            <svg viewBox="0 0 24 24" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2">
+
+                            <svg
+                                viewBox="0 0 24 24"
+                                class="w-4 h-4 text-slate-400"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2">
+
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="12" cy="7" r="4"></circle>
+
                             </svg>
-                            <span class="text-sm font-bold text-[#001a4d]">${enc.nom}</span>
+
+                            <div>
+
+                                <div class="text-sm font-bold text-[#001a4d]">
+                                    ${enc.nom || ''}
+                                </div>
+
+                                <div class="text-[10px] font-bold text-slate-400">
+                                    ${enc.fonction || 'Fonction non renseignée'}
+                                </div>
+
+                            </div>
+
                         </div>
+
                     </div>
+
                 `).join('');
             } else {
                 resultsContainer.innerHTML = `
@@ -878,37 +941,164 @@
             dropdown.classList.remove('hidden');
         }
 
-        function selectEncadrant(id, nom) {
-            document.getElementById('mentor-input').value = nom;
-            document.getElementById('mentor-id').value = id;
-            document.getElementById('encadrant-dropdown').classList.add('hidden');
+        function selectEncadrant(id) {
+
+        const encadrant =
+            allEncadrants.find(
+                enc =>
+                    String(enc.id) === String(id)
+            );
+
+        if (!encadrant) {
+            console.error(
+                'Encadrant introuvable :',
+                id
+            );
+            return;
         }
+
+
+        document.getElementById(
+            'mentor-input'
+        ).value =
+            encadrant.nom || '';
+
+
+        document.getElementById(
+            'mentor-id'
+        ).value =
+            encadrant.id || '';
+
+
+        document.getElementById(
+            'mentor-function-input'
+        ).value =
+            encadrant.fonction || '';
+
+
+        document.getElementById(
+            'encadrant-dropdown'
+        ).classList.add(
+            'hidden'
+        );
+    }
 
         function addNewEncadrant(nom) {
-            const trimmedNom = nom.trim();
-            if (!trimmedNom) return;
 
-            fetch('/api/encadrants', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nom: trimmedNom })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        // Add to local list
-                        allEncadrants.push(data.encadrant);
-                        // Select the newly added encadrant
-                        selectEncadrant(data.encadrant.id, data.encadrant.nom);
-                    } else {
-                        alert('Erreur lors de l\'ajout: ' + (data.error || 'Erreur inconnue'));
-                    }
+                const trimmedNom =
+                    nom.trim();
+
+                if (!trimmedNom) {
+                    return;
+                }
+
+
+                let fonction = (
+                    document.getElementById(
+                        'mentor-function-input'
+                    ).value || ''
+                ).trim();
+
+
+                if (!fonction) {
+
+                    fonction = (
+                        window.prompt(
+                            `Fonction de l'encadrant ${trimmedNom} :`,
+                            ''
+                        )
+                        || ''
+                    ).trim();
+                }
+
+
+                if (!fonction) {
+
+                    alert(
+                        "La fonction de l'encadrant est obligatoire."
+                    );
+
+                    return;
+                }
+
+
+                fetch('/api/encadrants', {
+
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type':
+                            'application/json'
+                    },
+
+                    body: JSON.stringify({
+
+                        nom:
+                            trimmedNom,
+
+                        fonction:
+                            fonction
+                    })
+
                 })
+                .then(res => res.json())
+
+                .then(data => {
+
+                    if (!data.success) {
+
+                        alert(
+                            "Erreur lors de l'ajout : "
+                            + (
+                                data.error
+                                || 'Erreur inconnue'
+                            )
+                        );
+
+                        return;
+                    }
+
+
+                    const index =
+                        allEncadrants.findIndex(
+                            enc =>
+                                String(enc.id)
+                                ===
+                                String(data.encadrant.id)
+                        );
+
+
+                    if (index === -1) {
+
+                        allEncadrants.push(
+                            data.encadrant
+                        );
+
+                    } else {
+
+                        allEncadrants[index] =
+                            data.encadrant;
+                    }
+
+
+                    selectEncadrant(
+                        data.encadrant.id
+                    );
+
+                })
+
                 .catch(err => {
-                    console.error('Error adding encadrant:', err);
-                    alert('Erreur lors de l\'ajout de l\'encadrant');
+
+                    console.error(
+                        'Error adding encadrant:',
+                        err
+                    );
+
+                    alert(
+                        "Erreur lors de l'ajout de l'encadrant"
+                    );
                 });
-        }
+            }
 
         function confirmAssignment() {
             const id = currentCandidateId;
@@ -916,6 +1106,15 @@
             const project = document.getElementById('projet-input').value.trim();
             const mentor = document.getElementById('mentor-input').value.trim() || 'À définir';
             const mentorId = document.getElementById('mentor-id').value || null;
+            const mentorFunction =document.getElementById('mentor-function-input').value.trim();
+            if (!mentorFunction) {
+
+                alert(
+                    "Veuillez renseigner la fonction de l'encadrant."
+                );
+
+                return;
+            }
             const zone = document.getElementById('info-zone').innerText;
             const pole = currentPole;
 
@@ -931,7 +1130,25 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ id, name, project, mentor, mentor_id: mentorId })
+                body: JSON.stringify({
+                id:
+                    id,
+
+                name:
+                    name,
+
+                project:
+                    project,
+
+                mentor:
+                    mentor,
+
+                mentor_id:
+                    mentorId,
+
+                mentor_function:
+                    mentorFunction
+            })
             })
                 .then(res => res.json())
                 .then(data => {
@@ -945,8 +1162,17 @@
                             }
                         }
 
-                        alert(`Affectation confirmée pour ${name}\n\nProjet: ${project}\nPôle (RH): ${pole || '—'}\nZone: ${zone}\nEncadrant: ${mentor}\n\nUn email de notification a été envoyé au candidat.`);
-                        closeAffectationModal();
+                    alert(`Affectation confirmée pour ${name}
+
+                    Projet : ${project}
+                    Pôle (RH) : ${pole || '—'}
+                    Zone : ${zone}
+
+                    Encadrant : ${mentor}
+                    Fonction : ${mentorFunction}
+
+                    Un email de notification a été envoyé au candidat.`);                       
+                    closeAffectationModal();
 
                         // Télécharger automatiquement le PDF si généré
                         if (data.pdf_path) {
