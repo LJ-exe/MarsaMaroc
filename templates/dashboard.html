@@ -299,10 +299,11 @@
 
                     <div class="space-y-2">
                         <label class="label-premium">Type de Stage</label>
-                        <select id="app-type" class="input-premium appearance-none">
-                            <option>PFE</option>
-                            <option>Stage Technique</option>
-                            <option>Stage d'Immersion</option>
+                        <select id="app-type" class="input-premium appearance-none" required>
+                            <option value="">Choisir le type de stage</option>
+                            <option value="Passage">Passage</option>
+                            <option value="Alterne">Alterné </option>
+                            <option value="Projet Fin etude">Projet Fin etude</option>
                         </select>
                     </div>
                     <div class="space-y-2">
@@ -882,27 +883,29 @@
                                 <span class="text-[9px] font-black text-slate-400 bg-slate-200 px-2 py-1 rounded uppercase">Manquant</span>
                                 {% endif %}
                             </div>
-                            
-                            <div class="flex items-center gap-3">
-                                <input type="file" id="intern-report-input" class="hidden" accept=".pdf" onchange="handleReportUpload()">
-                                <button type="button" onclick="document.getElementById('intern-report-input').click()" class="flex-1 py-4 bg-[#001a4d] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-blue-950 transition flex items-center justify-center gap-2">
-                                    <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5">
-                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                        <polyline points="17 8 12 3 7 8"/>
-                                        <line x1="12" y1="3" x2="12" y2="15"/>
-                                    </svg>
-                                    Déposer Rapport
-                                </button>
-                                
-                                {% if candidat and candidat.intern_report_path %}
-                                <button type="button" onclick="previewReport('{{ candidat.intern_report_path }}')" class="py-4 px-5 bg-white border border-[#e5eef7] text-[#003399] rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition">
-                                    Voir le rapport
-                                </button>
-                                <a id="intern-report-download-btn" href="/download/report/{{ candidat.intern_report_path }}" class="py-4 px-5 bg-white border border-[#e5eef7] text-[#003399] rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition flex items-center justify-center gap-2">
-                                    Télécharger
-                                </a>
-                                {% endif %}
-                            </div>
+                            <!-- Deposer rappor de stage -->
+                             {% if candidat and candidat.est_affecte %}
+                                <div class="flex items-center gap-3">
+                                    <input type="file" id="intern-report-input" class="hidden" accept=".pdf" onchange="handleReportUpload()">
+                                    <button type="button" onclick="document.getElementById('intern-report-input').click()" class="flex-1 py-4 bg-[#001a4d] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-blue-950 transition flex items-center justify-center gap-2">
+                                        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                            <polyline points="17 8 12 3 7 8"/>
+                                            <line x1="12" y1="3" x2="12" y2="15"/>
+                                        </svg>
+                                        Déposer Rapport
+                                    </button>
+                                    
+                                    {% if candidat and candidat.intern_report_path %}
+                                    <button type="button" onclick="previewReport('{{ candidat.intern_report_path }}')" class="py-4 px-5 bg-white border border-[#e5eef7] text-[#003399] rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition">
+                                        Voir le rapport
+                                    </button>
+                                    <a id="intern-report-download-btn" href="/download/report/{{ candidat.intern_report_path }}" class="py-4 px-5 bg-white border border-[#e5eef7] text-[#003399] rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition flex items-center justify-center gap-2">
+                                        Télécharger
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
                             <p id="report-upload-feedback" class="text-[10px] font-bold text-slate-400 mt-2 text-left"></p>
                         </div>
                     </div>

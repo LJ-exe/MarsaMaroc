@@ -105,6 +105,11 @@ def enrichir_candidats(candidats):
         ligne["encadrant_id"] = c.get("encadrant_id")
         ligne["project"] = c.get("project") or ""
         ligne["fiche_accueil_pdf"] = c.get("fiche_accueil_pdf")
+        # Le stagiaire est considéré comme affecté
+        # lorsque la fiche d'accueil a été générée par le service Affectation
+        ligne["est_affecte"] = bool(
+            ligne.get("fiche_accueil_pdf")
+        )
 
         # Rapport de stage
         ligne["intern_report_path"] = c.get("intern_report_path")
@@ -689,96 +694,77 @@ def generer_fiche_accueil_pdf_filled(stagiaire: dict, affectation: dict) -> str:
         # Specialty & Level: baseline 541.57, using 543.0, X starts after label at 140
         draw_bounded_string(c, f"{specialty} - {level}".upper(), x=140, y=543.0, max_width=380, initial_size=11.0)
         
-        # Type of stage - checkboxes instead of text
-        # 1.5 Dynamically detect checkbox positions from the template PDF using PyMuPDF (fitz)
-        detected_boxes = []
-        try:
-            import fitz
-            doc_temp = fitz.open(template_path)
-            page_temp = doc_temp[0]
-            h_page_temp = page_temp.rect.height
-            
-            # Find the Y position of the "Type de Stage" section by locating the word "Passage"
-            words = page_temp.get_text("words")
-            type_stage_y = None
-            for w in words:
-                if "passage" in w[4].lower() or "altern" in w[4].lower():
-                    type_stage_y = w[1] # top coordinate of the text
-                    break
-            if type_stage_y is None:
-                type_stage_y = 324.87
-                
-            # Get drawings and filter vertical lines near this Y
-            drawings_temp = page_temp.get_drawings()
-            v_lines = []
-            for d in drawings_temp:
-                r = d['rect']
-                if abs(r.y0 - type_stage_y) < 15 and 8 <= r.height <= 15 and r.width < 1.5:
-                    if 50 <= r.x0 <= 550:
-                        v_lines.append(r)
-            
-            # Sort vertical lines by X coordinate
-            v_lines.sort(key=lambda r: r.x0)
-            
-            # Group into pairs to form boxes
-            i = 0
-            while i < len(v_lines) - 1:
-                l1 = v_lines[i]
-                l2 = v_lines[i+1]
-                dist = l2.x0 - l1.x0
-                if 15 <= dist <= 40:
-                    x = l1.x0
-                    y = min(l1.y0, l2.y0)
-                    width = dist
-                    height = max(l1.height, l2.height)
-                    
-                    # Convert to ReportLab bottom-up coordinates
-                    rl_x = x
-                    rl_y = h_page_temp - (y + height)
-                    
-                    detected_boxes.append({
-                        'x': rl_x,
-                        'y': rl_y,
-                        'width': width,
-                        'height': height
-                    })
-                    i += 2
-                else:
-                    i += 1
-            doc_temp.close()
-        except Exception as e:
-            print(f"[PDF] Checkbox detection error: {e}")
+                # =====================================================
+        # TYPE DE STAGE
+        # Coche automatiquement la case choisie par le stagiaire
+        # =====================================================
 
-        # Fallback coordinates (in ReportLab system) if detection failed
-        fallback_centers = [
-            (242.33, 511.27),
-            (344.41, 511.27),
-            (505.84, 511.27)
-        ]
-        
-        box_centers = []
-        if len(detected_boxes) >= 3:
-            for box in detected_boxes[:3]:
-                cx = box['x'] + box['width'] / 2
-                cy = box['y'] + box['height'] / 2
-                box_centers.append((cx, cy))
-            print(f"[PDF] Dynamically detected centers: {box_centers}")
+        type_lower = (type_stage or "").strip().lower()
+
+        print(
+            f"[CHECKBOX] Type stage reçu : '{type_stage}', "
+            f"normalisé : '{type_lower}'"
+        )
+
+        # Centres exacts des trois cases du PDF
+        PASSAGE_BOX = (242.33, 511.27)
+        ALTERNE_BOX = (344.41, 511.27)
+        PFE_BOX = (505.84, 511.27)
+
+        target_center = None
+
+
+        # ----------------------------
+        # PASSAGE
+        # ----------------------------
+        if type_lower == "passage":
+            target_center = PASSAGE_BOX
+
+
+        # ----------------------------
+        # ALTERNE / ALTERNÉ
+        # ----------------------------
+        elif type_lower == "alterne" or "altern" in type_lower:
+            target_center = ALTERNE_BOX
+
+
+        # ----------------------------
+        # PROJET FIN ETUDE
+        # ----------------------------
+        elif (
+            type_lower == "projet fin etude"
+            or "projet fin" in type_lower
+            or "fin etude" in type_lower
+            or "pfe" in type_lower
+        ):
+            target_center = PFE_BOX
+
+
+        # ----------------------------
+        # Dessiner la croix
+        # ----------------------------
+        if target_center:
+
+            target_center_x, target_center_y = target_center
+
+            print(
+                f"[CHECKBOX] Case cochée : "
+                f"X={target_center_x}, Y={target_center_y}"
+            )
+
+            draw_checkbox_cross(
+                c,
+                target_center_x,
+                target_center_y,
+                size=8
+            )
+
         else:
-            box_centers = fallback_centers
-            print(f"[PDF] Using fallback centers (detection failed or incomplete): {box_centers}")
 
-        type_lower = type_stage.lower() if type_stage else ''
-        print(f"[CHECKBOX] Type stage value: '{type_stage}', lower: '{type_lower}'")
-        
-        selected_idx = 0
-        if 'altern' in type_lower:
-            selected_idx = 1
-        elif 'pfa' in type_lower or 'fin' in type_lower:
-            selected_idx = 2
-            
-        target_center_x, target_center_y = box_centers[selected_idx]
-        print(f"[CHECKBOX] Selected index: {selected_idx}, drawing cross at center X={target_center_x}, Y={target_center_y}")
-        draw_checkbox_cross(c, target_center_x, target_center_y, size=8)
+            print(
+                f"[CHECKBOX] Type de stage non reconnu : "
+                f"'{type_stage}'"
+            )
         
         # Division d'affectation: baseline 399.47, using 401.0, X starts after label at 172
         draw_bounded_string(c, department.upper(), x=172, y=401.0, max_width=350, initial_size=11.0)
@@ -2033,34 +2019,67 @@ def api_candidates_evaluation_valider():
         now_str = datetime.datetime.now().isoformat()
         update_data = {"evaluation_status": decision}
 
+#         if decision == "Accepté":
+#             rh_data = {
+#                 "directeur_rh": corps.get("directeur_rh", ""),
+#             }
+#             attestation_pdf = generer_attestation_pdf(stagiaire, rh_data)
+#             if not attestation_pdf:
+#                 return jsonify(success=False, error="Erreur lors de la génération de l'attestation de stage"), 500
+
+#             update_data.update(
+#                 {
+#                     "attestation_pdf": attestation_pdf,
+#                     "attestation_status": "Généré",
+#                     "attestation_generated_at": now_str,
+#                 }
+#             )
+#             notif_text = (
+#                 "Félicitations ! Votre fiche d'évaluation a été acceptée par la RH. "
+#                 "Vos documents finaux (fiche d'évaluation et attestation) sont disponibles."
+#             )
+#             email_sujet = "[Marsa Maroc] Documents finaux disponibles"
+#             email_corps = f"""Bonjour {nom_stagiaire},
+
+# Votre fiche d'évaluation a été acceptée par la Direction des Ressources Humaines.
+# Votre attestation de stage officielle est disponible dans votre espace stagiaire.
+
+# Cordialement,
+# La Direction des Ressources Humaines — Marsa Maroc
+# """
         if decision == "Accepté":
-            rh_data = {
-                "directeur_rh": corps.get("directeur_rh", ""),
-            }
-            attestation_pdf = generer_attestation_pdf(stagiaire, rh_data)
-            if not attestation_pdf:
-                return jsonify(success=False, error="Erreur lors de la génération de l'attestation de stage"), 500
+
+            # =====================================================
+            # La fiche d'évaluation est acceptée
+            # MAIS aucune attestation n'est générée automatiquement.
+            # Le RH devra uploader l'attestation manuellement.
+            # =====================================================
 
             update_data.update(
                 {
-                    "attestation_pdf": attestation_pdf,
-                    "attestation_status": "Généré",
-                    "attestation_generated_at": now_str,
+                    "attestation_pdf": None,
+                    "attestation_generated_at": None,
                 }
             )
+
             notif_text = (
-                "Félicitations ! Votre fiche d'évaluation a été acceptée par la RH. "
-                "Vos documents finaux (fiche d'évaluation et attestation) sont disponibles."
+                "Votre fiche d'évaluation a été acceptée par la RH. "
+                "Votre attestation de stage sera mise à disposition prochainement."
             )
-            email_sujet = "[Marsa Maroc] Documents finaux disponibles"
+
+            email_sujet = "[Marsa Maroc] Fiche d'évaluation acceptée"
+
             email_corps = f"""Bonjour {nom_stagiaire},
 
-Votre fiche d'évaluation a été acceptée par la Direction des Ressources Humaines.
-Votre attestation de stage officielle est disponible dans votre espace stagiaire.
+            Votre fiche d'évaluation a été acceptée par la Direction des Ressources Humaines.
 
-Cordialement,
-La Direction des Ressources Humaines — Marsa Maroc
-"""
+            Votre attestation de stage sera mise à disposition dans votre espace stagiaire
+            après son dépôt par le service RH.
+
+            Cordialement,
+            La Direction des Ressources Humaines — Marsa Maroc
+            """
+            
         else:
             motif = (corps.get("reject_reason") or "").strip()
             if not motif:
@@ -2118,6 +2137,215 @@ Système Marsa Maroc Stagiaires
         traceback.print_exc()
         return jsonify(success=False, error=str(exc)), 500
 
+@app.post("/api/candidates/attestation/upload")
+@login_required("rh")
+def api_upload_attestation():
+    """
+    RH :
+    Upload manuel de l'attestation de stage après
+    validation de la fiche d'évaluation.
+    """
+
+    if not supabase:
+        return jsonify(
+            success=False,
+            error="Supabase non configuré"
+        ), 500
+
+    # =====================================================
+    # 1. Vérifier le fichier
+    # =====================================================
+
+    if "file" not in request.files:
+        return jsonify(
+            success=False,
+            error="Aucun fichier fourni"
+        ), 400
+
+    file = request.files["file"]
+
+    candidate_id = (
+        request.form.get("candidate_id")
+        or request.form.get("id")
+    )
+
+    if not candidate_id:
+        return jsonify(
+            success=False,
+            error="ID du stagiaire manquant"
+        ), 400
+
+    if not file or file.filename == "":
+        return jsonify(
+            success=False,
+            error="Aucun fichier sélectionné"
+        ), 400
+
+    if not file.filename.lower().endswith(".pdf"):
+        return jsonify(
+            success=False,
+            error="L'attestation doit être un fichier PDF"
+        ), 400
+
+    try:
+
+        # =====================================================
+        # 2. Charger le stagiaire
+        # =====================================================
+
+        result = (
+            supabase
+            .table(TABLE_APPLICATIONS)
+            .select("*")
+            .eq("id", candidate_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not result.data:
+            return jsonify(
+                success=False,
+                error="Stagiaire non trouvé"
+            ), 404
+
+        stagiaire = result.data[0]
+        candidat = normaliser_candidat(stagiaire)
+
+        # =====================================================
+        # 3. Vérifier que la fiche d'évaluation est acceptée
+        # =====================================================
+
+        if candidat.get("evaluation_status") != "Accepté":
+            return jsonify(
+                success=False,
+                error=(
+                    "La fiche d'évaluation doit être acceptée "
+                    "avant de déposer l'attestation."
+                )
+            ), 403
+
+        # =====================================================
+        # 4. Dossier de destination
+        # =====================================================
+
+        output_dir = os.path.join(
+            app.root_path,
+            "generated_pdfs"
+        )
+
+        os.makedirs(
+            output_dir,
+            exist_ok=True
+        )
+
+        # =====================================================
+        # 5. Nom du fichier
+        # =====================================================
+
+        timestamp = datetime.now().strftime(
+            "%Y%m%d_%H%M%S"
+        )
+
+        pdf_filename = (
+            f"attestation_{candidate_id}_{timestamp}.pdf"
+        )
+
+        pdf_path = os.path.join(
+            output_dir,
+            pdf_filename
+        )
+
+        # =====================================================
+        # 6. Sauvegarder le PDF envoyé par le RH
+        # =====================================================
+
+        file.save(pdf_path)
+
+        if not os.path.exists(pdf_path):
+            return jsonify(
+                success=False,
+                error="Erreur lors de l'enregistrement du PDF"
+            ), 500
+
+        # =====================================================
+        # 7. Notification stagiaire
+        # =====================================================
+
+        notifications = ajouter_notification(
+            stagiaire,
+            (
+                "Votre attestation de stage officielle "
+                "est maintenant disponible."
+            )
+        )
+
+        # =====================================================
+        # 8. Sauvegarder dans Supabase
+        # =====================================================
+
+        update_payload = {
+            "attestation_pdf": pdf_filename,
+            "attestation_status": "Généré",
+            "attestation_generated_at":
+                datetime.now(timezone.utc).isoformat(),
+            "notifications": notifications,
+        }
+
+        supabase_executer_update_eq(
+            supabase,
+            TABLE_APPLICATIONS,
+            update_payload,
+            "id",
+            candidate_id
+        )
+
+        # =====================================================
+        # 9. Envoyer un email au stagiaire
+        # =====================================================
+
+        candidate_email = stagiaire.get("email")
+
+        nom_stagiaire = (
+            candidat.get("name")
+            or "Stagiaire"
+        )
+
+        if candidate_email:
+
+            envoyer_email_stagiaire(
+                candidate_id,
+                candidate_email,
+                "[Marsa Maroc] Attestation de stage disponible",
+                f"""Bonjour {nom_stagiaire},
+
+Votre attestation de stage officielle est maintenant disponible.
+
+Vous pouvez la consulter et la télécharger depuis votre espace stagiaire.
+
+Cordialement,
+La Direction des Ressources Humaines — Marsa Maroc
+"""
+            )
+
+        print(
+            f"[ATTESTATION] PDF uploadé par RH : {pdf_filename}"
+        )
+
+        return jsonify(
+            success=True,
+            attestation_pdf=pdf_filename,
+            message="Attestation déposée avec succès."
+        )
+
+    except Exception as exc:
+
+        import traceback
+        traceback.print_exc()
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
 
 
 @app.route("/download/fiche_accueil/<path:filename>")
@@ -2633,6 +2861,16 @@ def api_report_upload():
         return jsonify(
             success=False,
             error="Le rapport de stage est disponible uniquement après acceptation de la candidature.",
+        ), 403
+        
+    # Le rapport ne peut être déposé qu'après affectation
+    if not candidat.get("est_affecte"):
+        return jsonify(
+            success=False,
+            error=(
+                "Vous devez d'abord être affecté par le service d'affectation "
+                "avant de pouvoir déposer votre rapport de stage."
+            ),
         ), 403
 
     candidate_id = str(candidat["id"])

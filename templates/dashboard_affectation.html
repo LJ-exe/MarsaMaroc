@@ -332,24 +332,87 @@
                                         Message
                                     </button>
 
-                                    <!-- Rapport button -->
-                                    <button type="button"
-                                        onclick="openReportModal('{{ candidate.id }}', '{{ candidate.name }}', '{{ candidate.intern_report_path or '' }}' , '{{ candidate.intern_report_status or '' }}')"
-                                        class="bg-purple-600 text-white px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:scale-[1.05] transition flex items-center gap-2 relative">
-                                        {% if candidate.intern_report_path and candidate.intern_report_status == 'En
-                                        attente' %}
-                                        <span
-                                            class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-amber-400 rounded-full border-2 border-white"></span>
-                                        {% endif %}
-                                        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                            stroke-width="2.5">
-                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                            <polyline points="14 2 14 8 20 8" />
-                                            <line x1="16" y1="13" x2="8" y2="13" />
-                                            <line x1="16" y1="17" x2="8" y2="17" />
-                                        </svg>
-                                        Rapport
-                                    </button>
+                                    <!-- Rapport de stage -->
+                                    <div id="report-action-{{ candidate.id }}">
+
+                                        <!-- ============================================= -->
+                                        <!-- BOUTON NORMAL : rapport pas encore validé -->
+                                        <!-- ============================================= -->
+
+                                        <button
+                                            type="button"
+                                            id="report-main-btn-{{ candidate.id }}"
+                                            onclick="openReportModal(
+                                                '{{ candidate.id }}',
+                                                '{{ candidate.name }}',
+                                                '{{ candidate.intern_report_path or '' }}',
+                                                '{{ candidate.intern_report_status or '' }}'
+                                            )"
+                                            class="{% if candidate.intern_report_status == 'Validé' %}hidden{% endif %}
+                                                bg-purple-600 text-white px-4 py-2.5 rounded-xl
+                                                text-[9px] font-black uppercase tracking-widest
+                                                shadow-lg hover:scale-[1.05] transition
+                                                flex items-center gap-2 relative">
+
+                                            {% if candidate.intern_report_path
+                                                and candidate.intern_report_status == 'En attente' %}
+                                            <span
+                                                class="absolute -top-1 -right-1 w-2.5 h-2.5
+                                                    bg-amber-400 rounded-full border-2 border-white">
+                                            </span>
+                                            {% endif %}
+
+                                            <svg viewBox="0 0 24 24"
+                                                class="w-3.5 h-3.5"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="2.5">
+
+                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                <polyline points="14 2 14 8 20 8" />
+                                                <line x1="16" y1="13" x2="8" y2="13" />
+                                                <line x1="16" y1="17" x2="8" y2="17" />
+
+                                            </svg>
+
+                                            Rapport
+                                        </button>
+
+
+                                        <!-- ============================================= -->
+                                        <!-- RAPPORT DÉJÀ VALIDÉ -->
+                                        <!-- ============================================= -->
+
+                                        <div
+                                            id="report-validated-{{ candidate.id }}"
+                                            class="{% if candidate.intern_report_status != 'Validé' %}hidden{% endif %}
+                                                flex flex-col items-end gap-0.5">
+
+                                            <!-- Petite indication -->
+                                            <span
+                                                class="text-[8px] font-black text-emerald-600 uppercase">
+                                                ✓ Rapport validé
+                                            </span>
+
+                                            <!-- Petite écriture cliquable -->
+                                            <button
+                                                type="button"
+                                                onclick="openReportModal(
+                                                    '{{ candidate.id }}',
+                                                    '{{ candidate.name }}',
+                                                    '{{ candidate.intern_report_path or '' }}',
+                                                    'Validé'
+                                                )"
+                                                class="text-[10px] font-bold text-[#003399]
+                                                    hover:underline cursor-pointer">
+
+                                                Voir le rapport
+
+                                            </button>
+
+                                        </div>
+
+                                    </div>
 
                                     <!-- Fiche Évaluation de Stage (PDF vierge) -->
 
@@ -1684,7 +1747,28 @@
                     if (data.success) {
                         // Update status and show evaluation button
                         currentReportStatus = 'Validé';
-                        const validateBtn = document.getElementById('report-validate-btn');
+                        // =====================================================
+                        // Mettre à jour l'affichage du rapport dans le tableau
+                        // =====================================================
+
+                        const mainReportBtn = document.getElementById(
+                            `report-main-btn-${currentReportCandidateId}`
+                        );
+
+                        const validatedReportDisplay = document.getElementById(
+                            `report-validated-${currentReportCandidateId}`
+                        );
+
+                        // Cacher le gros bouton "Rapport"
+                        if (mainReportBtn) {
+                            mainReportBtn.classList.add('hidden');
+                        }
+
+                        // Afficher "Rapport validé" + "Voir le rapport"
+                        if (validatedReportDisplay) {
+                            validatedReportDisplay.classList.remove('hidden');
+                        }
+                                                const validateBtn = document.getElementById('report-validate-btn');
                         validateBtn.disabled = true;
                         validateBtn.innerText = 'Rapport validé';
                         validateBtn.className = 'flex-[2] min-w-[180px] py-3 bg-slate-200 text-slate-500 rounded-xl text-[9px] font-black uppercase tracking-widest cursor-not-allowed';
