@@ -1040,15 +1040,7 @@ def generer_decision_stage_pdf(
         # de deux mois
         # de trois mois
 
-        duree_stage = duree_stage_en_mois(
-            period
-        )
-        
-        duree_stage = (
-            decision_info.get("duree")
-            or duree_stage
-        ).strip()
-
+        duree_stage = duree_stage_en_mois(period).strip()
 
         # =====================================================
         # AFFECTATION
@@ -1188,21 +1180,19 @@ def generer_decision_stage_pdf(
             ):
                 font_size -= 0.25
 
-            c.setFillColor(
-                black
-            )
+            # Texte dynamique légèrement plus gras
+            c.setFillColor(black)
+            c.setStrokeColor(black)
+            c.setLineWidth(0.13)
 
-            c.setFont(
-                font,
-                font_size
-            )
+            txt = c.beginText()
+            txt.setTextOrigin(x, y)
+            txt.setFont(font, font_size)
 
-            c.drawString(
-                x,
-                y,
-                text
-            )
+            
 
+            txt.textOut(text)
+            c.drawText(txt)
 
              # =====================================================
         # EN-TÊTE SUPÉRIEUR
@@ -1213,7 +1203,7 @@ def generer_decision_stage_pdf(
         draw_fit(
             entite_header,
             411,
-            746,
+            747.5,
             150,
             6.3,
             "Helvetica"
@@ -1224,22 +1214,22 @@ def generer_decision_stage_pdf(
         # LIGNE DECISION
         # DECISION N° [173] /DAF/DRH/DEPC-[TCR/2026].
         # =====================================================
-
+        # Numéro et référence : même ligne et même taille que le texte du modèle
         draw_fit(
             numero,
-            149,
-            668,
-            16,
-            8,
+            140,
+            669.5,
+            20,
+            10,
             "Times-Bold"
         )
 
         draw_fit(
             reference,
-            255,
-            668,
-            42,
-            8,
+            250,
+            669.5,
+            50,
+            10,
             "Times-Bold"
         )
 
@@ -1249,12 +1239,13 @@ def generer_decision_stage_pdf(
         # Casablanca - Maroc     09/09/2026
         # =====================================================
 
+       # Date de décision : juste après "Casablanca", sur la même ligne
         draw_fit(
             date_decision,
-            486,
-            729,
-            50,
-            7.5,
+            490,
+            681,
+            55,
+            10,
             "Times-Bold"
         )
 
@@ -1267,19 +1258,19 @@ def generer_decision_stage_pdf(
         draw_fit(
             direction,
             308,
-            628,
-            108,
-            8.2,
+            628.5,
+            120,
+            10.5,
             "Times-Bold"
         )
 
         # Blanc entre "-" et ":"
         draw_fit(
             pole,
-            430,
-            628,
-            145,
-            8.2,
+            415,
+            628.5,
+            150,
+            10.5,
             "Times-Bold"
         )
 
@@ -1290,10 +1281,10 @@ def generer_decision_stage_pdf(
 
         draw_fit(
             nom_decision,
-            228,
-            600,
-            142,
-            8.5,
+            214,
+            601,
+            145,
+            10,
             "Times-Bold"
         )
 
@@ -1304,10 +1295,10 @@ def generer_decision_stage_pdf(
 
         draw_fit(
             responsable,
-            262,
-            572,
-            190,
-            8.5,
+            256,
+            572.5,
+            200,
+            10,
             "Times-Bold"
         )
 
@@ -1321,9 +1312,9 @@ def generer_decision_stage_pdf(
         draw_fit(
             nom_decision,
             72,
-            470,
-            132,
-            8.5,
+            470.5,
+            138,
+            10,
             "Times-Bold"
         )
 
@@ -1338,9 +1329,9 @@ def generer_decision_stage_pdf(
         c.setFillColor(white)
 
         c.rect(
-            365,
+            363,
             466,
-            48,
+            55,
             15,
             fill=1,
             stroke=0
@@ -1348,10 +1339,10 @@ def generer_decision_stage_pdf(
 
         draw_fit(
             duree_stage,
-            368,
-            470,
-            44,
-            8,
+            367.5,
+            471,
+            66,
+            10,
             "Times-Bold"
         )
 
@@ -1387,24 +1378,23 @@ def generer_decision_stage_pdf(
 
 
         # Première partie après "à la"
-        draw_fit(
-            ligne1,
-            440,
-            470,
-            100,
-            8,
-            "Times-Bold"
-        )
+            draw_fit(
+                ligne1,
+                443.5,
+                471.5,
+                110,
+                9.25,
+                "Times-Bold"
+            )
 
         # Suite éventuelle au début de la deuxième ligne
         if ligne2:
-
             draw_fit(
                 ligne2,
-                72,
-                456,
-                82,
-                8,
+                74,
+                456.5,
+                85,
+                9.25,
                 "Times-Bold"
             )
 
@@ -1415,27 +1405,18 @@ def generer_decision_stage_pdf(
         # et ce à compter du [01/09/2026].
         # =====================================================
 
+        # Une seule date de début, alignée après "et ce à compter du"
         draw_fit(
             date_debut,
-            241,
-            456,
+            247,
+            457.5,
             65,
-            8.5,
+            9.5,
             "Times-Bold"
         )
 
 
-        # =====================================================
-        # DATE DÉBUT
-        # =====================================================
-
-        draw_fit(
-            date_debut,
-            241,
-            506,
-            58,
-            9
-        )
+       
 
 
         # =====================================================
@@ -2334,8 +2315,7 @@ def api_generer_decision_stage():
                 or auto_data["division"],
 
             "duree":
-                corps.get("duree")
-                or auto_data["duree"],
+                auto_data["duree"],
 
             "date_debut":
                 corps.get("date_debut")
@@ -2713,26 +2693,23 @@ def duree_stage_en_mois(period: str) -> str:
             + 1
         )
 
-        nombres = {
-            1: "un",
-            2: "deux",
-            3: "trois",
-            4: "quatre",
-            5: "cinq",
-            6: "six",
-            7: "sept",
-            8: "huit",
-            9: "neuf",
-            10: "dix",
-            11: "onze",
-            12: "douze",
-        }
+        # nombres = {
+        #     1: "un",
+        #     2: "deux",
+        #     3: "trois",
+        #     4: "quatre",
+        #     5: "cinq",
+        #     6: "six",
+        #     7: "sept",
+        #     8: "huit",
+        #     9: "neuf",
+        #     10: "dix",
+        #     11: "onze",
+        #     12: "douze",
+        # }
 
         if months == 1:
             return "d'un mois"
-
-        if months in nombres:
-            return f"de {nombres[months]} mois"
 
         return f"de {months} mois"
 
@@ -2940,20 +2917,89 @@ def rh():
 @app.route("/affectation")
 @login_required("affectation")
 def affectation():
-    # Afficher uniquement les stagiaires acceptés par le RH.
-    # Le statut reste 'Accepté' (approved) tout au long du workflow affectation
-    # (Fiche d'Accueil → Rapport → Évaluation → Attestation) pour qu'ils
-    # restent visibles dans ce tableau jusqu'à la fin.
-    candidats = [
-        c
-        for c in charger_candidats()
-        if c.get("status") == "Accepté"
-    ]
-    return render_template(
-        "dashboard_affectation.html",
-        user=nom_utilisateur(),
-        candidates=candidats,
-    )
+
+    if not supabase:
+        return render_template(
+            "dashboard_affectation.html",
+            user=nom_utilisateur(),
+            candidates=[],
+        )
+
+    try:
+        appliquer_session_supabase(supabase)
+
+        user_id = session.get("user_id")
+
+        profile_result = (
+            supabase
+            .table("profiles")
+            .select("id, name, role, encadrant_id")
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not profile_result.data:
+            print("[AFFECTATION] Profil introuvable")
+
+            return render_template(
+                "dashboard_affectation.html",
+                user=nom_utilisateur(),
+                candidates=[],
+            )
+
+        profil = profile_result.data[0]
+
+        encadrant_id = profil.get("encadrant_id")
+
+        print(
+            "[AFFECTATION] profil connecté :",
+            profil
+        )
+
+        if not encadrant_id:
+            print(
+                "[AFFECTATION] encadrant_id manquant"
+            )
+
+            return render_template(
+                "dashboard_affectation.html",
+                user=profil.get("name") or nom_utilisateur(),
+                candidates=[],
+            )
+
+        candidats = [
+            c
+            for c in charger_candidats()
+            if (
+                c.get("status") == "Accepté"
+                and str(c.get("encadrant_id"))
+                == str(encadrant_id)
+            )
+        ]
+
+        print(
+            "[AFFECTATION] stagiaires trouvés :",
+            len(candidats)
+        )
+
+        return render_template(
+            "dashboard_affectation.html",
+            user=profil.get("name") or nom_utilisateur(),
+            candidates=candidats,
+        )
+
+    except Exception as exc:
+        print(
+            "[AFFECTATION] erreur :",
+            exc
+        )
+
+        return render_template(
+            "dashboard_affectation.html",
+            user=nom_utilisateur(),
+            candidates=[],
+        )
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -3156,27 +3202,101 @@ def api_apply():
 
 
 @app.post("/api/candidates/status")
+@login_required("rh")
 def api_status():
+
     if not supabase:
-        return jsonify(success=False, error="Supabase non configuré"), 500
+        return jsonify(
+            success=False,
+            error="Supabase non configuré"
+        ), 500
 
     corps = request.get_json() or {}
-    nouveau_statut = statut_pour_db(corps.get("status"))
+
+    statut_recu = corps.get("status")
+    nouveau_statut = statut_pour_db(statut_recu)
+
     mise_a_jour = {
         "status": nouveau_statut,
         "rh_status_hint": "",
     }
+
     if corps.get("department"):
         mise_a_jour["department"] = corps.get("department")
+
+    # =====================================================
+    # SI LE RH ACCEPTE :
+    # LE CHOIX DU MENTOR EST OBLIGATOIRE
+    # =====================================================
+
+    if statut_recu == "Accepté":
+
+        mentor_id = corps.get("mentor_id")
+
+        if not mentor_id:
+            return jsonify(
+                success=False,
+                error="Veuillez choisir un mentor."
+            ), 400
+
+        try:
+            mentor_result = (
+                supabase
+                .table("encadrants")
+                .select("*")
+                .eq("id", mentor_id)
+                .limit(1)
+                .execute()
+            )
+
+            if not mentor_result.data:
+                return jsonify(
+                    success=False,
+                    error="Mentor introuvable."
+                ), 404
+
+            mentor_data = mentor_result.data[0]
+
+            mise_a_jour["mentor"] = (
+                mentor_data.get("nom") or ""
+            ).strip()
+
+            mise_a_jour["mentor_function"] = (
+                mentor_data.get("fonction") or ""
+            ).strip()
+
+            mise_a_jour["encadrant_id"] = mentor_id
+
+        except Exception as exc:
+            return jsonify(
+                success=False,
+                error=f"Erreur mentor : {exc}"
+            ), 500
+
     if nouveau_statut != "action_required":
         mise_a_jour["requested_doc_type"] = None
 
     try:
-        query = supabase.table(TABLE_APPLICATIONS).update(mise_a_jour)
-        appliquer_filtre_identifiant(query, corps).execute()
+
+        query = (
+            supabase
+            .table(TABLE_APPLICATIONS)
+            .update(mise_a_jour)
+        )
+
+        appliquer_filtre_identifiant(
+            query,
+            corps
+        ).execute()
+
         return jsonify(success=True)
+
     except Exception as exc:
-        return jsonify(success=False, error=str(exc)), 500
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
 
 
 @app.post("/api/candidates/department")
@@ -3192,6 +3312,91 @@ def api_department():
         return jsonify(success=True)
     except Exception as exc:
         return jsonify(success=False, error=str(exc)), 500
+    
+@app.post("/api/candidates/mentor")
+@login_required("rh")
+def api_assign_mentor():
+
+    if not supabase:
+        return jsonify(
+            success=False,
+            error="Supabase non configuré"
+        ), 500
+
+    corps = request.get_json() or {}
+
+    candidate_id = corps.get("id")
+    mentor_id = corps.get("mentor_id")
+
+    if not candidate_id or not mentor_id:
+        return jsonify(
+            success=False,
+            error="Stagiaire ou mentor manquant"
+        ), 400
+
+    try:
+
+        # Récupérer le mentor sélectionné par le RH
+        mentor_result = (
+            supabase
+            .table("encadrants")
+            .select("*")
+            .eq("id", mentor_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not mentor_result.data:
+            return jsonify(
+                success=False,
+                error="Mentor introuvable"
+            ), 404
+
+        mentor_data = mentor_result.data[0]
+
+        mentor_nom = (
+            mentor_data.get("nom")
+            or ""
+        ).strip()
+
+        mentor_fonction = (
+            mentor_data.get("fonction")
+            or ""
+        ).strip()
+
+        # Affecter ce mentor au stagiaire
+        update_data = {
+            "mentor": mentor_nom,
+            "mentor_function": mentor_fonction,
+            "encadrant_id": mentor_id
+        }
+
+        supabase_executer_update_eq(
+            supabase,
+            TABLE_APPLICATIONS,
+            update_data,
+            "id",
+            candidate_id
+        )
+
+        return jsonify(
+            success=True,
+            mentor=mentor_nom,
+            mentor_function=mentor_fonction,
+            mentor_id=mentor_id
+        )
+
+    except Exception as exc:
+
+        import traceback
+        traceback.print_exc()
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
+        
+    
 
 
 @app.post("/api/candidates/affect")
@@ -3252,6 +3457,83 @@ def api_affect():
             ), 404
 
         stagiaire = stagiaire_result.data[0]
+        
+        # =====================================================
+        # LE MENTOR A DÉJÀ ÉTÉ CHOISI PAR LE RH
+        # =====================================================
+
+        mentor = (
+            stagiaire.get("mentor")
+            or ""
+        ).strip()
+
+        mentor_function = (
+            stagiaire.get("mentor_function")
+            or ""
+        ).strip()
+
+        if not mentor:
+
+            return jsonify(
+                success=False,
+                error=(
+                    "Aucun mentor n'a été attribué "
+                    "à ce stagiaire par le RH."
+                )
+            ), 403
+
+
+        # Le profil Affectation connecté EST ce mentor
+        # =====================================================
+        # VÉRIFIER QUE LE STAGIAIRE APPARTIENT À
+        # L'ENCADRANT ACTUELLEMENT CONNECTÉ
+        # =====================================================
+
+        user_id = session.get("user_id")
+
+        if not user_id:
+            return jsonify(
+                success=False,
+                error="Session utilisateur introuvable."
+            ), 401
+
+        profile_result = (
+            supabase
+            .table("profiles")
+            .select("encadrant_id")
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not profile_result.data:
+            return jsonify(
+                success=False,
+                error="Profil encadrant introuvable."
+            ), 403
+
+        encadrant_connecte_id = (
+            profile_result.data[0]
+            .get("encadrant_id")
+        )
+
+        stagiaire_encadrant_id = (
+            stagiaire.get("encadrant_id")
+        )
+
+        if (
+            not encadrant_connecte_id
+            or
+            str(encadrant_connecte_id)
+            !=
+            str(stagiaire_encadrant_id)
+        ):
+            return jsonify(
+                success=False,
+                error=(
+                    "Ce stagiaire ne vous est pas affecté."
+                )
+            ), 403
 
         print(
             "[AFFECTATION] Stagiaire trouvé :",
@@ -3273,15 +3555,9 @@ def api_affect():
         # =====================================================
 
         update_data = {
-        "project": corps.get("project") or "",
-        "mentor": corps.get("mentor") or "",
-        "mentor_function": corps.get("mentor_function") or "",
-    }
-
-        if corps.get("mentor_id"):
-            update_data["encadrant_id"] = corps.get(
-                "mentor_id"
-            )
+            "project":
+                corps.get("project") or ""
+        }
 
         supabase_executer_update_eq(
             supabase,
@@ -3314,25 +3590,28 @@ def api_affect():
         # UPDATE LOCAL TRAINEE DATA TOO
         # =====================================================
 
-        stagiaire["project"] = update_data["project"]
-        stagiaire["mentor"] = update_data["mentor"]
-        stagiaire["mentor_function"] = (
-            update_data["mentor_function"]
+        stagiaire["project"] = (
+            update_data["project"]
         )
+
+        # mentor et fonction restent ceux choisis par RH
+        stagiaire["mentor"] = mentor
+        stagiaire["mentor_function"] = mentor_function
 
         # =====================================================
         # 4. GENERATE FICHE ACCUEIL
         # =====================================================
 
         affectation_data = {
+
             "project":
                 update_data["project"],
 
             "mentor":
-                update_data["mentor"],
+                mentor,
 
             "mentor_function":
-                update_data["mentor_function"],
+                mentor_function,
 
             "department":
                 stagiaire.get("department") or "",
@@ -3541,7 +3820,7 @@ L'équipe RH Marsa Maroc
         ), 500
         
 @app.get("/api/encadrants")
-@login_required("affectation")
+@login_required("rh")
 def get_encadrants():
     """Récupère la liste des encadrants."""
     if not supabase:
@@ -3576,7 +3855,7 @@ def get_encadrants():
 
 
 @app.post("/api/encadrants")
-@login_required("affectation")
+@login_required("rh")
 def add_encadrant():
     """Ajoute un nouvel encadrant."""
 

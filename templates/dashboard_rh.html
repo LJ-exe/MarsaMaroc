@@ -51,40 +51,166 @@
 
 <body class="min-h-screen bg-slate-50">
 
-    <!-- Top Navigation -->
-    <nav class="navbar-top sticky top-0 z-50 w-full px-6 py-4 flex items-center justify-between shadow-sm">
-        <div class="flex items-center gap-4">
-            <img src="/static/logo_marsa.png" alt="Marsa Maroc" class="w-10 h-10 rounded-lg object-contain">
-            <div>
-                <a href="/" class="font-bold text-lg tracking-tight text-[#003399] uppercase">Marsa Maroc</a>
-                <span
-                    class="text-[10px] block font-medium text-slate-400 uppercase tracking-widest leading-none">Management
-                    RH</span>
+        <!-- Top Navigation -->
+        <nav class="navbar-top sticky top-0 z-50 w-full bg-white
+                border-b border-[#e5eef7] shadow-sm px-6 py-4">
+
+        <div class="w-full flex items-center gap-6">
+
+            <!-- ========================= -->
+            <!-- LOGO MARSA MAROC -->
+            <!-- ========================= -->
+            <div class="flex items-center gap-4 shrink-0">
+
+                <img
+                    src="/static/logo_marsa.png"
+                    alt="Marsa Maroc"
+                    class="w-10 h-10 rounded-lg object-contain">
+
+                <div>
+                    <a href="/"
+                    class="font-bold text-lg tracking-tight
+                            text-[#003399] uppercase leading-none">
+
+                        Marsa Maroc
+
+                    </a>
+
+                    <span class="text-[10px] block font-medium
+                                text-slate-400 uppercase tracking-widest
+                                leading-none mt-1">
+
+                        Management RH
+
+                    </span>
+                </div>
+
             </div>
+
+
+            <!-- ========================= -->
+            <!-- MENU CENTRAL -->
+            <!-- ========================= -->
+            <div class="flex-1 min-w-0 flex justify-center">
+
+                <div class="flex items-center gap-8
+                            overflow-x-auto whitespace-nowrap
+                            px-4">
+
+                    <a href="#overview-section"
+                    onclick="focusRhSection('overview-section')"
+                    class="rh-nav-link text-sm font-bold
+                            text-[#003399]
+                            border-b-2 border-[#003399]
+                            pb-1 transition">
+
+                        Vue d'ensemble
+
+                    </a>
+
+                    <a href="#candidates-section"
+                    onclick="focusRhSection('candidates-section', 'Tous')"
+                    class="rh-nav-link text-sm font-medium
+                            text-slate-500
+                            hover:text-[#003399]
+                            transition">
+
+                        Vivier Candidats
+
+                    </a>
+
+                    <a href="#assignments-section"
+                    onclick="focusRhSection('assignments-section', 'Refusé')"
+                    class="rh-nav-link text-sm font-medium
+                            text-slate-500
+                            hover:text-[#003399]
+                            transition">
+
+                        Affectations
+
+                    </a>
+
+                    <a href="#analytics-section"
+                    onclick="focusRhSection('analytics-section')"
+                    class="rh-nav-link text-sm font-medium
+                            text-slate-500
+                            hover:text-[#003399]
+                            transition">
+
+                        Analytiques
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <!-- ========================= -->
+            <!-- PROFIL RH + LOGOUT -->
+            <!-- ========================= -->
+            <div class="ml-auto shrink-0 flex items-center gap-3">
+
+                <!-- Nom + rôle -->
+                <div class="text-right hidden sm:block">
+
+                    <p class="text-sm font-bold
+                            text-slate-800 leading-none">
+
+                        {{ user }}
+
+                    </p>
+
+                    <p class="text-[10px] font-medium
+                            text-slate-400 uppercase
+                            tracking-tighter mt-1">
+
+                        Ressources Humaines
+
+                    </p>
+
+                </div>
+
+
+                <!-- Avatar -->
+                <div class="w-10 h-10
+                            bg-blue-50 text-[#003399]
+                            rounded-full
+                            flex items-center justify-center
+                            font-bold shrink-0">
+
+                    {{ user[0]|upper }}
+
+                </div>
+
+
+                <!-- Logout existant -->
+                <a href="/logout"
+                class="ml-1 p-1
+                        text-slate-400
+                        hover:text-red-500
+                        transition"
+                title="Déconnexion">
+
+                    <svg viewBox="0 0 24 24"
+                        class="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2">
+
+                        <path
+                            d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4
+                            M16 17l5-5-5-5
+                            M21 12H9" />
+
+                    </svg>
+
+                </a>
+
+            </div>
+
         </div>
 
-        <div class="flex items-center gap-6 md:gap-10 overflow-x-auto max-w-[55vw] md:max-w-none whitespace-nowrap">
-            <a href="#overview-section" onclick="focusRhSection('overview-section')" class="rh-nav-link text-sm font-bold text-[#003399] border-b-2 border-[#003399] pb-1">Vue d'ensemble</a>
-            <a href="#candidates-section" onclick="focusRhSection('candidates-section', 'Tous')" class="rh-nav-link text-sm font-medium text-slate-500 hover:text-blue-900 transition">Vivier Candidats</a>
-            <a href="#assignments-section" onclick="focusRhSection('assignments-section', 'Refusé')" class="rh-nav-link text-sm font-medium text-slate-500 hover:text-blue-900 transition">Affectations</a>
-            <a href="#analytics-section" onclick="focusRhSection('analytics-section')" class="rh-nav-link text-sm font-medium text-slate-500 hover:text-blue-900 transition">Analytiques</a>
-        </div>
-
-        <div class="flex items-center gap-3 pr-6 border-r border-slate-100">
-            <div class="text-right hidden sm:block">
-                <p class="text-sm font-bold text-slate-800 leading-none">{{ user }}</p>
-                <p class="text-[10px] font-medium text-slate-400 uppercase tracking-tighter mt-1">Directeur RH</p>
-            </div>
-            <div class="w-10 h-10 bg-blue-50 text-[#003399] rounded-full flex items-center justify-center font-bold">
-                {{ user[0]|upper }}
-            </div>
-        </div>
-        <a href="/logout" class="text-slate-400 hover:text-red-500 transition">
-            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
-            </svg>
-        </a>
-        </div>
     </nav>
 
     <main id="overview-section" class="max-w-7xl mx-auto p-8 space-y-6">
@@ -120,8 +246,10 @@
                                 attente')|list|length) + (candidates|selectattr('status', 'equalto', 'Action
                                 Requise')|list|length) }}</span> À traiter</span>
                     </div>
+                    
                 </div>
             </div>
+            
             <!-- Decorative background element -->
             <div class="absolute -right-10 -bottom-10 opacity-[0.03] pointer-events-none">
                 <svg viewBox="0 0 500 500" class="w-72 h-72">
@@ -129,6 +257,171 @@
                 </svg>
             </div>
         </div>
+         <section id="analytics-section"
+            class="bg-white rounded-[24px] shadow-sm border border-[#e5eef7] p-8 scroll-mt-28">
+
+            {% set ns = namespace(
+                attente=0,
+                acceptes=0,
+                affectes=0,
+                refuses=0
+            ) %}
+
+            {% for candidate in candidates %}
+
+                {% if candidate.status in ['En attente', 'Action Requise'] %}
+                    {% set ns.attente = ns.attente + 1 %}
+                {% endif %}
+
+                {% if candidate.status == 'Accepté' %}
+                    {% set ns.acceptes = ns.acceptes + 1 %}
+                {% endif %}
+
+                {% if candidate.status == 'Accepté' and candidate.encadrant_id %}
+                    {% set ns.affectes = ns.affectes + 1 %}
+                {% endif %}
+
+                {% if candidate.status == 'Refusé' %}
+                    {% set ns.refuses = ns.refuses + 1 %}
+                {% endif %}
+
+            {% endfor %}
+
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+
+                <div>
+                    <h2 class="text-xl font-black text-[#001a4d]">
+                        Analytiques
+                    </h2>
+
+                    <p class="text-sm text-slate-500 font-medium mt-1">
+                        Répartition actuelle des candidatures.
+                    </p>
+                </div>
+
+                <div class="bg-[#f3f7fb] border border-[#e5eef7] rounded-full px-5 py-2">
+
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        Total
+                    </span>
+
+                    <span class="ml-2 text-sm font-black text-[#001a4d]">
+                        {{ candidates|length }}
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+
+                <!-- À TRAITER -->
+                <div class="rounded-2xl bg-amber-50 border border-amber-100 p-5">
+
+                    <div class="flex items-center justify-between">
+
+                        <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest">
+                            À traiter
+                        </p>
+
+                        <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center text-amber-600">
+                            ⏳
+                        </div>
+
+                    </div>
+
+                    <p class="text-3xl font-black text-amber-800 mt-4">
+                        {{ ns.attente }}
+                    </p>
+
+                    <p class="text-[10px] font-bold text-amber-600/70 mt-1">
+                        En attente ou action requise
+                    </p>
+
+                </div>
+
+
+                <!-- ACCEPTÉES -->
+                <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-5">
+
+                    <div class="flex items-center justify-between">
+
+                        <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">
+                            Acceptées
+                        </p>
+
+                        <div class="w-9 h-9 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
+                            ✓
+                        </div>
+
+                    </div>
+
+                    <p class="text-3xl font-black text-emerald-800 mt-4">
+                        {{ ns.acceptes }}
+                    </p>
+
+                    <p class="text-[10px] font-bold text-emerald-600/70 mt-1">
+                        Candidatures validées par le RH
+                    </p>
+
+                </div>
+
+
+                <!-- AFFECTÉES À UN ENCADRANT -->
+                <div class="rounded-2xl bg-blue-50 border border-blue-100 p-5">
+
+                    <div class="flex items-center justify-between">
+
+                        <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">
+                            Affectées
+                        </p>
+
+                        <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600">
+                            👤
+                        </div>
+
+                    </div>
+
+                    <p class="text-3xl font-black text-blue-800 mt-4">
+                        {{ ns.affectes }}
+                    </p>
+
+                    <p class="text-[10px] font-bold text-blue-600/70 mt-1">
+                        Encadrant attribué par le RH
+                    </p>
+
+                </div>
+
+
+                <!-- REFUSÉES -->
+                <div class="rounded-2xl bg-rose-50 border border-rose-100 p-5">
+
+                    <div class="flex items-center justify-between">
+
+                        <p class="text-[10px] font-black text-rose-600 uppercase tracking-widest">
+                            Refusées
+                        </p>
+
+                        <div class="w-9 h-9 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600">
+                            ✕
+                        </div>
+
+                    </div>
+
+                    <p class="text-3xl font-black text-rose-800 mt-4">
+                        {{ ns.refuses }}
+                    </p>
+
+                    <p class="text-[10px] font-bold text-rose-600/70 mt-1">
+                        Candidatures refusées
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
 
         <!-- Filters & Search -->
         <div id="candidates-section" class="flex flex-col md:flex-row items-center justify-between gap-6 overflow-x-auto pb-2 scroll-mt-28">
@@ -240,7 +533,7 @@
                             <!-- DÉCISION DE STAGE -->
                             <!-- ========================================== -->
 
-                            {% if candidate.fiche_accueil_pdf %}
+                            {% if candidate.status == 'Accepté' and candidate.encadrant_id %}
 
                             <div class="flex flex-col items-end gap-1.5 mb-3">
 
@@ -473,33 +766,7 @@
             </div>
         </div>
 
-        <section id="analytics-section" class="bg-white rounded-[24px] shadow-sm border border-[#e5eef7] p-8 scroll-mt-28">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h2 class="text-xl font-black text-[#001a4d]">Analytiques</h2>
-                    <p class="text-sm text-slate-500 font-medium">Répartition actuelle des candidatures.</p>
-                </div>
-                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">{{ candidates|length }} dossiers</span>
-            </div>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="rounded-2xl bg-amber-50 border border-amber-100 p-5">
-                    <p class="text-[10px] font-black text-amber-600 uppercase tracking-widest">En attente</p>
-                    <p class="text-3xl font-black text-amber-800 mt-2">{{ candidates|selectattr('status', 'equalto', 'En attente')|list|length }}</p>
-                </div>
-                <div class="rounded-2xl bg-emerald-50 border border-emerald-100 p-5">
-                    <p class="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Acceptées</p>
-                    <p class="text-3xl font-black text-emerald-800 mt-2">{{ candidates|selectattr('status', 'equalto', 'Accepté')|list|length }}</p>
-                </div>
-                <div class="rounded-2xl bg-blue-50 border border-blue-100 p-5">
-                    <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Affectées</p>
-                    <p class="text-3xl font-black text-blue-800 mt-2">{{ candidates|selectattr('status', 'equalto', 'Attente Affectation')|list|length }}</p>
-                </div>
-                <div class="rounded-2xl bg-rose-50 border border-rose-100 p-5">
-                    <p class="text-[10px] font-black text-rose-600 uppercase tracking-widest">Refusées</p>
-                    <p class="text-3xl font-black text-rose-800 mt-2">{{ candidates|selectattr('status', 'equalto', 'Refusé')|list|length }}</p>
-                </div>
-            </div>
-        </section>
+       
     </main>
 
     <!-- Left Side PDF Preview Panel -->
@@ -648,6 +915,28 @@
                             {% endfor %}
                         </select>
                         <p class="text-[10px] font-medium text-slate-400">Obligatoire pour accepter le dossier.</p>
+                        <!-- Mentor choisi par le RH -->
+                        <div class="space-y-2 mt-4">
+
+                            <label for="modal-mentor-select"
+                                class="text-[10px] font-black text-[#001a4d] uppercase tracking-widest">
+                                Mentor / Encadrant
+                            </label>
+
+                            <select id="modal-mentor-select"
+                                class="w-full bg-white border border-[#e5eef7] rounded-xl py-3 px-4 text-xs font-bold text-[#001a4d] focus:outline-none focus:border-blue-400">
+
+                                <option value="">
+                                    — Choisir le mentor —
+                                </option>
+
+                            </select>
+
+                            <p class="text-[10px] font-medium text-slate-400">
+                                Obligatoire pour accepter le stagiaire.
+                            </p>
+
+                        </div>
                     </div>
                     <p class="text-xs font-bold text-slate-500"><span class="text-slate-400">Zone souhaitée :</span>
                         <span id="modal-zone">—</span>
@@ -1236,6 +1525,59 @@
         console.log('[RH INIT] Dashboard script loaded');
         let currentFilter = 'Tous';
         let currentCandidateId = null;
+        let rhEncadrants = [];
+
+        async function loadRhEncadrants() {
+
+            try {
+
+                const response = await fetch('/api/encadrants');
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(
+                        data.error || "Impossible de charger les mentors."
+                    );
+                }
+
+                rhEncadrants = data.encadrants || [];
+
+                const select =
+                    document.getElementById('modal-mentor-select');
+
+                if (!select) {
+                    return;
+                }
+
+                select.innerHTML = `
+                    <option value="">
+                        — Choisir le mentor —
+                    </option>
+                `;
+
+                rhEncadrants.forEach(encadrant => {
+
+                    const option =
+                        document.createElement('option');
+
+                    option.value = encadrant.id;
+
+                    option.textContent =
+                        encadrant.fonction
+                            ? `${encadrant.nom} — ${encadrant.fonction}`
+                            : encadrant.nom;
+
+                    select.appendChild(option);
+                });
+
+            } catch (error) {
+
+                console.error(
+                    "[RH MENTORS]",
+                    error
+                );
+            }
+        }
         // ==========================================
         // DÉCISION DE STAGE
         // ==========================================
@@ -1257,9 +1599,13 @@
 
         // Initialize table with persisted statuses
         document.addEventListener('DOMContentLoaded', () => {
+
             console.log('[RH INIT] DOMContentLoaded');
-            console.log('[RH INIT] openValiderEvaluationModal function exists:', typeof openValiderEvaluationModal !== 'undefined');
+
             filterTable();
+
+            // Charger les mentors disponibles
+            loadRhEncadrants();
         });
 
         function examinerDossier(btn) {
@@ -1278,6 +1624,12 @@
 
             document.getElementById('modal-zone').innerText = zone || 'Non renseignée';
             document.getElementById('modal-pole-select').value = department || '';
+            const mentorSelect =
+                document.getElementById('modal-mentor-select');
+
+            if (mentorSelect) {
+                mentorSelect.value = '';
+            }
 
             // Reset all statuses in modal before fetching
             const docs = ["cv", "cin", "assurance", "convention", "demande"];
@@ -1437,41 +1789,145 @@
             }, 300);
         }
 
-        function updateStatus(status) {
-            const name = document.getElementById('modal-name').innerText;
-            const department = document.getElementById('modal-pole-select').value;
+       function updateStatus(status) {
 
-            if (status === 'Accepté' && !department) {
-                alert('Veuillez choisir une Direction / Pôle avant d\'accepter le dossier.');
+            const name =
+                document.getElementById(
+                    'modal-name'
+                ).innerText;
+
+            const department =
+                document.getElementById(
+                    'modal-pole-select'
+                ).value;
+
+            const mentorSelect =
+                document.getElementById(
+                    'modal-mentor-select'
+                );
+
+            const mentorId =
+                mentorSelect
+                    ? mentorSelect.value
+                    : '';
+
+            console.log(
+                '[RH] mentor_id sélectionné :',
+                mentorId
+            );
+
+            if (
+                status === 'Accepté'
+                &&
+                !department
+            ) {
+
+                alert(
+                    "Veuillez choisir une Direction / Pôle."
+                );
+
                 return;
             }
 
+            if (
+                status === 'Accepté'
+                &&
+                !mentorId
+            ) {
+
+                alert(
+                    "Veuillez choisir un mentor."
+                );
+
+                return;
+            }
+
+            const payload = {
+
+                id: currentCandidateId,
+
+                name: name,
+
+                status: status,
+
+                department:
+                    department || null,
+
+                mentor_id:
+                    status === 'Accepté'
+                        ? mentorId
+                        : null
+            };
+
+            console.log(
+                '[RH] Payload envoyé :',
+                payload
+            );
+
             fetch('/api/candidates/status', {
+
                 method: 'POST',
+
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type':
+                        'application/json'
                 },
-                body: JSON.stringify({
-                    id: currentCandidateId,
-                    name,
-                    status,
-                    department: department || null
-                })
+
+                body:
+                    JSON.stringify(payload)
+
             })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        closeModal();
-                        location.reload();
-                    } else {
-                        alert("Erreur lors de la mise à jour : " + (data.error || "Erreur inconnue"));
-                    }
-                })
-                .catch(err => {
-                    console.error("API error:", err);
-                    alert("Erreur de connexion au serveur.");
-                });
+            .then(async res => {
+
+                const data =
+                    await res.json();
+
+                if (!res.ok) {
+
+                    throw new Error(
+                        data.error
+                        || 'Erreur inconnue'
+                    );
+                }
+
+                return data;
+            })
+            .then(data => {
+
+                if (data.success) {
+
+                    closeModal();
+
+                    location.reload();
+
+                } else {
+
+                    alert(
+                        "Erreur lors de la mise à jour : "
+                        +
+                        (
+                            data.error
+                            ||
+                            "Erreur inconnue"
+                        )
+                    );
+                }
+            })
+            .catch(err => {
+
+                console.error(
+                    '[RH STATUS]',
+                    err
+                );
+
+                alert(
+                    "Erreur lors de la mise à jour : "
+                    +
+                    err.message
+                );
+            });
         }
+
 
         function applyFilter(filter, btn) {
             currentFilter = filter;

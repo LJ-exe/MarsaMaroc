@@ -76,7 +76,7 @@
                     <p class="text-sm font-bold text-slate-800 leading-none">
                         {{ user }}
                     </p>
-                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-tighter mt-1">Coordonnateur Flux
+                    <p class="text-[10px] font-medium text-slate-400 uppercase tracking-tighter mt-1">Encadrant
                     </p>
                 </div>
                 <div class="w-10 h-10 bg-blue-50 text-[#003399] rounded-full flex items-center justify-center font-bold">
@@ -92,65 +92,8 @@
     </nav>
 
     <main id="affectation-section" class="max-w-7xl mx-auto p-8 space-y-8 scroll-mt-28">
-        <!-- Quota Banner -->
-        <div
-            class="bg-white rounded-[32px] p-10 border border-[#e5eef7] shadow-sm flex flex-col lg:flex-row items-center justify-between gap-10">
-            <div class="flex items-center gap-6">
-                <div class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-[#003399]">
-                    <svg viewBox="0 0 24 24" class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="18" cy="5" r="3" />
-                        <circle cx="6" cy="12" r="3" />
-                        <circle cx="18" cy="19" r="3" />
-                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                    </svg>
-                </div>
-                <div class="space-y-1">
-                    <h1 class="text-3xl font-black text-[#001a4d]">Affectation & Répartition</h1>
-                    <p class="text-slate-400 font-medium">Coordination pédagogique entre les services portuaires.</p>
-                </div>
-            </div>
+            <!-- Main Content Area -->
 
-            <div class="flex flex-wrap justify-center gap-4">
-                <div class="bg-white border border-[#e5eef7] rounded-3xl p-5 min-w-[120px] text-center shadow-sm">
-                    <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">DSI</p>
-                    <p class="text-xl font-black text-[#001a4d]"><span id="count-dsi">0</span> <span
-                            class="text-slate-200">/ 5</span></p>
-                    <div class="w-full h-1 bg-slate-50 rounded-full mt-3 overflow-hidden">
-                        <div id="bar-dsi" class="h-full bg-blue-500 transition-all duration-500" style="width: 0%">
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white border border-[#e5eef7] rounded-3xl p-5 min-w-[120px] text-center shadow-sm">
-                    <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">FINANCE</p>
-                    <p class="text-xl font-black text-[#001a4d]"><span id="count-finance">0</span> <span
-                            class="text-slate-200">/ 3</span></p>
-                    <div class="w-full h-1 bg-slate-50 rounded-full mt-3 overflow-hidden">
-                        <div id="bar-finance" class="h-full bg-blue-500 transition-all duration-500" style="width: 0%">
-                        </div>
-                    </div>
-                </div>
-                <div class="bg-white border border-[#e5eef7] rounded-3xl p-5 min-w-[120px] text-center shadow-sm">
-                    <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">RH</p>
-                    <p class="text-xl font-black text-[#001a4d]"><span id="count-rh">0</span> <span
-                            class="text-slate-200">/ 2</span></p>
-                    <div class="w-full h-1 bg-slate-50 rounded-full mt-3 overflow-hidden">
-                        <div id="bar-rh" class="h-full bg-blue-500 transition-all duration-500" style="width: 0%"></div>
-                    </div>
-                </div>
-                <div class="bg-white border border-[#e5eef7] rounded-3xl p-5 min-w-[120px] text-center shadow-sm">
-                    <p class="text-[9px] font-black text-slate-300 uppercase tracking-widest mb-2">LOGISTIQUE</p>
-                    <p class="text-xl font-black text-[#001a4d]"><span id="count-logistique">0</span> <span
-                            class="text-slate-200">/ 8</span></p>
-                    <div class="w-full h-1 bg-slate-50 rounded-full mt-3 overflow-hidden">
-                        <div id="bar-logistique" class="h-full bg-blue-500 transition-all duration-500"
-                            style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Content Area -->
         <div class="bg-white rounded-[32px] border border-[#e5eef7] shadow-sm overflow-hidden">
             <div class="p-10 flex flex-col md:flex-row items-center justify-between gap-6">
                 <div class="flex items-center gap-4">
@@ -236,9 +179,7 @@
                                     la colonne peut être absente de la DB (retrait silencieux).
                                     ─────────────────────────────────────────────────────── #}
                                     {% set deja_affecte =
-                                        (candidate.mentor and candidate.mentor != 'À définir')
-                                        or candidate.encadrant_id
-                                        or candidate.project
+                                        candidate.project
                                         or candidate.fiche_accueil_pdf
                                     %}
                                     {% set rapport_valide = candidate.intern_report_status == 'Validé' %}
@@ -309,6 +250,8 @@
                                         data-id="{{ candidate.id }}" data-name="{{ candidate.name }}"
                                         data-pole="{{ candidate.department or '' }}"
                                         data-zone="{{ candidate.zone or '' }}"
+                                        data-mentor="{{ candidate.mentor or '' }}"
+                                        data-mentor-function="{{ candidate.mentor_function or '' }}"
                                         class="bg-[#001a4d] text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-900/10 hover:scale-[1.05] transition flex items-center gap-2">
                                         <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor"
                                             stroke-width="2.5">
@@ -317,7 +260,7 @@
                                             <line x1="20" y1="8" x2="20" y2="14" />
                                             <line x1="23" y1="11" x2="17" y2="11" />
                                         </svg>
-                                        Affecter
+                                        Assigner le projet
                                     </button>
                                     {% endif %}
 
@@ -437,7 +380,7 @@
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                     </svg>
                 </div>
-                <h2 class="text-2xl font-black text-[#001a4d] uppercase mb-1">Désignation du Poste</h2>
+                <h2 class="text-2xl font-black text-[#001a4d] uppercase mb-1">Projet de Stage</h2>
                 <p id="target-candidate" class="text-slate-400 font-bold uppercase tracking-widest text-xs">Candidat:
                     ...</p>
             </div>
@@ -449,7 +392,36 @@
                     <span id="info-pole" class="text-[#001a4d]">—</span>
                 </p>
                 <p class="text-xs font-bold text-slate-600"><span class="text-slate-400">Zone souhaitée (Stagiaire)
-                        :</span> <span id="info-zone" class="text-[#001a4d]">—</span></p>
+                        :</span> <span id="info-zone" class="text-[#001a4d]">—</span>
+                </p>
+                <p class="text-xs font-bold text-slate-600">
+
+                <span class="text-slate-400">
+                    Mentor :
+                </span>
+
+                <span
+                    id="info-mentor"
+                    class="text-[#001a4d]">
+                    —
+                </span>
+
+            </p>
+
+            <p class="text-xs font-bold text-slate-600">
+
+                <span class="text-slate-400">
+                    Fonction :
+                </span>
+
+                <span
+                    id="info-mentor-function"
+                    class="text-[#001a4d]">
+                    —
+                </span>
+
+            </p>
+                    
             </div>
 
             <div class="space-y-6">
@@ -459,55 +431,12 @@
                         class="w-full bg-[#f8fafc] border border-[#e5eef7] rounded-xl py-3 px-4 text-sm font-bold text-[#001a4d] focus:outline-none focus:border-blue-400">
                 </div>
 
-                <div class="space-y-2">
-                    <label class="label-premium">Responsable de l'Encadrement (Mentor)</label>
-                    <div class="relative" id="encadrant-search-container">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 z-10">
-                            <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                                <circle cx="12" cy="7" r="4" />
-                            </svg>
-                        </span>
-                        <input type="text" id="mentor-input" placeholder="Rechercher ou choisir un encadrant..."
-                            class="w-full bg-[#f8fafc] border border-[#e5eef7] rounded-xl py-3 pl-12 pr-6 text-sm font-bold text-[#001a4d] focus:outline-none focus:border-blue-400"
-                            autocomplete="off">
-                        <input type="hidden" id="mentor-id" value="">
-
-                        <!-- Dropdown results -->
-                        <div id="encadrant-dropdown"
-                            class="absolute top-full left-0 right-0 mt-2 bg-white border border-[#e5eef7] rounded-xl shadow-lg z-50 hidden max-h-60 overflow-y-auto">
-                            <div id="encadrant-results" class="p-2">
-                                <!-- Results will be loaded here -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="space-y-2">
-
-                            <div class="space-y-2">
-
-                        <label class="label-premium">
-                            Fonction de l'encadrant
-                        </label>
-
-                        <input
-                            type="text"
-                            id="mentor-function-input"
-                            placeholder="Ex : Responsable Systèmes d'Information"
-                            class="w-full bg-[#f8fafc]
-                                border border-[#e5eef7]
-                                rounded-xl py-3 px-4
-                                text-sm font-bold text-[#001a4d]
-                                focus:outline-none
-                                focus:border-blue-400">
-
-                    </div>
-                </div>
+                
 
                 <div class="pt-6">
                     <button onclick="confirmAssignment()"
                         class="w-full bg-[#001a4d] text-white py-5 rounded-2xl font-black uppercase tracking-[0.2em] shadow-2xl shadow-blue-900/20 hover:scale-[1.01] transition">
-                        Confirmer le déploiement
+                        Enregistrer le projet
                     </button>
                 </div>
             </div>
@@ -742,453 +671,204 @@
     </div>
 
     <script>
-        const poleMapping = {
-            'DSI - Direction Systèmes d\'Information': 'dsi',
-            'DCH - Capital Humain': 'rh',
-            'DAF - Finance & Contrôle': 'finance',
-            'DOF - Opérations Portuaires': 'logistique'
-        };
+       
 
-        const limits = { dsi: 5, rh: 2, finance: 3, logistique: 8 };
+       
 
-        // Initialize dashboard
-        document.addEventListener('DOMContentLoaded', () => {
-            updateQuotaUI();
-
-            // Setup encadrant search input event listener
-            const mentorInput = document.getElementById('mentor-input');
-            if (mentorInput) {
-                mentorInput.addEventListener('input', (e) => {
-                    const searchTerm = e.target.value;
-
-                    // Clear the hidden ID when user types
-                    document.getElementById('mentor-id').value = '';
-
-                    // Debounce search
-                    clearTimeout(searchTimeout);
-                    searchTimeout = setTimeout(() => {
-                        const filtered = filterEncadrants(searchTerm);
-                        showEncadrantDropdown(filtered, searchTerm);
-                    }, 300);
-                });
-
-                // Hide dropdown when clicking outside
-                document.addEventListener('click', (e) => {
-                    const container = document.getElementById('encadrant-search-container');
-                    if (container && !container.contains(e.target)) {
-                        document.getElementById('encadrant-dropdown').classList.add('hidden');
-                    }
-                });
-            }
-        });
-
-        function loadQuotas() {
-            return JSON.parse(localStorage.getItem('department_quotas') || '{"dsi":0, "finance":0, "rh":0, "logistique":0}');
-        }
-
-        function updateQuotaUI() {
-            const quotas = loadQuotas();
-            Object.keys(quotas).forEach(key => {
-                const countEl = document.getElementById(`count-${key}`);
-                const barEl = document.getElementById(`bar-${key}`);
-                if (countEl && barEl) {
-                    countEl.innerText = quotas[key];
-                    const percentage = (quotas[key] / limits[key]) * 100;
-                    barEl.style.width = `${Math.min(percentage, 100)}%`;
-                }
-            });
-        }
+       
 
         let currentPole = '';
         let currentCandidateId = '';
 
-        function openAffectationModal(btn) {
+       function openAffectationModal(btn) {
+
             const id = btn.dataset.id;
             const name = btn.dataset.name;
             const pole = btn.dataset.pole;
             const zone = btn.dataset.zone;
-            document.getElementById('target-candidate').innerText = 'Candidat: ' + name;
-            document.getElementById('info-pole').innerText = pole || 'Non défini par la RH';
 
-            // Reset encadrant search
-            document.getElementById('mentor-input').value = '';
-            document.getElementById('mentor-id').value = '';
+            const mentor =
+                btn.dataset.mentor || '';
+
+            const mentorFunction =
+                btn.dataset.mentorFunction || '';
+
             document.getElementById(
-                'mentor-function-input'
-            ).value = '';
-            document.getElementById('encadrant-dropdown').classList.add('hidden');
+                'target-candidate'
+            ).innerText =
+                'Candidat: ' + name;
 
-            // Load encadrants list
-            loadEncadrants();
-            document.getElementById('info-zone').innerText = zone || 'Non choisie par le stagiaire';
-            document.getElementById('projet-input').value = '';
-            document.getElementById('mentor-input').value = '';
+            document.getElementById(
+                'info-pole'
+            ).innerText =
+                pole || 'Non défini par la RH';
+
+            document.getElementById(
+                'info-zone'
+            ).innerText =
+                zone || 'Non choisie par le stagiaire';
+
+            document.getElementById(
+                'info-mentor'
+            ).innerText =
+                mentor || 'Non défini';
+
+            document.getElementById(
+                'info-mentor-function'
+            ).innerText =
+                mentorFunction || '—';
+
+            document.getElementById(
+                'projet-input'
+            ).value = '';
+
             currentPole = pole || '';
             currentCandidateId = id || '';
-            document.getElementById('affectation-modal').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-        }
 
+            document.getElementById(
+                'affectation-modal'
+            ).classList.remove('hidden');
+
+            document.body.style.overflow =
+                'hidden';
+        }
         function closeAffectationModal() {
             document.getElementById('affectation-modal').classList.add('hidden');
             document.body.style.overflow = 'auto';
         }
 
-        // Encadrant search functionality
-        let allEncadrants = [];
-        let searchTimeout = null;
-
-        function loadEncadrants() {
-            fetch('/api/encadrants')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        allEncadrants = data.encadrants || [];
-                    }
-                })
-                .catch(err => console.error('Error loading encadrants:', err));
-        }
-
-        function filterEncadrants(searchTerm) {
-            if (!searchTerm || searchTerm.trim() === '') {
-                return allEncadrants;
-            }
-            const term = searchTerm.toLowerCase().trim();
-            return allEncadrants.filter(enc => {
-
-                const nom =
-                    (enc.nom || '')
-                        .toLowerCase();
-
-                const fonction =
-                    (enc.fonction || '')
-                        .toLowerCase();
-
-                return (
-                    nom.includes(term)
-                    ||
-                    fonction.includes(term)
-                );
-            });
-        }
-
-        function showEncadrantDropdown(results, searchTerm) {
-            const dropdown = document.getElementById('encadrant-dropdown');
-            const resultsContainer = document.getElementById('encadrant-results');
-
-            if (results.length === 0 && searchTerm && searchTerm.trim() !== '') {
-                // Show "Add new encadrant" option
-                resultsContainer.innerHTML = `
-                    <div class="p-3 hover:bg-slate-50 cursor-pointer rounded-lg border border-dashed border-blue-300 bg-blue-50/50" 
-                         onclick="addNewEncadrant('${searchTerm}')">
-                        <div class="flex items-center gap-2">
-                            <svg viewBox="0 0 24 24" class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2">
-                                <line x1="12" y1="5" x2="12" y2="19"></line>
-                                <line x1="5" y1="12" x2="19" y2="12"></line>
-                            </svg>
-                            <span class="text-sm font-bold text-blue-600">Ajouter "${searchTerm}"</span>
-                        </div>
-                    </div>
-                `;
-            } else if (results.length > 0) {
-                // Show matching encadrants
-                resultsContainer.innerHTML = results.map(enc => `
-
-                    <div
-                        class="p-3 hover:bg-slate-50
-                            cursor-pointer rounded-lg transition"
-                        onclick="selectEncadrant('${enc.id}')">
-
-                        <div class="flex items-center gap-2">
-
-                            <svg
-                                viewBox="0 0 24 24"
-                                class="w-4 h-4 text-slate-400"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2">
-
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-
-                            </svg>
-
-                            <div>
-
-                                <div class="text-sm font-bold text-[#001a4d]">
-                                    ${enc.nom || ''}
-                                </div>
-
-                                <div class="text-[10px] font-bold text-slate-400">
-                                    ${enc.fonction || 'Fonction non renseignée'}
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                `).join('');
-            } else {
-                resultsContainer.innerHTML = `
-                    <div class="p-3 text-center text-slate-400 text-xs">
-                        Aucun encadrant trouvé
-                    </div>
-                `;
-            }
-
-            dropdown.classList.remove('hidden');
-        }
-
-        function selectEncadrant(id) {
-
-        const encadrant =
-            allEncadrants.find(
-                enc =>
-                    String(enc.id) === String(id)
-            );
-
-        if (!encadrant) {
-            console.error(
-                'Encadrant introuvable :',
-                id
-            );
-            return;
-        }
+        
 
 
-        document.getElementById(
-            'mentor-input'
-        ).value =
-            encadrant.nom || '';
+      function confirmAssignment() {
 
+            const id =
+                currentCandidateId;
 
-        document.getElementById(
-            'mentor-id'
-        ).value =
-            encadrant.id || '';
-
-
-        document.getElementById(
-            'mentor-function-input'
-        ).value =
-            encadrant.fonction || '';
-
-
-        document.getElementById(
-            'encadrant-dropdown'
-        ).classList.add(
-            'hidden'
-        );
-    }
-
-        function addNewEncadrant(nom) {
-
-                const trimmedNom =
-                    nom.trim();
-
-                if (!trimmedNom) {
-                    return;
-                }
-
-
-                let fonction = (
-                    document.getElementById(
-                        'mentor-function-input'
-                    ).value || ''
-                ).trim();
-
-
-                if (!fonction) {
-
-                    fonction = (
-                        window.prompt(
-                            `Fonction de l'encadrant ${trimmedNom} :`,
-                            ''
-                        )
-                        || ''
-                    ).trim();
-                }
-
-
-                if (!fonction) {
-
-                    alert(
-                        "La fonction de l'encadrant est obligatoire."
+            const name =
+                document
+                    .getElementById(
+                        'target-candidate'
+                    )
+                    .innerText
+                    .replace(
+                        'Candidat: ',
+                        ''
                     );
 
-                    return;
-                }
+            const project =
+                document
+                    .getElementById(
+                        'projet-input'
+                    )
+                    .value
+                    .trim();
 
+            const mentor =
+                document
+                    .getElementById(
+                        'info-mentor'
+                    )
+                    .innerText;
 
-                fetch('/api/encadrants', {
+            const mentorFunction =
+                document
+                    .getElementById(
+                        'info-mentor-function'
+                    )
+                    .innerText;
 
-                    method: 'POST',
+            const zone =
+                document
+                    .getElementById(
+                        'info-zone'
+                    )
+                    .innerText;
 
-                    headers: {
-                        'Content-Type':
-                            'application/json'
-                    },
-
-                    body: JSON.stringify({
-
-                        nom:
-                            trimmedNom,
-
-                        fonction:
-                            fonction
-                    })
-
-                })
-                .then(res => res.json())
-
-                .then(data => {
-
-                    if (!data.success) {
-
-                        alert(
-                            "Erreur lors de l'ajout : "
-                            + (
-                                data.error
-                                || 'Erreur inconnue'
-                            )
-                        );
-
-                        return;
-                    }
-
-
-                    const index =
-                        allEncadrants.findIndex(
-                            enc =>
-                                String(enc.id)
-                                ===
-                                String(data.encadrant.id)
-                        );
-
-
-                    if (index === -1) {
-
-                        allEncadrants.push(
-                            data.encadrant
-                        );
-
-                    } else {
-
-                        allEncadrants[index] =
-                            data.encadrant;
-                    }
-
-
-                    selectEncadrant(
-                        data.encadrant.id
-                    );
-
-                })
-
-                .catch(err => {
-
-                    console.error(
-                        'Error adding encadrant:',
-                        err
-                    );
-
-                    alert(
-                        "Erreur lors de l'ajout de l'encadrant"
-                    );
-                });
-            }
-
-        function confirmAssignment() {
-            const id = currentCandidateId;
-            const name = document.getElementById('target-candidate').innerText.replace('Candidat: ', '');
-            const project = document.getElementById('projet-input').value.trim();
-            const mentor = document.getElementById('mentor-input').value.trim() || 'À définir';
-            const mentorId = document.getElementById('mentor-id').value || null;
-            const mentorFunction =document.getElementById('mentor-function-input').value.trim();
-            if (!mentorFunction) {
-
-                alert(
-                    "Veuillez renseigner la fonction de l'encadrant."
-                );
-
-                return;
-            }
-            const zone = document.getElementById('info-zone').innerText;
-            const pole = currentPole;
+            const pole =
+                currentPole;
 
             if (!project) {
-                alert('Veuillez saisir le nom du projet de stage.');
+
+                alert(
+                    'Veuillez saisir le nom du projet de stage.'
+                );
+
                 return;
             }
 
-            const quotaKey = poleMapping[pole];
+            
 
             fetch('/api/candidates/affect', {
+
                 method: 'POST',
+
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type':
+                        'application/json'
                 },
+
                 body: JSON.stringify({
-                id:
-                    id,
+                    id: id,
+                    name: name,
+                    project: project
+                })
 
-                name:
-                    name,
-
-                project:
-                    project,
-
-                mentor:
-                    mentor,
-
-                mentor_id:
-                    mentorId,
-
-                mentor_function:
-                    mentorFunction
             })
-            })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        if (quotaKey) {
-                            let quotas = loadQuotas();
-                            if (quotas[quotaKey] < limits[quotaKey]) {
-                                quotas[quotaKey]++;
-                                localStorage.setItem('department_quotas', JSON.stringify(quotas));
-                                updateQuotaUI();
-                            }
-                        }
+            .then(res => res.json())
+            .then(data => {
 
-                    alert(`Affectation confirmée pour ${name}
+                if (data.success) {
 
-                    Projet : ${project}
-                    Pôle (RH) : ${pole || '—'}
-                    Zone : ${zone}
+                    
 
-                    Encadrant : ${mentor}
-                    Fonction : ${mentorFunction}
+                    alert(
+                        `Affectation confirmée pour ${name}
 
-                    Un email de notification a été envoyé au candidat.`);                       
+        Projet : ${project}
+        Pôle : ${pole || '—'}
+        Zone : ${zone}
+
+        Mentor : ${mentor}
+        Fonction : ${mentorFunction}`
+                    );
+
                     closeAffectationModal();
 
-                        // Télécharger automatiquement le PDF si généré
-                        if (data.pdf_path) {
-                            window.open(`/download/fiche_accueil/${data.pdf_path}`, '_blank');
-                        }
+                    if (data.pdf_path) {
 
-                        // Reload to update the candidates list from the server
-                        location.reload();
-                    } else {
-                        alert("Erreur lors de l'affectation : " + (data.error || "Erreur inconnue"));
+                        window.open(
+                            `/download/fiche_accueil/${data.pdf_path}`,
+                            '_blank'
+                        );
                     }
-                })
-                .catch(err => {
-                    console.error("API error:", err);
-                    alert("Erreur de connexion au serveur.");
-                });
+
+                    location.reload();
+
+                } else {
+
+                    alert(
+                        "Erreur lors de l'affectation : "
+                        +
+                        (
+                            data.error
+                            ||
+                            "Erreur inconnue"
+                        )
+                    );
+                }
+            })
+            .catch(err => {
+
+                console.error(
+                    "API error:",
+                    err
+                );
+
+                alert(
+                    "Erreur de connexion au serveur."
+                );
+            });
         }
 
         function filterAffectation() {

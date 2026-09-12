@@ -352,19 +352,47 @@
                                 <p
                                     class="text-[9px] font-black text-[#001a4d]/30 uppercase mb-4 pl-4 border-l-2 border-[#003399]">
                                     Profil Candidat</p>
-                                <div class="grid grid-cols-2 gap-y-4">
-                                    <div class="text-[11px] font-bold text-slate-500">Type:</div>
-                                    <div class="text-[11px] font-black text-[#003399] justify-self-end bg-blue-50 px-3 py-1 rounded-md">
-                                        {{ candidat.type if candidat else '—' }}</div>
+                               <div class="grid grid-cols-2 gap-y-4">
 
-                                    <div class="text-[11px] font-bold text-slate-500">Formation:</div>
-                                    <div class="text-[11px] font-black text-slate-900 justify-self-end uppercase">
-                                        {{ candidat.school if candidat else '—' }}</div>
-
-                                    <div class="text-[11px] font-bold text-slate-500">Période:</div>
-                                    <div class="text-[11px] font-black text-slate-900 justify-self-end">
-                                        {{ candidat.period if candidat else '—' }}</div>
+                                <!-- TYPE DE STAGE -->
+                                <div class="text-[11px] font-bold text-slate-500">
+                                    Type:
                                 </div>
+
+                                <div id="summary-type"
+                                    class="text-[11px] font-black text-[#003399] justify-self-end bg-blue-50 px-3 py-1 rounded-md text-right">
+                                    {{ candidat.type if candidat and candidat.type else '—' }}
+                                </div>
+
+
+                                <!-- FORMATION / FILIERE -->
+                                <div class="text-[11px] font-bold text-slate-500">
+                                    Formation:
+                                </div>
+
+                                <div id="summary-formation"
+                                    class="text-[11px] font-black text-slate-900 justify-self-end uppercase text-right">
+                                    {% if candidat and candidat.specialty %}
+                                        {{ candidat.specialty }}
+                                    {% elif candidat and candidat.school %}
+                                        {{ candidat.school }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </div>
+
+
+                                <!-- PERIODE -->
+                                <div class="text-[11px] font-bold text-slate-500">
+                                    Période:
+                                </div>
+
+                                <div id="summary-period"
+                                    class="text-[11px] font-black text-slate-900 justify-self-end text-right">
+                                    {{ candidat.period if candidat and candidat.period else '—' }}
+                                </div>
+
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -655,7 +683,12 @@
                     <!-- Section Documents Officiels -->
                     <div id="official-docs-container" class="space-y-4">
                         {% set docs_finaux = candidat and candidat.status == 'Accepté' and candidat.evaluation_status == 'Accepté' %}
-                        {% if candidat and (candidat.fiche_accueil_pdf or (candidat.status == 'Accepté' and candidat.intern_report_path) or docs_finaux) %}
+                        {% if candidat and (
+                            candidat.decision_pdf
+                            or candidat.fiche_accueil_pdf
+                            or (candidat.status == 'Accepté' and candidat.intern_report_path)
+                            or docs_finaux
+                        ) %}
                         <div class="bg-white rounded-[32px] p-8 border border-[#e5eef7] shadow-sm space-y-6">
                             <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Mes Documents Officiels</p>
                             
@@ -1015,6 +1048,50 @@
         window.currentCandidateId = "{{ candidat.id if candidat else '' }}";
         window.modeVue = "{{ mode_vue }}";
         window.requestedDocType = "{{ candidat.requested_doc_type if candidat else '' }}";
+        function formatStageDate(dateString) {
+            if (!dateString) return '';
+
+            const parts = dateString.split('-');
+
+            if (parts.length !== 3) {
+                return dateString;
+            }
+
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+
+        function updateAdministrativeSummary(candidate) {
+            const typeElement = document.getElementById('summary-type');
+            const formationElement = document.getElementById('summary-formation');
+            const periodElement = document.getElementById('summary-period');
+
+            // Type de stage
+            if (typeElement) {
+                typeElement.textContent =
+                    candidate.type || '—';
+            }
+
+            // Formation = Filière, sinon école en fallback
+            if (formationElement) {
+                formationElement.textContent =
+                    candidate.specialty ||
+                    candidate.school ||
+                    '—';
+            }
+
+            // Période
+            if (periodElement) {
+                if (candidate.start && candidate.end) {
+                    periodElement.textContent =
+                        `${formatStageDate(candidate.start)} → ${formatStageDate(candidate.end)}`;
+                } else if (candidate.period) {
+                    periodElement.textContent = candidate.period;
+                } else {
+                    periodElement.textContent = '—';
+                }
+            }
+        }
 
         function submitApplication() {
             const formView = document.getElementById('form-view');
@@ -1032,8 +1109,19 @@
             const start = document.getElementById('app-start').value;
             const end = document.getElementById('app-end').value;
 
-            if (!nom || !prenom || !phone || !school || !specialty || !zone || !start || !end || level === 'Choisir') {
-                alert("Veuillez remplir tous les champs obligatoires, y compris la zone d'affectation et le niveau.");
+            if (
+                !nom ||
+                !prenom ||
+                !phone ||
+                !school ||
+                !specialty ||
+                !type ||
+                !zone ||
+                !start ||
+                !end ||
+                level === 'Choisir'
+            ) {
+            alert("Veuillez remplir tous les champs obligatoires, y compris la zone d'affectation et le niveau.");
                 return;
             }
 
@@ -1060,19 +1148,31 @@
             })
             .then(res => res.json().then(data => ({ ok: res.ok, data })))
             .then(({ ok, data }) => {
-                if (ok && data.success) {
-                    window.currentCandidateId = data.id || '';
-                    window.currentCandidateName = data.name || '';
+              if (ok && data.success) {
+                window.currentCandidateId = data.id || '';
+                window.currentCandidateName = data.name || '';
 
-                    formView.classList.add('hidden');
-                    docsView.classList.remove('hidden');
-                    statusBadge.classList.remove('hidden');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    if (!window.currentCandidateId) {
-                        alert('Candidature enregistrée mais identifiant manquant. Rechargez la page.');
-                        location.reload();
-                    }
-                } else {
+                // Remplit automatiquement la Synthèse Administrative
+                // avec les données que le stagiaire vient d'envoyer
+                updateAdministrativeSummary(payload);
+
+                formView.classList.add('hidden');
+                docsView.classList.remove('hidden');
+                statusBadge.classList.remove('hidden');
+
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+
+                if (!window.currentCandidateId) {
+                    alert(
+                        'Candidature enregistrée mais identifiant manquant. Rechargez la page.'
+                    );
+                    location.reload();
+                }
+            } 
+                else {
                     const err = data.error;
                     let msg = typeof err === 'string' ? err : (err?.message || '');
                     if (!msg && err && typeof err === 'object') {
