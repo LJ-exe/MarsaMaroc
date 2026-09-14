@@ -145,54 +145,71 @@
 
             </div>
 
-
             <!-- ========================= -->
             <!-- PROFIL RH + LOGOUT -->
             <!-- ========================= -->
             <div class="ml-auto shrink-0 flex items-center gap-3">
 
-                <!-- Nom + rôle -->
-                <div class="text-right hidden sm:block">
+                <!-- Profil RH cliquable -->
+                <button
+                    type="button"
+                    onclick="openRhProfileModal()"
+                    class="group flex items-center gap-3 rounded-2xl px-3 py-2
+                        hover:bg-blue-50 transition-all duration-200"
+                    title="Gérer mon profil">
 
-                    <p class="text-sm font-bold
-                            text-slate-800 leading-none">
+                    <!-- Nom + rôle -->
+                    <div class="text-right hidden sm:block">
 
-                        {{ user }}
+                        <p
+                            id="rh-navbar-name"
+                            class="text-sm font-bold text-slate-800 leading-none
+                                group-hover:text-[#003399] transition">
+                            {{ user }}
+                        </p>
 
-                    </p>
+                        <p class="text-[10px] font-medium
+                                text-slate-400 uppercase
+                                tracking-tighter mt-1">
+                            Ressources Humaines
+                        </p>
 
-                    <p class="text-[10px] font-medium
-                            text-slate-400 uppercase
-                            tracking-tighter mt-1">
+                    </div>
 
-                        Ressources Humaines
-
-                    </p>
-
-                </div>
-
-
-                <!-- Avatar -->
-                <div class="w-10 h-10
+                    <!-- Avatar -->
+                    <div
+                        id="rh-navbar-avatar"
+                        class="w-10 h-10
                             bg-blue-50 text-[#003399]
                             rounded-full
                             flex items-center justify-center
-                            font-bold shrink-0">
+                            font-bold shrink-0
+                            border border-blue-100
+                            group-hover:bg-[#003399]
+                            group-hover:text-white
+                            transition">
 
-                    {{ user[0]|upper }}
+                        {{ user[0]|upper }}
 
-                </div>
+                    </div>
 
+                </button>
 
-                <!-- Logout existant -->
-                <a href="/logout"
-                class="ml-1 p-1
+                <!-- Séparateur -->
+                <div class="w-px h-8 bg-slate-200"></div>
+
+                <!-- Logout -->
+                <a
+                    href="/logout"
+                    class="ml-1 p-2 rounded-xl
                         text-slate-400
                         hover:text-red-500
+                        hover:bg-red-50
                         transition"
-                title="Déconnexion">
+                    title="Déconnexion">
 
-                    <svg viewBox="0 0 24 24"
+                    <svg
+                        viewBox="0 0 24 24"
                         class="h-5 w-5"
                         fill="none"
                         stroke="currentColor"
@@ -208,6 +225,8 @@
                 </a>
 
             </div>
+           
+
 
         </div>
 
@@ -461,17 +480,234 @@
                             <th class="px-8 py-4">Zone souhaitée</th>
                             <th class="px-8 py-4">Établissement & Filière</th>
                             <th class="px-8 py-4">Type & Période</th>
+                            <th class="px-8 py-4">
+                                Fiche d'accueil
+                            </th>
                             <th class="px-8 py-4">Statut</th>
-                            <th class="px-8 py-4 text-right">Actions</th>
+                            <th class="px-8 py-4 text-right">
+                                Actions
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#e5eef7]">
                         {% for candidate in candidates %}
                         <tr class="table-row-hover transition-colors group" data-status="{{ candidate.status }}">
                             <td class="px-8 py-5">
-                                <p class="text-sm font-black text-[#001a4d]">{{ candidate.name }}</p>
-                                <p class="text-[11px] font-bold text-slate-400">{{ candidate.phone }}</p>
-                            </td>
+
+                            <!-- NOM -->
+                            <p class="text-sm font-black text-[#001a4d]">
+                                {{ candidate.name }}
+                            </p>
+
+                            <!-- TÉLÉPHONE -->
+                            <p class="text-[11px] font-bold text-slate-400">
+                                {{ candidate.phone }}
+                            </p>
+
+
+                            <!-- ========================================== -->
+                            <!-- CV CANDIDAT -->
+                            <!-- ========================================== -->
+
+                            {% if candidate.documents
+                                and candidate.documents.cv
+                                and candidate.documents.cv.uploaded %}
+
+                            <div class="flex items-center gap-2 mt-2">
+
+                                <!-- VOIR CV -->
+                                <a
+                                    href="/api/documents/{{ candidate.id }}/cv"
+                                    target="_blank"
+                                    class="inline-flex items-center gap-1.5
+                                        px-2.5 py-1.5
+                                        bg-blue-50
+                                        text-[#003399]
+                                        border border-blue-100
+                                        rounded-lg
+                                        text-[8px]
+                                        font-black uppercase
+                                        tracking-wider
+                                        hover:bg-[#003399]
+                                        hover:text-white
+                                        transition">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        class="w-3 h-3"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2.5">
+
+                                        <circle cx="12" cy="12" r="3"/>
+
+                                        <path
+                                            d="M1 12s4-7 11-7
+                                            11 7 11 7-4 7-11 7
+                                            S1 12 1 12z"/>
+
+                                    </svg>
+
+                                    Voir CV
+
+                                </a>
+
+
+                                <!-- TÉLÉCHARGER CV -->
+                                <a
+                                    href="/api/documents/{{ candidate.id }}/cv/download"
+                                    class="inline-flex items-center gap-1.5
+                                        px-2.5 py-1.5
+                                        bg-white
+                                        text-slate-500
+                                        border border-slate-200
+                                        rounded-lg
+                                        text-[8px]
+                                        font-black uppercase
+                                        tracking-wider
+                                        hover:text-[#003399]
+                                        hover:border-blue-200
+                                        transition">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        class="w-3 h-3"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2.5">
+
+                                        <path
+                                            d="M21 15v4a2 2 0 0 1-2 2H5
+                                            a2 2 0 0 1-2-2v-4"/>
+
+                                        <polyline
+                                            points="7 10 12 15 17 10"/>
+
+                                        <line
+                                            x1="12"
+                                            y1="15"
+                                            x2="12"
+                                            y2="3"/>
+
+                                    </svg>
+
+                                    Télécharger
+
+                                </a>
+
+                            </div>
+
+                            {% else %}
+
+                            <div class="mt-2">
+
+                                <span
+                                    class="text-[8px] font-black
+                                        text-slate-400
+                                        bg-slate-100
+                                        px-2 py-1
+                                        rounded-lg uppercase">
+
+                                    CV indisponible
+
+                                </span>
+
+                            </div>
+
+                            {% endif %}
+
+                            <!-- ========================================== -->
+                            <!-- RAPPORT DE STAGE -->
+                            <!-- ========================================== -->
+
+                            {% if candidate.intern_report_path %}
+
+                            <div class="flex items-center gap-2 mt-2">
+
+                                <!-- VOIR RAPPORT -->
+                                <a
+                                    href="/preview/report/{{ candidate.intern_report_path }}"
+                                    target="_blank"
+                                    class="inline-flex items-center gap-1.5
+                                        px-2.5 py-1.5
+                                        bg-purple-50
+                                        text-purple-700
+                                        border border-purple-100
+                                        rounded-lg
+                                        text-[8px]
+                                        font-black uppercase
+                                        tracking-wider
+                                        hover:bg-purple-700
+                                        hover:text-white
+                                        transition">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        class="w-3 h-3"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2.5">
+
+                                        <circle cx="12" cy="12" r="3"/>
+
+                                        <path
+                                            d="M1 12s4-7 11-7
+                                            11 7 11 7-4 7-11 7
+                                            S1 12 1 12z"/>
+
+                                    </svg>
+
+                                    Voir Rapport
+
+                                </a>
+
+
+                                <!-- TÉLÉCHARGER RAPPORT -->
+                                <a
+                                    href="/download/report/{{ candidate.intern_report_path }}"
+                                    class="inline-flex items-center gap-1.5
+                                        px-2.5 py-1.5
+                                        bg-white
+                                        text-slate-500
+                                        border border-slate-200
+                                        rounded-lg
+                                        text-[8px]
+                                        font-black uppercase
+                                        tracking-wider
+                                        hover:text-purple-700
+                                        hover:border-purple-200
+                                        transition">
+
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        class="w-3 h-3"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2.5">
+
+                                        <path
+                                            d="M21 15v4a2 2 0 0 1-2 2H5
+                                            a2 2 0 0 1-2-2v-4"/>
+
+                                        <polyline points="7 10 12 15 17 10"/>
+
+                                        <line
+                                            x1="12"
+                                            y1="15"
+                                            x2="12"
+                                            y2="3"/>
+
+                                    </svg>
+
+                                    Télécharger
+
+                                </a>
+
+                            </div>
+
+                            {% endif %}
+
+                        </td>
                             <script>console.log('[RH CANDIDATE] ID: {{ candidate.id }}, Name: {{ candidate.name }}, evaluation_pdf: {{ candidate.evaluation_pdf }}, evaluation_status: {{ candidate.evaluation_status }}');</script>
                             <td class="px-8 py-5">
                                 <p class="text-sm font-black text-[#001a4d]">{{ candidate.submittedAtFormatted }}</p>
@@ -493,6 +729,126 @@
                                     candidate.type or '—' }}</span>
                                 <p class="text-[10px] font-bold text-slate-400 mt-1">{{ candidate.period or '—' }}</p>
                             </td>
+                            <!-- ========================================== -->
+                            <!-- FICHE D'ACCUEIL -->
+                            <!-- ========================================== -->
+
+                            <td class="px-8 py-5">
+
+                                {% if candidate.fiche_accueil_pdf %}
+
+                                <div class="flex flex-col items-start gap-2">
+
+                                    <span
+                                        class="inline-flex items-center gap-1.5
+                                            bg-emerald-50 text-emerald-600
+                                            border border-emerald-100
+                                            text-[8px] font-black
+                                            px-2.5 py-1 rounded-full uppercase">
+
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            class="w-3 h-3"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            stroke-width="3">
+
+                                            <polyline points="20 6 9 17 4 12"/>
+
+                                        </svg>
+
+                                        Disponible
+
+                                    </span>
+
+
+                                    <div class="flex items-center gap-2">
+
+                                        <!-- VOIR -->
+                                        <a
+                                            href="/pdf/{{ candidate.fiche_accueil_pdf }}"
+                                            target="_blank"
+                                            class="inline-flex items-center gap-1
+                                                text-[9px] font-black
+                                                text-[#003399]
+                                                hover:underline">
+
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                class="w-3.5 h-3.5"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="2.5">
+
+                                                <circle cx="12" cy="12" r="3"/>
+                                                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/>
+
+                                            </svg>
+
+                                            Voir
+
+                                        </a>
+
+
+                                        <!-- TÉLÉCHARGER -->
+                                        <a
+                                            href="/download/fiche_accueil/{{ candidate.fiche_accueil_pdf }}"
+                                            class="inline-flex items-center gap-1
+                                                text-[9px] font-black
+                                                text-slate-500
+                                                hover:text-[#003399]
+                                                hover:underline">
+
+                                            <svg
+                                                viewBox="0 0 24 24"
+                                                class="w-3.5 h-3.5"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="2.5">
+
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                                <polyline points="7 10 12 15 17 10"/>
+                                                <line x1="12" y1="15" x2="12" y2="3"/>
+
+                                            </svg>
+
+                                            PDF
+
+                                        </a>
+
+                                    </div>
+
+                                </div>
+
+
+                                {% else %}
+
+                                <div class="flex flex-col items-start gap-1">
+
+                                    <span
+                                        class="inline-flex items-center
+                                            bg-slate-100 text-slate-400
+                                            text-[8px] font-black
+                                            px-2.5 py-1 rounded-full uppercase">
+
+                                        Non disponible
+
+                                    </span>
+
+                                    {% if candidate.status == 'Accepté' %}
+
+                                    <span class="text-[8px] font-bold text-slate-400">
+                                        En attente d'affectation
+                                    </span>
+
+                                    {% endif %}
+
+                                </div>
+
+                                {% endif %}
+
+                            </td>
+
                             <td class="px-8 py-5">
                                 {% if candidate.status == 'Accepté' %}
                                 <span
@@ -708,9 +1064,9 @@
                                         tracking-widest transition">
 
                                     {% if candidate.attestation_pdf %}
-                                        Remplacer l'attestation
+                                        Remplacer l'attestation de Stage
                                     {% else %}
-                                        Ajouter l'attestation
+                                        Ajouter l'attestation de Stage
                                     {% endif %}
 
                                 </button>
@@ -1088,26 +1444,81 @@
 
                 <div class="grid grid-cols-2 gap-4">
 
-                    <!-- Numéro -->
+                    <!-- NUMÉRO DE DÉCISION -->
                     <div>
+
                         <label
                             class="text-[9px] font-black
-                                   text-slate-400 uppercase tracking-widest">
-
+                                text-slate-400 uppercase tracking-widest">
                             Numéro décision
-
                         </label>
+
+                        <div class="flex gap-2 mt-2 mb-2">
+
+                            <!-- AUTOMATIQUE -->
+                            <label
+                                class="flex-1 flex items-center gap-2
+                                    px-3 py-2 rounded-xl
+                                    bg-slate-50 border border-slate-200
+                                    cursor-pointer">
+
+                                <input
+                                    type="radio"
+                                    name="decision-numero-mode"
+                                    id="decision-numero-auto"
+                                    value="auto"
+                                    checked
+                                    onchange="toggleDecisionNumeroMode()"
+                                    class="accent-[#003399]">
+
+                                <span class="text-[10px] font-black text-[#001a4d]">
+                                    Automatique
+                                </span>
+
+                            </label>
+
+
+                            <!-- MANUEL -->
+                            <label
+                                class="flex-1 flex items-center gap-2
+                                    px-3 py-2 rounded-xl
+                                    bg-slate-50 border border-slate-200
+                                    cursor-pointer">
+
+                                <input
+                                    type="radio"
+                                    name="decision-numero-mode"
+                                    id="decision-numero-manuel"
+                                    value="manuel"
+                                    onchange="toggleDecisionNumeroMode()"
+                                    class="accent-[#003399]">
+
+                                <span class="text-[10px] font-black text-[#001a4d]">
+                                    Manuel
+                                </span>
+
+                            </label>
+
+                        </div>
+
 
                         <input
                             id="decision-numero"
-                            type="text"
+                            type="number"
+                            min="1"
                             readonly
-                            placeholder="Automatique"
-                            class="w-full mt-2 p-3
-                                   bg-slate-100 border border-slate-200
-                                   rounded-xl text-xs font-black
-                                   text-[#001a4d]">
+                            placeholder="Attribué automatiquement"
+                            class="w-full p-3
+                                bg-slate-100
+                                border border-slate-200
+                                rounded-xl
+                                text-xs font-black
+                                text-[#001a4d]
+                                focus:outline-none
+                                focus:border-blue-400">
+
                     </div>
+                    
 
 
                     <!-- Référence -->
@@ -1348,9 +1759,162 @@
 
                 </div>
 
+                <!-- ================================================= -->
+                <!-- MODE DE CRÉATION DE LA DÉCISION -->
+                <!-- ================================================= -->
+
+                <div>
+
+                    <p class="text-[9px] font-black
+                            text-slate-400 uppercase tracking-widest mb-2">
+                        Mode de création
+                    </p>
+
+                    <div class="grid grid-cols-2 gap-3">
+
+                        <!-- GÉNÉRATION -->
+                        <label
+                            class="cursor-pointer rounded-2xl
+                                border border-blue-100
+                                bg-blue-50 p-4">
+
+                            <div class="flex items-center gap-3">
+
+                                <input
+                                    type="radio"
+                                    name="decision-source-mode"
+                                    id="decision-source-generate"
+                                    value="generate"
+                                    checked
+                                    onchange="toggleDecisionSourceMode()"
+                                    class="accent-[#003399]">
+
+                                <div>
+
+                                    <p class="text-[11px] font-black text-[#003399]">
+                                        Générer
+                                    </p>
+
+                                    <p class="text-[9px] font-bold text-slate-400 mt-1">
+                                        Créer depuis le modèle Marsa Maroc
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </label>
+
+
+                        <!-- IMPORT -->
+                        <label
+                            class="cursor-pointer rounded-2xl
+                                border border-slate-200
+                                bg-slate-50 p-4">
+
+                            <div class="flex items-center gap-3">
+
+                                <input
+                                    type="radio"
+                                    name="decision-source-mode"
+                                    id="decision-source-upload"
+                                    value="upload"
+                                    onchange="toggleDecisionSourceMode()"
+                                    class="accent-[#003399]">
+
+                                <div>
+
+                                    <p class="text-[11px] font-black text-[#001a4d]">
+                                        Importer PDF
+                                    </p>
+
+                                    <p class="text-[9px] font-bold text-slate-400 mt-1">
+                                        Charger une décision existante
+                                    </p>
+
+                                </div>
+
+                            </div>
+
+                        </label>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ================================================= -->
+                <!-- UPLOAD PDF -->
+                <!-- ================================================= -->
+
+                <div
+                    id="decision-upload-block"
+                    class="hidden">
+
+                    <label
+                        class="text-[9px] font-black
+                            text-slate-400 uppercase tracking-widest">
+
+                        Fichier de décision
+                    </label>
+
+
+                    <label
+                        for="decision-upload-file"
+                        class="mt-2 w-full min-h-[120px]
+                            border-2 border-dashed border-slate-200
+                            rounded-2xl
+                            flex flex-col items-center justify-center
+                            cursor-pointer
+                            hover:border-blue-400
+                            hover:bg-blue-50/30
+                            transition">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            class="w-7 h-7 text-[#003399]"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2">
+
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5
+                                    a2 2 0 0 1-2-2v-4"/>
+
+                            <polyline points="17 8 12 3 7 8"/>
+
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+
+                        </svg>
+
+
+                        <p class="text-xs font-black text-[#001a4d] mt-3">
+                            Choisir une décision PDF
+                        </p>
+
+                        <p
+                            id="decision-upload-name"
+                            class="text-[9px] font-bold text-slate-400 mt-1">
+
+                            Aucun fichier sélectionné
+
+                        </p>
+
+                    </label>
+
+
+                    <input
+                        type="file"
+                        id="decision-upload-file"
+                        accept=".pdf,application/pdf"
+                        class="hidden"
+                        onchange="decisionUploadFileChanged(this)">
+
+                </div>
+
+
 
                 <!-- Signature -->
-                <div>
+                <div id="decision-signature-block">
 
                     <div
                         class="flex justify-between items-center mb-2">
@@ -1520,6 +2084,450 @@
             </div>
         </div>
     </div>
+
+    <!-- ===================================================== -->
+    <!-- MODAL PROFIL RH -->
+    <!-- ===================================================== -->
+
+    <div id="rh-profile-modal"
+        class="fixed inset-0 z-[250] hidden overflow-y-auto">
+
+        <!-- Overlay -->
+        <div
+            class="fixed inset-0 bg-[#001a4d]/50 backdrop-blur-sm"
+            onclick="closeRhProfileModal()">
+        </div>
+
+        <!-- Modal -->
+        <div class="relative my-10 mx-auto
+                    w-[94%] max-w-3xl
+                    bg-white rounded-[32px]
+                    shadow-2xl overflow-hidden">
+
+            <!-- Header -->
+            <div class="px-8 py-7 border-b border-[#e5eef7]
+                        flex items-center justify-between">
+
+                <div class="flex items-center gap-4">
+
+                    <div class="w-12 h-12 rounded-2xl
+                                bg-blue-50 text-[#003399]
+                                flex items-center justify-center">
+
+                        <svg viewBox="0 0 24 24"
+                            class="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2">
+
+                            <path d="M20 21a8 8 0 0 0-16 0"/>
+                            <circle cx="12" cy="7" r="4"/>
+
+                        </svg>
+
+                    </div>
+
+                    <div>
+                        <p class="text-[9px] font-black text-slate-400
+                                uppercase tracking-widest">
+                            Marsa Maroc
+                        </p>
+
+                        <h2 class="text-2xl font-black text-[#001a4d]">
+                            Gestion du profil RH
+                        </h2>
+                    </div>
+
+                </div>
+
+                <button
+                    type="button"
+                    onclick="closeRhProfileModal()"
+                    class="w-10 h-10 rounded-xl
+                        flex items-center justify-center
+                        text-slate-400 hover:text-slate-900
+                        hover:bg-slate-100 transition">
+
+                    <svg viewBox="0 0 24 24"
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2.5">
+
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+
+                    </svg>
+
+                </button>
+
+            </div>
+
+            <!-- Tabs -->
+            <div class="px-8 pt-6">
+
+                <div class="flex gap-2 p-1.5
+                            bg-slate-100 rounded-2xl">
+
+                    <button
+                        id="rh-tab-profile"
+                        type="button"
+                        onclick="switchRhProfileTab('profile')"
+                        class="flex-1 bg-white text-[#003399]
+                            rounded-xl py-3
+                            text-[10px] font-black uppercase
+                            tracking-widest shadow-sm transition">
+
+                        Mon profil
+
+                    </button>
+
+                    <button
+                        id="rh-tab-member"
+                        type="button"
+                        onclick="switchRhProfileTab('member')"
+                        class="flex-1 text-slate-500
+                            rounded-xl py-3
+                            text-[10px] font-black uppercase
+                            tracking-widest transition">
+
+                        Ajouter un membre
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- Feedback -->
+            <div
+                id="rh-profile-feedback"
+                class="hidden mx-8 mt-5 rounded-xl p-3
+                    text-[11px] font-bold">
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- TAB : MON PROFIL -->
+            <!-- ================================================= -->
+
+            <div id="rh-profile-tab-content"
+                class="p-8 space-y-6">
+
+                <div class="grid md:grid-cols-2 gap-5">
+
+                    <div>
+                        <label class="text-[9px] font-black
+                                    text-slate-400 uppercase tracking-widest">
+                            Prénom
+                        </label>
+
+                        <input
+                            id="rh-profile-first-name"
+                            type="text"
+                            class="w-full mt-2 px-4 py-3
+                                bg-slate-50
+                                border border-[#e5eef7]
+                                rounded-xl text-sm font-semibold
+                                text-[#001a4d]
+                                focus:outline-none
+                                focus:border-blue-400">
+                    </div>
+
+
+                    <div>
+                        <label class="text-[9px] font-black
+                                    text-slate-400 uppercase tracking-widest">
+                            Nom
+                        </label>
+
+                        <input
+                            id="rh-profile-last-name"
+                            type="text"
+                            class="w-full mt-2 px-4 py-3
+                                bg-slate-50
+                                border border-[#e5eef7]
+                                rounded-xl text-sm font-semibold
+                                text-[#001a4d]
+                                focus:outline-none
+                                focus:border-blue-400">
+                    </div>
+
+                </div>
+
+
+                <div>
+                    <label class="text-[9px] font-black
+                                text-slate-400 uppercase tracking-widest">
+                        Adresse e-mail
+                    </label>
+
+                    <input
+                        id="rh-profile-email"
+                        type="email"
+                        class="w-full mt-2 px-4 py-3
+                            bg-slate-50
+                            border border-[#e5eef7]
+                            rounded-xl text-sm font-semibold
+                            text-[#001a4d]
+                            focus:outline-none
+                            focus:border-blue-400">
+                </div>
+
+
+                <div class="border-t border-slate-100 pt-6">
+
+                    <div class="mb-4">
+                        <p class="text-sm font-black text-[#001a4d]">
+                            Modifier le mot de passe
+                        </p>
+
+                        <p class="text-[10px] text-slate-400 font-medium mt-1">
+                            Laissez ces champs vides si vous ne souhaitez pas modifier le mot de passe.
+                        </p>
+                    </div>
+
+
+                    <div class="grid md:grid-cols-2 gap-5">
+
+                        <div>
+                            <label class="text-[9px] font-black
+                                        text-slate-400 uppercase tracking-widest">
+                                Nouveau mot de passe
+                            </label>
+
+                            <input
+                                id="rh-profile-password"
+                                type="password"
+                                autocomplete="off"
+                                class="w-full mt-2 px-4 py-3
+                                    bg-slate-50
+                                    border border-[#e5eef7]
+                                    rounded-xl text-sm
+                                    focus:outline-none
+                                    focus:border-blue-400">
+                        </div>
+
+
+                        <div>
+                            <label class="text-[9px] font-black
+                                        text-slate-400 uppercase tracking-widest">
+                                Confirmer
+                            </label>
+
+                            <input
+                                id="rh-profile-password-confirm"
+                                type="password"
+                                autocomplete="off"
+                                class="w-full mt-2 px-4 py-3
+                                    bg-slate-50
+                                    border border-[#e5eef7]
+                                    rounded-xl text-sm
+                                    focus:outline-none
+                                    focus:border-blue-400">
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="flex gap-3 pt-2">
+
+                    <button
+                        type="button"
+                        onclick="closeRhProfileModal()"
+                        class="w-1/3 py-4 rounded-xl
+                            bg-slate-100
+                            text-slate-500
+                            text-[9px] font-black uppercase
+                            tracking-widest">
+
+                        Annuler
+
+                    </button>
+
+                    <button
+                        id="rh-profile-save-btn"
+                        type="button"
+                        onclick="saveRhProfile()"
+                        class="w-2/3 py-4 rounded-xl
+                            bg-[#003399]
+                            hover:bg-[#001a4d]
+                            text-white
+                            text-[9px] font-black uppercase
+                            tracking-widest transition">
+
+                        Enregistrer les modifications
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- TAB : AJOUT MEMBRE -->
+            <!-- ================================================= -->
+
+            <div id="rh-member-tab-content"
+                class="hidden p-8 space-y-6">
+
+                <div>
+                    <h3 class="text-lg font-black text-[#001a4d]">
+                        Nouveau membre interne
+                    </h3>
+
+                    <p class="text-xs text-slate-400 font-medium mt-1">
+                        Créez un compte pour un membre RH ou Affectation.
+                    </p>
+                </div>
+
+
+                <div class="grid md:grid-cols-2 gap-5">
+
+                    <div>
+                        <label class="text-[9px] font-black
+                                    text-slate-400 uppercase tracking-widest">
+                            Prénom
+                        </label>
+
+                        <input
+                            id="rh-member-first-name"
+                            type="text"
+                            class="w-full mt-2 px-4 py-3
+                                bg-slate-50 border border-[#e5eef7]
+                                rounded-xl text-sm font-semibold
+                                focus:outline-none focus:border-blue-400">
+                    </div>
+
+
+                    <div>
+                        <label class="text-[9px] font-black
+                                    text-slate-400 uppercase tracking-widest">
+                            Nom
+                        </label>
+
+                        <input
+                            id="rh-member-last-name"
+                            type="text"
+                            class="w-full mt-2 px-4 py-3
+                                bg-slate-50 border border-[#e5eef7]
+                                rounded-xl text-sm font-semibold
+                                focus:outline-none focus:border-blue-400">
+                    </div>
+
+                </div>
+
+
+                <div class="grid md:grid-cols-2 gap-5">
+
+                    <div>
+                        <label class="text-[9px] font-black
+                                    text-slate-400 uppercase tracking-widest">
+                            Email
+                        </label>
+
+                        <input
+                            id="rh-member-email"
+                            type="email"
+                            class="w-full mt-2 px-4 py-3
+                                bg-slate-50 border border-[#e5eef7]
+                                rounded-xl text-sm font-semibold
+                                focus:outline-none focus:border-blue-400">
+                    </div>
+
+
+                    <div>
+                        <label class="text-[9px] font-black
+                                    text-slate-400 uppercase tracking-widest">
+                            Rôle
+                        </label>
+
+                        <select
+                            id="rh-member-role"
+                            class="w-full mt-2 px-4 py-3
+                                bg-slate-50 border border-[#e5eef7]
+                                rounded-xl text-sm font-bold
+                                text-[#001a4d]
+                                focus:outline-none focus:border-blue-400">
+
+                            <option value="rh" selected>
+                                Ressources Humaines
+                            </option>
+
+                            <option value="affectation">
+                                Affectation
+                            </option>
+
+                        </select>
+                    </div>
+
+                </div>
+
+
+                <div class="grid md:grid-cols-2 gap-5">
+
+                    <div>
+                        <label class="text-[9px] font-black
+                                    text-slate-400 uppercase tracking-widest">
+                            Mot de passe
+                        </label>
+
+                        <input
+                            id="rh-member-password"
+                            type="password"
+                            autocomplete="off"
+                            class="w-full mt-2 px-4 py-3
+                                bg-slate-50 border border-[#e5eef7]
+                                rounded-xl text-sm
+                                focus:outline-none focus:border-blue-400">
+                    </div>
+
+
+                    <div>
+                        <label class="text-[9px] font-black
+                                    text-slate-400 uppercase tracking-widest">
+                            Confirmer le mot de passe
+                        </label>
+
+                        <input
+                            id="rh-member-password-confirm"
+                            type="password"
+                            autocomplete="off"
+                            class="w-full mt-2 px-4 py-3
+                                bg-slate-50 border border-[#e5eef7]
+                                rounded-xl text-sm
+                                focus:outline-none focus:border-blue-400">
+                    </div>
+
+                </div>
+
+
+                <button
+                    id="rh-member-create-btn"
+                    type="button"
+                    onclick="createRhMember()"
+                    class="w-full py-4 rounded-xl
+                        bg-[#003399]
+                        hover:bg-[#001a4d]
+                        text-white
+                        text-[9px] font-black uppercase
+                        tracking-widest transition">
+
+                    Ajouter le membre
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
 
     <script>
         console.log('[RH INIT] Dashboard script loaded');
@@ -2345,10 +3353,59 @@
         // CHAMPS
         // ======================================
 
+        const numeroInput =
         document.getElementById(
             'decision-numero'
-        ).value =
-            result.numero || 'Automatique';
+        );
+
+        numeroInput.value =
+            result.numero || '';
+
+        numeroInput.dataset.existingNumero =
+            result.numero || '';
+
+
+        const numeroMode =
+            data.numero_mode || 'auto';
+
+
+        document.getElementById(
+            'decision-numero-auto'
+        ).checked =
+            numeroMode !== 'manuel';
+
+
+        document.getElementById(
+            'decision-numero-manuel'
+        ).checked =
+            numeroMode === 'manuel';
+
+
+        toggleDecisionNumeroMode();
+
+
+        // Toujours ouvrir le modal en mode génération
+        document.getElementById(
+            'decision-source-generate'
+        ).checked = true;
+
+        document.getElementById(
+            'decision-source-upload'
+        ).checked = false;
+
+
+        document.getElementById(
+            'decision-upload-file'
+        ).value = '';
+
+
+        document.getElementById(
+            'decision-upload-name'
+        ).innerText =
+            'Aucun fichier sélectionné';
+
+
+        toggleDecisionSourceMode();
 
 
         document.getElementById(
@@ -2746,12 +3803,215 @@ function closeDecisionModal() {
     decisionSigned = false;
 }
 
+function getDecisionNumeroMode() {
+
+    const selected =
+        document.querySelector(
+            'input[name="decision-numero-mode"]:checked'
+        );
+
+    return selected
+        ? selected.value
+        : 'auto';
+}
+
+
+function getDecisionSourceMode() {
+
+    const selected =
+        document.querySelector(
+            'input[name="decision-source-mode"]:checked'
+        );
+
+    return selected
+        ? selected.value
+        : 'generate';
+}
+
+
+function toggleDecisionNumeroMode() {
+
+    const input =
+        document.getElementById(
+            'decision-numero'
+        );
+
+    const mode =
+        getDecisionNumeroMode();
+
+
+    if (mode === 'manuel') {
+
+        input.readOnly = false;
+
+        input.classList.remove(
+            'bg-slate-100'
+        );
+
+        input.classList.add(
+            'bg-white'
+        );
+
+        input.placeholder =
+            'Saisir le numéro';
+
+        input.focus();
+
+    } else {
+
+        input.readOnly = true;
+
+        input.classList.remove(
+            'bg-white'
+        );
+
+        input.classList.add(
+            'bg-slate-100'
+        );
+
+        const existing =
+            input.dataset.existingNumero || '';
+
+        input.value =
+            existing;
+
+        input.placeholder =
+            'Attribué automatiquement';
+    }
+}
+
+
+function toggleDecisionSourceMode() {
+
+    const mode =
+        getDecisionSourceMode();
+
+    const uploadBlock =
+        document.getElementById(
+            'decision-upload-block'
+        );
+
+    const signatureBlock =
+        document.getElementById(
+            'decision-signature-block'
+        );
+
+    const saveBtn =
+        document.getElementById(
+            'decision-save-btn'
+        );
+
+
+    if (mode === 'upload') {
+
+        uploadBlock.classList.remove(
+            'hidden'
+        );
+
+        signatureBlock.classList.add(
+            'hidden'
+        );
+
+        saveBtn.innerText =
+            'Importer la décision';
+
+    } else {
+
+        uploadBlock.classList.add(
+            'hidden'
+        );
+
+        signatureBlock.classList.remove(
+            'hidden'
+        );
+
+        saveBtn.innerText =
+            'Générer la décision';
+    }
+}
+
+
+function decisionUploadFileChanged(input) {
+
+    const label =
+        document.getElementById(
+            'decision-upload-name'
+        );
+
+    if (
+        input.files &&
+        input.files[0]
+    ) {
+
+        label.innerText =
+            input.files[0].name;
+
+        label.classList.remove(
+            'text-slate-400'
+        );
+
+        label.classList.add(
+            'text-emerald-600'
+        );
+
+    } else {
+
+        label.innerText =
+            'Aucun fichier sélectionné';
+    }
+}
+
+
+
+
 async function saveDecision() {
 
     const candidateId =
         document.getElementById(
             'decision-candidate-id'
         ).value;
+
+    const sourceMode =
+    getDecisionSourceMode();
+
+    const numeroMode =
+        getDecisionNumeroMode();
+
+    const numero =
+        document.getElementById(
+            'decision-numero'
+        ).value.trim();
+
+
+    if (
+        numeroMode === 'manuel' &&
+        !numero
+    ) {
+
+        alert(
+            "Veuillez saisir le numéro de décision."
+        );
+
+        return;
+    }
+
+
+    // ==============================================
+    // MODE IMPORT PDF
+    // ==============================================
+
+    if (sourceMode === 'upload') {
+
+        await uploadDecisionPDF(
+            candidateId,
+            numeroMode,
+            numero
+        );
+
+        return;
+    }
+
+
 
 
     if (!candidateId) {
@@ -2777,6 +4037,13 @@ async function saveDecision() {
     const payload = {
 
         id: candidateId,
+        numero_mode:
+            numeroMode,
+
+        numero_manuel:
+            numeroMode === 'manuel'
+                ? numero
+                : null,
 
         reference:
             document.getElementById(
@@ -2941,6 +4208,184 @@ async function saveDecision() {
 
 
 
+
+async function uploadDecisionPDF(
+    candidateId,
+    numeroMode,
+    numero
+) {
+
+    const fileInput =
+        document.getElementById(
+            'decision-upload-file'
+        );
+
+    const feedback =
+        document.getElementById(
+            'decision-feedback'
+        );
+
+    const saveBtn =
+        document.getElementById(
+            'decision-save-btn'
+        );
+
+
+    if (
+        !fileInput.files ||
+        !fileInput.files[0]
+    ) {
+
+        alert(
+            "Veuillez sélectionner une décision PDF."
+        );
+
+        return;
+    }
+
+
+    const file =
+        fileInput.files[0];
+
+
+    if (
+        !file.name
+            .toLowerCase()
+            .endsWith('.pdf')
+    ) {
+
+        alert(
+            "La décision doit être au format PDF."
+        );
+
+        return;
+    }
+
+
+    const formData =
+        new FormData();
+
+
+    formData.append(
+        'id',
+        candidateId
+    );
+
+    formData.append(
+        'file',
+        file
+    );
+
+    formData.append(
+        'numero_mode',
+        numeroMode
+    );
+
+
+    if (
+        numeroMode === 'manuel'
+    ) {
+
+        formData.append(
+            'numero_manuel',
+            numero
+        );
+    }
+
+
+    try {
+
+        saveBtn.disabled = true;
+
+        saveBtn.classList.add(
+            'opacity-60',
+            'cursor-not-allowed'
+        );
+
+
+        feedback.innerText =
+            "Import de la décision en cours...";
+
+        feedback.className =
+            "rounded-xl p-3 text-[10px] font-bold " +
+            "bg-blue-50 text-blue-600";
+
+
+        const response =
+            await fetch(
+                '/api/candidates/decision/upload',
+                {
+                    method: 'POST',
+                    body: formData
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        if (
+            !response.ok ||
+            !result.success
+        ) {
+
+            throw new Error(
+                result.error ||
+                "Erreur lors de l'import."
+            );
+        }
+
+
+        feedback.innerText =
+            `Décision N°${result.decision_numero} importée avec succès.`;
+
+
+        feedback.className =
+            "rounded-xl p-3 text-[10px] font-bold " +
+            "bg-emerald-50 text-emerald-600";
+
+
+        setTimeout(
+            () => {
+
+                closeDecisionModal();
+
+                location.reload();
+
+            },
+            1000
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            '[DECISION UPLOAD]',
+            error
+        );
+
+
+        feedback.innerText =
+            error.message;
+
+
+        feedback.className =
+            "rounded-xl p-3 text-[10px] font-bold " +
+            "bg-rose-50 text-rose-600";
+
+
+        saveBtn.disabled = false;
+
+        saveBtn.classList.remove(
+            'opacity-60',
+            'cursor-not-allowed'
+        );
+    }
+}
+
+
+
         async function uploadAttestation(candidateId, input) {
             
 
@@ -3061,6 +4506,604 @@ async function saveDecision() {
             input.value = '';
         }
     }
+
+
+// ==========================================================
+// PROFIL RH
+// ==========================================================
+
+function setRhProfileMessage(message, type = 'success') {
+
+    const element =
+        document.getElementById('rh-profile-feedback');
+
+    if (!element) {
+        return;
+    }
+
+    element.innerText = message;
+    element.classList.remove('hidden');
+
+    if (type === 'success') {
+
+        element.className =
+            'mx-8 mt-5 rounded-xl p-3 text-[11px] font-bold ' +
+            'bg-emerald-50 text-emerald-700 border border-emerald-100';
+
+    } else {
+
+        element.className =
+            'mx-8 mt-5 rounded-xl p-3 text-[11px] font-bold ' +
+            'bg-rose-50 text-rose-700 border border-rose-100';
+
+    }
+}
+
+
+function clearRhProfileMessage() {
+
+    const element =
+        document.getElementById('rh-profile-feedback');
+
+    if (element) {
+        element.classList.add('hidden');
+        element.innerText = '';
+    }
+}
+
+
+async function openRhProfileModal() {
+
+    const modal =
+        document.getElementById('rh-profile-modal');
+
+    if (!modal) {
+        return;
+    }
+
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
+    switchRhProfileTab('profile');
+    clearRhProfileMessage();
+
+    try {
+
+        const response =
+            await fetch('/api/rh/profile');
+
+        const data =
+            await response.json();
+
+        if (!response.ok || !data.success) {
+
+            throw new Error(
+                data.error ||
+                "Impossible de charger le profil RH."
+            );
+
+        }
+
+        document.getElementById(
+            'rh-profile-first-name'
+        ).value = data.first_name || '';
+
+        document.getElementById(
+            'rh-profile-last-name'
+        ).value = data.last_name || '';
+
+        document.getElementById(
+            'rh-profile-email'
+        ).value = data.email || '';
+
+        document.getElementById(
+            'rh-profile-password'
+        ).value = '';
+
+        document.getElementById(
+            'rh-profile-password-confirm'
+        ).value = '';
+
+    } catch (error) {
+
+        console.error('[RH PROFILE]', error);
+
+        setRhProfileMessage(
+            error.message,
+            'error'
+        );
+    }
+}
+
+
+function closeRhProfileModal() {
+
+    const modal =
+        document.getElementById('rh-profile-modal');
+
+    if (modal) {
+        modal.classList.add('hidden');
+    }
+
+    document.body.style.overflow = 'auto';
+}
+
+
+function switchRhProfileTab(tab) {
+
+    const profileContent =
+        document.getElementById(
+            'rh-profile-tab-content'
+        );
+
+    const memberContent =
+        document.getElementById(
+            'rh-member-tab-content'
+        );
+
+    const profileButton =
+        document.getElementById(
+            'rh-tab-profile'
+        );
+
+    const memberButton =
+        document.getElementById(
+            'rh-tab-member'
+        );
+
+    clearRhProfileMessage();
+
+    if (tab === 'member') {
+
+        profileContent.classList.add('hidden');
+        memberContent.classList.remove('hidden');
+
+        memberButton.className =
+            'flex-1 bg-white text-[#003399] rounded-xl py-3 ' +
+            'text-[10px] font-black uppercase tracking-widest ' +
+            'shadow-sm transition';
+
+        profileButton.className =
+            'flex-1 text-slate-500 rounded-xl py-3 ' +
+            'text-[10px] font-black uppercase tracking-widest transition';
+
+    } else {
+
+        memberContent.classList.add('hidden');
+        profileContent.classList.remove('hidden');
+
+        profileButton.className =
+            'flex-1 bg-white text-[#003399] rounded-xl py-3 ' +
+            'text-[10px] font-black uppercase tracking-widest ' +
+            'shadow-sm transition';
+
+        memberButton.className =
+            'flex-1 text-slate-500 rounded-xl py-3 ' +
+            'text-[10px] font-black uppercase tracking-widest transition';
+
+    }
+}
+
+
+// ==========================================================
+// MODIFIER LE PROFIL RH CONNECTÉ
+// ==========================================================
+
+async function saveRhProfile() {
+
+    clearRhProfileMessage();
+
+    const firstName =
+        document.getElementById(
+            'rh-profile-first-name'
+        ).value.trim();
+
+    const lastName =
+        document.getElementById(
+            'rh-profile-last-name'
+        ).value.trim();
+
+    const email =
+        document.getElementById(
+            'rh-profile-email'
+        ).value.trim();
+
+    const password =
+        document.getElementById(
+            'rh-profile-password'
+        ).value;
+
+    const passwordConfirm =
+        document.getElementById(
+            'rh-profile-password-confirm'
+        ).value;
+
+    if (!firstName || !lastName || !email) {
+
+        setRhProfileMessage(
+            "Le prénom, le nom et l'e-mail sont obligatoires.",
+            'error'
+        );
+
+        return;
+    }
+
+    if (password && password.length < 6) {
+
+        setRhProfileMessage(
+            "Le mot de passe doit contenir au moins 6 caractères.",
+            'error'
+        );
+
+        return;
+    }
+
+    if (password !== passwordConfirm) {
+
+        setRhProfileMessage(
+            "Les mots de passe ne correspondent pas.",
+            'error'
+        );
+
+        return;
+    }
+
+
+    const saveButton =
+        document.getElementById(
+            'rh-profile-save-btn'
+        );
+
+    const originalText =
+        saveButton.innerText;
+
+    try {
+
+        saveButton.disabled = true;
+        saveButton.innerText = 'Enregistrement...';
+
+        saveButton.classList.add(
+            'opacity-60',
+            'cursor-not-allowed'
+        );
+
+
+        const response =
+            await fetch(
+                '/api/rh/profile',
+                {
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type':
+                            'application/json'
+                    },
+
+                    body: JSON.stringify({
+
+                        first_name:
+                            firstName,
+
+                        last_name:
+                            lastName,
+
+                        email:
+                            email,
+
+                        password:
+                            password,
+
+                        password_confirm:
+                            passwordConfirm
+
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok || !data.success) {
+
+            throw new Error(
+                data.error ||
+                "Impossible de modifier le profil."
+            );
+        }
+
+
+        // Mise à jour immédiate de la navbar
+        const fullName =
+            `${firstName} ${lastName}`.trim();
+
+        const navbarName =
+            document.getElementById(
+                'rh-navbar-name'
+            );
+
+        const navbarAvatar =
+            document.getElementById(
+                'rh-navbar-avatar'
+            );
+
+
+        if (navbarName) {
+            navbarName.innerText = fullName;
+        }
+
+        if (navbarAvatar) {
+
+            navbarAvatar.innerText =
+                firstName
+                    ? firstName.charAt(0).toUpperCase()
+                    : fullName.charAt(0).toUpperCase();
+
+        }
+
+
+        document.getElementById(
+            'rh-profile-password'
+        ).value = '';
+
+        document.getElementById(
+            'rh-profile-password-confirm'
+        ).value = '';
+
+
+        setRhProfileMessage(
+            "Profil mis à jour avec succès."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            '[RH PROFILE SAVE]',
+            error
+        );
+
+        setRhProfileMessage(
+            error.message,
+            'error'
+        );
+
+    } finally {
+
+        saveButton.disabled = false;
+        saveButton.innerText = originalText;
+
+        saveButton.classList.remove(
+            'opacity-60',
+            'cursor-not-allowed'
+        );
+    }
+}
+
+
+// ==========================================================
+// AJOUTER UN NOUVEAU MEMBRE
+// ==========================================================
+
+async function createRhMember() {
+
+    clearRhProfileMessage();
+
+    const firstName =
+        document.getElementById(
+            'rh-member-first-name'
+        ).value.trim();
+
+    const lastName =
+        document.getElementById(
+            'rh-member-last-name'
+        ).value.trim();
+
+    const email =
+        document.getElementById(
+            'rh-member-email'
+        ).value.trim();
+
+    const role =
+        document.getElementById(
+            'rh-member-role'
+        ).value || 'rh';
+
+    const password =
+        document.getElementById(
+            'rh-member-password'
+        ).value;
+
+    const passwordConfirm =
+        document.getElementById(
+            'rh-member-password-confirm'
+        ).value;
+
+
+    if (
+        !firstName ||
+        !lastName ||
+        !email ||
+        !password
+    ) {
+
+        setRhProfileMessage(
+            "Tous les champs sont obligatoires.",
+            'error'
+        );
+
+        return;
+    }
+
+
+    if (password.length < 6) {
+
+        setRhProfileMessage(
+            "Le mot de passe doit contenir au moins 6 caractères.",
+            'error'
+        );
+
+        return;
+    }
+
+
+    if (password !== passwordConfirm) {
+
+        setRhProfileMessage(
+            "Les mots de passe ne correspondent pas.",
+            'error'
+        );
+
+        return;
+    }
+
+
+    const button =
+        document.getElementById(
+            'rh-member-create-btn'
+        );
+
+    const originalText =
+        button.innerText;
+
+
+    try {
+
+        button.disabled = true;
+        button.innerText = 'Création...';
+
+        button.classList.add(
+            'opacity-60',
+            'cursor-not-allowed'
+        );
+
+
+        const response =
+            await fetch(
+                '/api/rh/members',
+                {
+                    method: 'POST',
+
+                    headers: {
+                        'Content-Type':
+                            'application/json'
+                    },
+
+                    body: JSON.stringify({
+
+                        first_name:
+                            firstName,
+
+                        last_name:
+                            lastName,
+
+                        email:
+                            email,
+
+                        role:
+                            role,
+
+                        password:
+                            password,
+
+                        password_confirm:
+                            passwordConfirm
+
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok || !data.success) {
+
+            throw new Error(
+                data.error ||
+                "Impossible de créer le membre."
+            );
+        }
+
+
+        setRhProfileMessage(
+            "Le nouveau membre a été créé avec succès."
+        );
+
+
+        document.getElementById(
+            'rh-member-first-name'
+        ).value = '';
+
+        document.getElementById(
+            'rh-member-last-name'
+        ).value = '';
+
+        document.getElementById(
+            'rh-member-email'
+        ).value = '';
+
+        document.getElementById(
+            'rh-member-password'
+        ).value = '';
+
+        document.getElementById(
+            'rh-member-password-confirm'
+        ).value = '';
+
+        document.getElementById(
+            'rh-member-role'
+        ).value = 'rh';
+
+
+    } catch (error) {
+
+        console.error(
+            '[RH MEMBER]',
+            error
+        );
+
+        setRhProfileMessage(
+            error.message,
+            'error'
+        );
+
+    } finally {
+
+        button.disabled = false;
+        button.innerText = originalText;
+
+        button.classList.remove(
+            'opacity-60',
+            'cursor-not-allowed'
+        );
+    }
+}
+
+
+// Fermer avec la touche Escape
+document.addEventListener(
+    'keydown',
+    function (event) {
+
+        if (event.key === 'Escape') {
+
+            const modal =
+                document.getElementById(
+                    'rh-profile-modal'
+                );
+
+            if (
+                modal &&
+                !modal.classList.contains('hidden')
+            ) {
+                closeRhProfileModal();
+            }
+        }
+    }
+);
 
 
     </script>

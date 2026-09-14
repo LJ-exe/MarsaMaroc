@@ -169,7 +169,10 @@ def enrichir_candidats(candidats):
         )
 
         ligne["rh_status_submessage"] = message_hint_rh(ligne)
-
+        # Documents du candidat : CV, CIN, assurance, convention, demande
+        ligne["documents"] = documents_uploades(
+            str(ligne["id"])
+        )
         resultat.append(ligne)
 
     return resultat
@@ -461,6 +464,76 @@ def envoyer_email(dest: str, sujet: str, corps: str, fichier_tag: str = "general
 
 def envoyer_email_stagiaire(candidate_id: str, email_dest: str, sujet: str, corps: str):
     envoyer_email(email_dest, sujet, corps, fichier_tag=str(candidate_id))
+    
+def notifier_nouveau_document_email(
+    stagiaire: dict,
+    nom_document: str
+):
+    """
+    Envoie un email réel au stagiaire lorsqu'un nouveau
+    document devient disponible dans son espace.
+    """
+
+    if not stagiaire:
+        return
+
+    candidate_id = str(
+        stagiaire.get("id") or ""
+    )
+
+    candidate_email = (
+        stagiaire.get("email")
+        or ""
+    ).strip().lower()
+
+    nom_stagiaire = (
+        stagiaire.get("name")
+        or "Stagiaire"
+    )
+
+    if not candidate_email:
+        print(
+            f"[EMAIL DOCUMENT] Aucun email pour {candidate_id}"
+        )
+        return
+
+    app_url = (
+        os.getenv(
+            "APP_URL",
+            "http://127.0.0.1:5000"
+        )
+        .rstrip("/")
+    )
+
+    lien_espace = f"{app_url}/stagiaire"
+
+    sujet = (
+        f"[Marsa Maroc] "
+        f"{nom_document} disponible"
+    )
+
+    corps = f"""Bonjour {nom_stagiaire},
+
+Un nouveau document vient d'être ajouté à votre espace stagiaire Marsa Maroc.
+
+Document :
+{nom_document}
+
+Vous pouvez maintenant le consulter et le télécharger depuis votre espace stagiaire :
+
+{lien_espace}
+
+Cordialement,
+Direction du Capital Humain
+Marsa Maroc
+"""
+
+    envoyer_email_stagiaire(
+        candidate_id,
+        candidate_email,
+        sujet,
+        corps
+    )
 
 
 def ajouter_notification(candidat: dict, texte: str) -> list:
@@ -2163,6 +2236,7 @@ def api_get_decision_stage(candidate_id):
         ), 500    
     
 @app.post("/api/candidates/decision/generer")
+@app.route("/download/decision/<path:filename>")
 @login_required("rh")
 def api_generer_decision_stage():
 
@@ -2251,15 +2325,100 @@ def api_generer_decision_stage():
         # si la décision existe déjà,
         # on garde son numéro.
 
-        numero = stagiaire.get(
-            "decision_numero"
-        )
+        # ==============================================
+        # NUMÉRO : AUTOMATIQUE OU MANUEL
+        # ==============================================
 
-        if not numero:
+        numero_mode = (
+            corps.get("numero_mode")
+            or "auto"
+        ).strip().lower()
 
-            numero = (
-                get_next_decision_stage_number()
+
+        if numero_mode == "manuel":
+
+            numero_manuel = str(
+                corps.get("numero_manuel")
+                or ""
+            ).strip()
+
+
+            if not numero_manuel:
+
+                return jsonify(
+                    success=False,
+                    error="Le numéro manuel est obligatoire."
+                ), 400
+
+
+            try:
+
+                numero = int(
+                    numero_manuel
+                )
+
+            except ValueError:
+
+                return jsonify(
+                    success=False,
+                    error=(
+                        "Le numéro de décision doit "
+                        "être un nombre valide."
+                    )
+                ), 400
+
+
+            if numero <= 0:
+
+                return jsonify(
+                    success=False,
+                    error=(
+                        "Le numéro de décision doit "
+                        "être supérieur à zéro."
+                    )
+                ), 400
+
+
+            # Vérifier qu'un autre stagiaire
+            # n'utilise pas déjà ce numéro
+
+            existing = (
+                supabase
+                .table(TABLE_APPLICATIONS)
+                .select("id")
+                .eq("decision_numero", numero)
+                .neq("id", candidate_id)
+                .limit(1)
+                .execute()
             )
+
+
+            if existing.data:
+
+                return jsonify(
+                    success=False,
+                    error=(
+                        f"La décision N°{numero} "
+                        "existe déjà."
+                    )
+                ), 409
+
+
+        else:
+
+            numero_mode = "auto"
+
+            # Si une décision existe déjà,
+            # conserver son numéro.
+            numero = stagiaire.get(
+                "decision_numero"
+            )
+
+            if not numero:
+
+                numero = (
+                    get_next_decision_stage_number()
+                )
 
 
                # ==============================================
@@ -2379,6 +2538,7 @@ def api_generer_decision_stage():
         # ==============================================
 
         decision_data = {
+        "numero_mode": numero_mode,
         "reference": decision_info["reference"],
         "date_decision": decision_info["date_decision"],
         "direction": decision_info["direction"],
@@ -2453,6 +2613,22 @@ def api_generer_decision_stage():
             },
             "id",
             candidate_id
+        )
+        # ==============================================
+        # EMAIL AU STAGIAIRE
+        # ==============================================
+
+        notifier_nouveau_document_email(
+            stagiaire,
+            "Décision de stage"
+        )
+        # ==============================================
+        # EMAIL - DÉCISION DISPONIBLE
+        # ==============================================
+
+        notifier_nouveau_document_email(
+            stagiaire,
+            "Décision de stage"
         )
 
 
@@ -2901,13 +3077,53 @@ def stagiaire():
 @app.route("/rh")
 @login_required("rh")
 def rh():
+
     candidates, db_error = charger_candidats_avec_erreur()
-    # Debug: Log evaluation_pdf values for all candidates
-    for c in candidates or []:
-        print(f"[RH DEBUG] Candidate {c.get('id')}: evaluation_pdf='{c.get('evaluation_pdf')}', evaluation_status='{c.get('evaluation_status')}'")
+
+    rh_name = nom_utilisateur()
+
+    try:
+
+        appliquer_session_supabase(supabase)
+
+        user_id = session.get("user_id")
+
+        if user_id:
+
+            result = (
+                supabase
+                .table("profiles")
+                .select("name")
+                .eq("id", user_id)
+                .limit(1)
+                .execute()
+            )
+
+            if result.data:
+
+                db_name = (
+                    result.data[0].get("name")
+                    or ""
+                ).strip()
+
+                if db_name:
+
+                    rh_name = db_name
+
+                    # Garder la session synchronisée
+                    session["user_name"] = db_name
+
+    except Exception as exc:
+
+        print(
+            "[RH] Erreur chargement profil :",
+            exc
+        )
+
+
     return render_template(
         "dashboard_rh.html",
-        user=nom_utilisateur(),
+        user=rh_name,
         candidates=candidates,
         poles=POLES,
         db_error=db_error,
@@ -3132,6 +3348,471 @@ def logout():
             print(f"[AUTH] Erreur logout: {exc}")
     session.clear()
     return redirect(url_for("login"))
+
+
+# ============================================================
+# GESTION DU PROFIL RH
+# ============================================================
+
+ROLES_MEMBRES_INTERNES = {"rh", "affectation"}
+
+
+def _extraire_user_auth(response):
+    if response is None:
+        return None
+
+    user = getattr(response, "user", None)
+    if user:
+        return user
+
+    if isinstance(response, dict):
+        return response.get("user")
+
+    return response
+
+
+def _valeur_user(user, cle, default=None):
+    if user is None:
+        return default
+
+    if isinstance(user, dict):
+        return user.get(cle, default)
+
+    return getattr(user, cle, default)
+
+
+def synchroniser_profil_interne(user_obj, full_name, role):
+    """
+    Synchronise le compte Auth avec la table profiles.
+    """
+    client = supabase_admin or supabase
+
+    if not client or not user_obj:
+        return
+
+    user_id = str(_valeur_user(user_obj, "id") or "")
+    if not user_id:
+        return
+
+    # Laisser d'abord le helper existant créer le profil s'il n'existe pas.
+    try:
+        assurer_profil(client, user_obj)
+    except Exception as exc:
+        print(f"[RH PROFILE] assurer_profil: {exc}")
+
+    payload = {
+        "full_name": full_name,
+        "role": role,
+    }
+
+    # Schéma standard Supabase : profiles.id = auth.users.id
+    try:
+        result = (
+            client.table("profiles")
+            .update(payload)
+            .eq("id", user_id)
+            .execute()
+        )
+
+        if result.data:
+            return
+    except Exception as exc:
+        print(f"[RH PROFILE] update profiles.id: {exc}")
+
+    # Fallback si ta table utilise user_id
+    try:
+        result = (
+            client.table("profiles")
+            .update(payload)
+            .eq("user_id", user_id)
+            .execute()
+        )
+
+        if result.data:
+            return
+    except Exception as exc:
+        print(f"[RH PROFILE] update profiles.user_id: {exc}")
+
+@app.get("/api/rh/profile")
+@login_required("rh")
+def api_get_rh_profile():
+
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return jsonify(
+            success=False,
+            error="Utilisateur introuvable."
+        ), 401
+
+    try:
+
+        profile_result = (
+            supabase
+            .table("profiles")
+            .select("name")
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+        name = ""
+
+        if profile_result.data:
+            name = (
+                profile_result.data[0].get("name")
+                or ""
+            ).strip()
+
+
+        parts = name.split(None, 1)
+
+        first_name = (
+            parts[0]
+            if parts
+            else ""
+        )
+
+        last_name = (
+            parts[1]
+            if len(parts) > 1
+            else ""
+        )
+
+
+        # Email depuis Supabase Auth
+        user_response = (
+            supabase_admin
+            .auth
+            .admin
+            .get_user_by_id(user_id)
+        )
+
+        user = user_response.user
+
+        email = user.email or ""
+
+
+        return jsonify(
+            success=True,
+            first_name=first_name,
+            last_name=last_name,
+            email=email
+        )
+
+
+    except Exception as exc:
+
+        print(
+            "[RH PROFILE GET]",
+            exc
+        )
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
+
+
+
+@app.post("/api/rh/profile")
+@login_required("rh")
+def api_update_rh_profile():
+
+    if not supabase_admin:
+        return jsonify(
+            success=False,
+            error="SUPABASE_SERVICE_ROLE_KEY non configurée."
+        ), 500
+
+    corps = request.get_json() or {}
+
+    first_name = (
+        corps.get("first_name")
+        or ""
+    ).strip()
+
+    last_name = (
+        corps.get("last_name")
+        or ""
+    ).strip()
+
+    email = (
+        corps.get("email")
+        or ""
+    ).strip().lower()
+
+    password = (
+        corps.get("password")
+        or ""
+    )
+
+    password_confirm = (
+        corps.get("password_confirm")
+        or ""
+    )
+
+    if not first_name or not last_name or not email:
+        return jsonify(
+            success=False,
+            error="Prénom, nom et email obligatoires."
+        ), 400
+
+    if password and len(password) < 6:
+        return jsonify(
+            success=False,
+            error="Le mot de passe doit contenir au moins 6 caractères."
+        ), 400
+
+    if password != password_confirm:
+        return jsonify(
+            success=False,
+            error="Les mots de passe ne correspondent pas."
+        ), 400
+
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return jsonify(
+            success=False,
+            error="Utilisateur introuvable."
+        ), 401
+
+    name = f"{first_name} {last_name}".strip()
+
+    try:
+
+        # =============================================
+        # 1. MODIFIER EMAIL / PASSWORD DANS AUTH
+        # =============================================
+
+        auth_update = {
+            "email": email
+        }
+
+        if password:
+            auth_update["password"] = password
+
+        supabase_admin.auth.admin.update_user_by_id(
+            user_id,
+            auth_update
+        )
+
+
+        # =============================================
+        # 2. MODIFIER LE NOM DANS PROFILES
+        # =============================================
+
+        (
+            supabase_admin
+            .table("profiles")
+            .update({
+                "name": name
+            })
+            .eq("id", user_id)
+            .execute()
+        )
+
+
+        # =============================================
+        # 3. METTRE À JOUR LA SESSION ACTUELLE
+        # =============================================
+
+        session["user_name"] = name
+        session["user_email"] = email
+
+
+        return jsonify(
+            success=True,
+            name=name,
+            email=email
+        )
+
+
+    except Exception as exc:
+
+        print(
+            "[RH PROFILE UPDATE]",
+            exc
+        )
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
+
+
+@app.post("/api/rh/members")
+@login_required("rh")
+def api_create_rh_member():
+
+    if not supabase_admin:
+        return jsonify(
+            success=False,
+            error="SUPABASE_SERVICE_ROLE_KEY non configurée."
+        ), 500
+
+    corps = request.get_json() or {}
+
+    first_name = (corps.get("first_name") or "").strip()
+    last_name = (corps.get("last_name") or "").strip()
+    email = (corps.get("email") or "").strip().lower()
+    password = corps.get("password") or ""
+    password_confirm = corps.get("password_confirm") or ""
+
+    # RH par défaut
+    role = (corps.get("role") or "rh").strip().lower()
+
+    # Sécurité : uniquement comptes internes
+    if role not in {"rh", "affectation"}:
+        return jsonify(
+            success=False,
+            error="Rôle invalide."
+        ), 400
+
+    if not first_name or not last_name or not email or not password:
+        return jsonify(
+            success=False,
+            error="Tous les champs sont obligatoires."
+        ), 400
+
+    if len(password) < 6:
+        return jsonify(
+            success=False,
+            error="Le mot de passe doit contenir au moins 6 caractères."
+        ), 400
+
+    if password != password_confirm:
+        return jsonify(
+            success=False,
+            error="Les mots de passe ne correspondent pas."
+        ), 400
+
+    name = f"{first_name} {last_name}".strip()
+
+    try:
+
+        # ==================================================
+        # 1. CRÉER LE COMPTE DANS SUPABASE AUTH
+        # ==================================================
+
+        auth_response = (
+            supabase_admin
+            .auth
+            .admin
+            .create_user({
+                "email": email,
+                "password": password,
+                "email_confirm": True,
+
+                # IMPORTANT :
+                # le rôle est aussi enregistré dans Auth
+                "user_metadata": {
+                    "name": name,
+                    "role": role
+                }
+            })
+        )
+
+        user = auth_response.user
+
+        if not user:
+            return jsonify(
+                success=False,
+                error="Impossible de créer l'utilisateur."
+            ), 500
+
+        user_id = str(user.id)
+
+        print(
+            "[RH MEMBER] utilisateur Auth créé :",
+            user_id,
+            email,
+            role
+        )
+
+
+        # ==================================================
+        # 2. CRÉER / CORRIGER LE PROFIL
+        # ==================================================
+        #
+        # NE PAS laisser assurer_profil décider du rôle.
+        # On force explicitement profiles.role.
+        # ==================================================
+
+        (
+            supabase_admin
+            .table("profiles")
+            .upsert(
+                {
+                    "id": user_id,
+                    "name": name,
+                    "role": role
+                },
+                on_conflict="id"
+            )
+            .execute()
+        )
+
+
+        # ==================================================
+        # 3. VÉRIFICATION
+        # ==================================================
+
+        verification = (
+            supabase_admin
+            .table("profiles")
+            .select("id, name, role")
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not verification.data:
+            raise Exception(
+                "Le compte Auth a été créé mais le profil n'a pas été créé."
+            )
+
+        profil_cree = verification.data[0]
+
+        print(
+            "[RH MEMBER] profil créé :",
+            profil_cree
+        )
+
+
+        # Vérification supplémentaire du rôle
+        if profil_cree.get("role") != role:
+
+            raise Exception(
+                f"Le rôle enregistré est incorrect : "
+                f"{profil_cree.get('role')}"
+            )
+
+
+        return jsonify(
+            success=True,
+            member={
+                "id": user_id,
+                "name": name,
+                "email": email,
+                "role": role
+            }
+        ), 201
+
+
+    except Exception as exc:
+
+        print(
+            "[RH MEMBER CREATE]",
+            exc
+        )
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
+
 
 
 @app.get("/api/mon-dossier")
@@ -3397,6 +4078,645 @@ def api_assign_mentor():
         ), 500
         
     
+    # ============================================================
+# PROFIL ENCADRANT / AFFECTATION
+# ============================================================
+
+
+@app.get("/api/encadrant/profile")
+@login_required("affectation")
+def api_get_encadrant_profile():
+
+    if not supabase_admin:
+        return jsonify(
+            success=False,
+            error="SUPABASE_SERVICE_ROLE_KEY non configurée."
+        ), 500
+
+    user_id = session.get("user_id")
+
+    if not user_id:
+        return jsonify(
+            success=False,
+            error="Session utilisateur introuvable."
+        ), 401
+
+    try:
+
+        # ==================================================
+        # PROFIL
+        # ==================================================
+
+        profile_result = (
+            supabase_admin
+            .table("profiles")
+            .select("id, name, role, encadrant_id")
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not profile_result.data:
+            return jsonify(
+                success=False,
+                error="Profil encadrant introuvable."
+            ), 404
+
+        profile = profile_result.data[0]
+
+        name = (
+            profile.get("name")
+            or ""
+        ).strip()
+
+        encadrant_id = profile.get("encadrant_id")
+
+
+        # ==================================================
+        # PRÉNOM / NOM
+        # ==================================================
+
+        parts = name.split(None, 1)
+
+        first_name = (
+            parts[0]
+            if parts
+            else ""
+        )
+
+        last_name = (
+            parts[1]
+            if len(parts) > 1
+            else ""
+        )
+
+
+        # ==================================================
+        # EMAIL SUPABASE AUTH
+        # ==================================================
+
+        auth_response = (
+            supabase_admin
+            .auth
+            .admin
+            .get_user_by_id(user_id)
+        )
+
+        auth_user = auth_response.user
+
+        email = (
+            auth_user.email
+            if auth_user
+            else ""
+        )
+
+
+        # ==================================================
+        # INFORMATIONS ENCADRANT
+        # ==================================================
+
+        fonction = ""
+
+        if encadrant_id:
+
+            encadrant_result = (
+                supabase_admin
+                .table("encadrants")
+                .select("*")
+                .eq("id", encadrant_id)
+                .limit(1)
+                .execute()
+            )
+
+            if encadrant_result.data:
+
+                fonction = (
+                    encadrant_result.data[0]
+                    .get("fonction")
+                    or ""
+                ).strip()
+
+
+        return jsonify(
+            success=True,
+
+            first_name=first_name,
+            last_name=last_name,
+
+            email=email,
+
+            fonction=fonction,
+
+            encadrant_id=encadrant_id
+        )
+
+
+    except Exception as exc:
+
+        print(
+            "[ENCADRANT PROFILE GET]",
+            exc
+        )
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
+
+
+
+# ============================================================
+# MODIFIER SON PROFIL ENCADRANT
+# ============================================================
+
+@app.post("/api/encadrant/profile")
+@login_required("affectation")
+def api_update_encadrant_profile():
+
+    if not supabase_admin:
+        return jsonify(
+            success=False,
+            error="SUPABASE_SERVICE_ROLE_KEY non configurée."
+        ), 500
+
+    corps = request.get_json() or {}
+
+    first_name = (
+        corps.get("first_name")
+        or ""
+    ).strip()
+
+    last_name = (
+        corps.get("last_name")
+        or ""
+    ).strip()
+
+    email = (
+        corps.get("email")
+        or ""
+    ).strip().lower()
+
+    fonction = (
+        corps.get("fonction")
+        or ""
+    ).strip()
+
+    password = (
+        corps.get("password")
+        or ""
+    )
+
+    password_confirm = (
+        corps.get("password_confirm")
+        or ""
+    )
+
+
+    if not first_name or not last_name or not email:
+
+        return jsonify(
+            success=False,
+            error="Prénom, nom et email obligatoires."
+        ), 400
+
+
+    if password and len(password) < 6:
+
+        return jsonify(
+            success=False,
+            error="Le mot de passe doit contenir au moins 6 caractères."
+        ), 400
+
+
+    if password != password_confirm:
+
+        return jsonify(
+            success=False,
+            error="Les mots de passe ne correspondent pas."
+        ), 400
+
+
+    user_id = session.get("user_id")
+
+    if not user_id:
+
+        return jsonify(
+            success=False,
+            error="Session utilisateur introuvable."
+        ), 401
+
+
+    name = f"{first_name} {last_name}".strip()
+
+
+    try:
+
+        # ==================================================
+        # 1. EMAIL / PASSWORD AUTH
+        # ==================================================
+
+        auth_update = {
+            "email": email
+        }
+
+        if password:
+            auth_update["password"] = password
+
+
+        supabase_admin.auth.admin.update_user_by_id(
+            user_id,
+            auth_update
+        )
+
+
+        # ==================================================
+        # 2. RÉCUPÉRER LE PROFIL
+        # ==================================================
+
+        profile_result = (
+            supabase_admin
+            .table("profiles")
+            .select("encadrant_id")
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+        if not profile_result.data:
+
+            return jsonify(
+                success=False,
+                error="Profil encadrant introuvable."
+            ), 404
+
+
+        encadrant_id = (
+            profile_result.data[0]
+            .get("encadrant_id")
+        )
+
+
+        # ==================================================
+        # 3. MODIFIER PROFILES
+        # ==================================================
+
+        (
+            supabase_admin
+            .table("profiles")
+            .update({
+                "name": name,
+
+                # IMPORTANT
+                "role": "affectation"
+            })
+            .eq("id", user_id)
+            .execute()
+        )
+
+
+        # ==================================================
+        # 4. MODIFIER TABLE ENCADRANTS
+        # ==================================================
+
+        if encadrant_id:
+
+            (
+                supabase_admin
+                .table("encadrants")
+                .update({
+                    "nom": name,
+                    "fonction": fonction
+                })
+                .eq("id", encadrant_id)
+                .execute()
+            )
+
+
+        # ==================================================
+        # 5. SESSION
+        # ==================================================
+
+        session["user_name"] = name
+        session["user_email"] = email
+
+
+        return jsonify(
+            success=True,
+            name=name,
+            email=email,
+            fonction=fonction
+        )
+
+
+    except Exception as exc:
+
+        print(
+            "[ENCADRANT PROFILE UPDATE]",
+            exc
+        )
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
+
+
+
+# ============================================================
+# CRÉER UN NOUVEL ENCADRANT
+# ============================================================
+
+@app.post("/api/encadrant/members")
+@login_required("affectation")
+def api_create_encadrant_member():
+
+    if not supabase_admin:
+
+        return jsonify(
+            success=False,
+            error="SUPABASE_SERVICE_ROLE_KEY non configurée."
+        ), 500
+
+
+    corps = request.get_json() or {}
+
+    first_name = (
+        corps.get("first_name")
+        or ""
+    ).strip()
+
+    last_name = (
+        corps.get("last_name")
+        or ""
+    ).strip()
+
+    email = (
+        corps.get("email")
+        or ""
+    ).strip().lower()
+
+    fonction = (
+        corps.get("fonction")
+        or ""
+    ).strip()
+
+    password = (
+        corps.get("password")
+        or ""
+    )
+
+    password_confirm = (
+        corps.get("password_confirm")
+        or ""
+    )
+
+
+    if not first_name or not last_name or not email or not password:
+
+        return jsonify(
+            success=False,
+            error="Tous les champs obligatoires doivent être remplis."
+        ), 400
+
+
+    if len(password) < 6:
+
+        return jsonify(
+            success=False,
+            error="Le mot de passe doit contenir au moins 6 caractères."
+        ), 400
+
+
+    if password != password_confirm:
+
+        return jsonify(
+            success=False,
+            error="Les mots de passe ne correspondent pas."
+        ), 400
+
+
+    name = f"{first_name} {last_name}".strip()
+
+
+    try:
+
+        # ==================================================
+        # 1. CRÉER LE COMPTE AUTH
+        # ==================================================
+
+        auth_response = (
+            supabase_admin
+            .auth
+            .admin
+            .create_user({
+
+                "email": email,
+
+                "password": password,
+
+                "email_confirm": True,
+
+                "user_metadata": {
+
+                    "name": name,
+
+                    # Le rôle TECHNIQUE reste affectation
+                    "role": "affectation"
+                }
+            })
+        )
+
+
+        user = auth_response.user
+
+        if not user:
+
+            return jsonify(
+                success=False,
+                error="Impossible de créer le compte utilisateur."
+            ), 500
+
+
+        user_id = str(user.id)
+
+
+        # ==================================================
+        # 2. CHERCHER SI L'ENCADRANT EXISTE DÉJÀ
+        # ==================================================
+
+        existing = (
+            supabase_admin
+            .table("encadrants")
+            .select("*")
+            .eq("nom", name)
+            .limit(1)
+            .execute()
+        )
+
+
+        if existing.data:
+
+            encadrant = existing.data[0]
+
+            encadrant_id = encadrant.get("id")
+
+            # Mettre à jour sa fonction
+            if fonction:
+
+                (
+                    supabase_admin
+                    .table("encadrants")
+                    .update({
+                        "fonction": fonction
+                    })
+                    .eq("id", encadrant_id)
+                    .execute()
+                )
+
+
+        else:
+
+            # ==================================================
+            # 3. CRÉER L'ENCADRANT
+            # ==================================================
+
+            encadrant_result = (
+                supabase_admin
+                .table("encadrants")
+                .insert({
+                    "nom": name,
+                    "fonction": fonction
+                })
+                .execute()
+            )
+
+
+            if not encadrant_result.data:
+
+                # Nettoyer le compte Auth si création encadrant échoue
+                try:
+                    supabase_admin.auth.admin.delete_user(
+                        user_id
+                    )
+                except Exception:
+                    pass
+
+                return jsonify(
+                    success=False,
+                    error="Impossible de créer l'encadrant."
+                ), 500
+
+
+            encadrant = encadrant_result.data[0]
+
+            encadrant_id = encadrant.get("id")
+
+
+        # ==================================================
+        # 4. CRÉER / METTRE À JOUR PROFILES
+        # ==================================================
+
+        (
+            supabase_admin
+            .table("profiles")
+            .upsert(
+                {
+                    "id": user_id,
+
+                    "name": name,
+
+                    # IMPORTANT :
+                    # c'est ce rôle que ton login reconnaît
+                    "role": "affectation",
+
+                    # Liaison avec la table encadrants
+                    "encadrant_id": encadrant_id
+                },
+
+                on_conflict="id"
+            )
+            .execute()
+        )
+
+
+        # ==================================================
+        # 5. VÉRIFICATION
+        # ==================================================
+
+        verification = (
+            supabase_admin
+            .table("profiles")
+            .select(
+                "id, name, role, encadrant_id"
+            )
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+
+        if not verification.data:
+
+            raise Exception(
+                "Le profil encadrant n'a pas pu être créé."
+            )
+
+
+        profil = verification.data[0]
+
+
+        if profil.get("role") != "affectation":
+
+            raise Exception(
+                "Le rôle du profil encadrant est incorrect."
+            )
+
+
+        if not profil.get("encadrant_id"):
+
+            raise Exception(
+                "L'encadrant_id n'a pas été enregistré."
+            )
+
+
+        print(
+            "[ENCADRANT CREATE]",
+            profil
+        )
+
+
+        return jsonify(
+
+            success=True,
+
+            member={
+                "id": user_id,
+                "name": name,
+                "email": email,
+                "fonction": fonction,
+                "role": "affectation",
+                "encadrant_id": encadrant_id
+            }
+
+        ), 201
+
+
+    except Exception as exc:
+
+        print(
+            "[ENCADRANT CREATE ERROR]",
+            exc
+        )
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
+
+
+
+
+
 
 
 @app.post("/api/candidates/affect")
@@ -4043,36 +5363,13 @@ def api_candidates_evaluation_valider():
         now_str = datetime.datetime.now().isoformat()
         update_data = {"evaluation_status": decision}
 
-#         if decision == "Accepté":
-#             rh_data = {
-#                 "directeur_rh": corps.get("directeur_rh", ""),
-#             }
-#             attestation_pdf = generer_attestation_pdf(stagiaire, rh_data)
-#             if not attestation_pdf:
-#                 return jsonify(success=False, error="Erreur lors de la génération de l'attestation de stage"), 500
 
-#             update_data.update(
-#                 {
-#                     "attestation_pdf": attestation_pdf,
-#                     "attestation_status": "Généré",
-#                     "attestation_generated_at": now_str,
-#                 }
-#             )
-#             notif_text = (
-#                 "Félicitations ! Votre fiche d'évaluation a été acceptée par la RH. "
-#                 "Vos documents finaux (fiche d'évaluation et attestation) sont disponibles."
-#             )
-#             email_sujet = "[Marsa Maroc] Documents finaux disponibles"
-#             email_corps = f"""Bonjour {nom_stagiaire},
-
-# Votre fiche d'évaluation a été acceptée par la Direction des Ressources Humaines.
-# Votre attestation de stage officielle est disponible dans votre espace stagiaire.
-
-# Cordialement,
-# La Direction des Ressources Humaines — Marsa Maroc
-# """
         if decision == "Accepté":
 
+            notifier_nouveau_document_email(
+                stagiaire,
+                "Fiche d'évaluation de stage"
+            )
             # =====================================================
             # La fiche d'évaluation est acceptée
             # MAIS aucune attestation n'est générée automatiquement.
@@ -4897,7 +6194,26 @@ def api_report_upload():
             ),
         ), 403
 
+    # ============================================================
+    # LE RAPPORT N'EST DISPONIBLE QU'APRÈS LA DÉCISION DE STAGE
+    # ============================================================
+
+    if not candidat.get("decision_pdf"):
+
+        return jsonify(
+            success=False,
+            error=(
+                "Vous ne pouvez pas encore déposer votre rapport de stage. "
+                "La décision de stage doit d'abord être générée par la RH."
+            )
+        ), 403
+
+
+
+
     candidate_id = str(candidat["id"])
+    
+    
 
     if not file.filename.lower().endswith(".pdf"):
         return jsonify(success=False, error="Seuls les fichiers PDF sont acceptés"), 400
