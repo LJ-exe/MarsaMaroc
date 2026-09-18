@@ -2,7 +2,10 @@ import os
 from datetime import datetime, timezone
 from dotenv import load_dotenv
 from pdfrw import PdfReader, PdfWriter
-
+import pythoncom
+import win32com.client
+ 
+ 
 load_dotenv()
 load_dotenv('.env.local', override=True)
 
@@ -63,6 +66,67 @@ DOC_LABELS = {
     "convention": "Convention de Stage",
     "demande": "Demande de Stage",
 }
+
+OUTLOOK_DOCUMENT_MESSAGES = {
+
+    "fiche_accueil": {
+        "subject": "Fiche d'accueil de stage | Marsa Maroc",
+        "body": """Bonjour {name},
+
+Veuillez trouver en pièce jointe votre fiche d'accueil de stage au sein de Marsa Maroc.
+
+Nous vous invitons à prendre connaissance des informations relatives à votre affectation.
+
+Cordialement,
+
+Direction du Capital Humain
+Marsa Maroc"""
+    },
+
+    "decision_stage": {
+        "subject": "Décision de stage | Marsa Maroc",
+        "body": """Bonjour {name},
+
+Veuillez trouver en pièce jointe votre décision de stage officielle.
+
+Ce document précise les informations relatives à votre stage au sein de Marsa Maroc.
+
+Cordialement,
+
+Direction du Capital Humain
+Marsa Maroc"""
+    },
+
+    "evaluation": {
+        "subject": "Fiche d'appréciation de stage | Marsa Maroc",
+        "body": """Bonjour {name},
+
+Votre fiche d'appréciation de stage a été validée.
+
+Veuillez trouver le document en pièce jointe.
+
+Cordialement,
+
+Direction du Capital Humain
+Marsa Maroc"""
+    },
+
+    "attestation": {
+        "subject": "Attestation de stage | Marsa Maroc",
+        "body": """Bonjour {name},
+
+Nous vous transmettons votre attestation de stage.
+
+Veuillez trouver votre attestation officielle en pièce jointe.
+
+Cordialement,
+
+Direction du Capital Humain
+Marsa Maroc"""
+    },
+}
+
+
 
 HINT_NOUVEAU_DOCUMENT = "📩 Nouveau document envoyé par le stagiaire"
 HINT_PDF_RENVOYE = "📄 PDF renvoyé par le stagiaire"
@@ -536,23 +600,604 @@ Marsa Maroc
     )
 
 
-def ajouter_notification(candidat: dict, texte: str) -> list:
-    """Ajoute une notification in-app au tableau notifications du stagiaire."""
+def ouvrir_mail_outlook(
+    email_rh,
+    destinataire,
+    sujet,
+    corps,
+    fichier_path
+):
+    fichier_path = os.path.abspath(fichier_path)
+
+    if not os.path.exists(fichier_path):
+        raise RuntimeError(
+            f"Fichier introuvable : {fichier_path}"
+        )
+
+    pythoncom.CoInitialize()
+
+    try:
+        outlook = win32com.client.Dispatch(
+            "Outlook.Application"
+        )
+
+        namespace = outlook.Session
+
+        email_rh = (
+            email_rh or ""
+        ).strip().lower()
+
+        compte_rh = None
+
+        for account in namespace.Accounts:
+
+            try:
+                smtp = (
+                    account.SmtpAddress or ""
+                ).strip().lower()
+
+                if smtp == email_rh:
+                    compte_rh = account
+                    break
+
+            except Exception:
+                continue
+
+        if not compte_rh:
+            raise RuntimeError(
+                "Le compte Outlook correspondant au RH "
+                f"connecté est introuvable : {email_rh}"
+            )
+
+        mail = outlook.CreateItem(0)
+
+        mail.SendUsingAccount = compte_rh
+        mail.To = destinataire
+        mail.Subject = sujet
+        mail.Body = corps
+
+        mail.Attachments.Add(
+            fichier_path
+        )
+
+        # Ouvre Outlook sans envoyer automatiquement
+        mail.Display()
+
+    finally:
+        pythoncom.CoUninitialize()
+
+
+        
+@app.post("/api/rh/documents/validate")
+@login_required("rh")
+def rh_validate_document():
+
+    if not supabase:
+        return jsonify(
+            success=False,
+            error="Supabase non configuré"
+        ), 500
+
+    data = request.get_json(silent=True) or {}
+
+    candidate_id = str(
+        data.get("candidate_id") or ""
+    ).strip()
+
+    doc_type = (
+        data.get("doc_type") or ""
+    ).strip().lower()
+
+    if not candidate_id:
+        return jsonify(
+            success=False,
+            error="Candidat manquant."
+        ), 400
+
+    if doc_type not in DOCUMENTS_REQUIS:
+        return jsonify(
+            success=False,
+            error="Type de document invalide."
+        ), 400
+
+    # Vérifier que le PDF existe réellement
+    fichier_path = chemin_document(
+        candidate_id,
+        doc_type
+    )
+
+    if not fichier_path:
+        return jsonify(
+            success=False,
+            error="Document introuvable."
+        ), 404
+
+    try:
+
+        response = (
+            supabase
+            .table(TABLE_APPLICATIONS)
+            .select("id,validated_documents")
+            .eq("id", candidate_id)
+            .single()
+            .execute()
+        )
+
+        candidat = response.data
+
+        if not candidat:
+            return jsonify(
+                success=False,
+                error="Stagiaire introuvable."
+            ), 404
+
+        validated_documents = (
+            candidat.get("validated_documents")
+            or {}
+        )
+
+        if not isinstance(validated_documents, dict):
+            validated_documents = {}
+
+        validated_documents[doc_type] = True
+
+        (
+            supabase
+            .table(TABLE_APPLICATIONS)
+            .update({
+                "validated_documents":
+                    validated_documents
+            })
+            .eq("id", candidate_id)
+            .execute()
+        )
+
+        return jsonify(
+            success=True,
+            message=(
+                f"{DOC_LABELS.get(doc_type, doc_type)} "
+                "validé avec succès."
+            ),
+            outlook_available=True
+        )
+
+    except Exception as exc:
+
+        print(
+            f"[RH VALIDATE DOCUMENT] {exc}"
+        )
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
+        
+   
+@app.post("/api/rh/outlook/<candidate_id>/<doc_type>")
+@login_required("rh")
+def rh_outlook_document(candidate_id, doc_type):
+
+    TYPES_OUTLOOK = {
+
+        "fiche_accueil": {
+            "column": "fiche_accueil_pdf",
+        },
+
+        "decision_stage": {
+            "column": "decision_pdf",
+        },
+
+        "evaluation": {
+            "column": "evaluation_pdf",
+        },
+
+        "attestation": {
+            "column": "attestation_pdf",
+        },
+    }
+
+    if doc_type not in TYPES_OUTLOOK:
+        return jsonify(
+            success=False,
+            error="Type de document Outlook invalide."
+        ), 400
+
+    try:
+
+        # ==============================
+        # STAGIAIRE
+        # ==============================
+
+        response = (
+            supabase
+            .table(TABLE_APPLICATIONS)
+            .select(
+                "id,name,email,"
+                "fiche_accueil_pdf,"
+                "decision_pdf,"
+                "evaluation_pdf,"
+                "evaluation_status,"
+                "attestation_pdf"
+            )
+            .eq("id", candidate_id)
+            .single()
+            .execute()
+        )
+
+        candidat = response.data
+
+        if not candidat:
+            return jsonify(
+                success=False,
+                error="Stagiaire introuvable."
+            ), 404
+
+
+        # ==============================
+        # CAS FICHE D'APPRÉCIATION
+        # ==============================
+
+        if (
+            doc_type == "evaluation"
+            and candidat.get("evaluation_status") != "Accepté"
+        ):
+            return jsonify(
+                success=False,
+                error=(
+                    "La fiche d'appréciation doit être "
+                    "validée par le RH avant l'envoi."
+                )
+            ), 403
+
+
+        # ==============================
+        # NOM DU PDF
+        # ==============================
+
+        column_name = (
+            TYPES_OUTLOOK[doc_type]["column"]
+        )
+
+        filename = candidat.get(
+            column_name
+        )
+
+        if not filename:
+            return jsonify(
+                success=False,
+                error="Le document n'est pas disponible."
+            ), 404
+
+
+        # Sécuriser le nom du fichier
+        filename = os.path.basename(
+            filename
+        )
+
+
+        # ==============================
+        # CHERCHER LE PDF
+        # ==============================
+
+        possible_paths = [
+
+            os.path.join(
+                app.root_path,
+                "generated_pdfs",
+                filename
+            ),
+
+            os.path.join(
+                app.config["UPLOAD_FOLDER"],
+                filename
+            ),
+
+            os.path.join(
+                app.root_path,
+                "pdf",
+                filename
+            ),
+        ]
+
+        fichier_path = None
+
+        for path in possible_paths:
+
+            if os.path.exists(path):
+                fichier_path = path
+                break
+
+
+        if not fichier_path:
+            return jsonify(
+                success=False,
+                error=f"PDF introuvable : {filename}"
+            ), 404
+
+
+        # ==============================
+        # EMAIL STAGIAIRE
+        # ==============================
+
+        email_stagiaire = (
+            candidat.get("email")
+            or ""
+        ).strip()
+
+        if not email_stagiaire:
+            return jsonify(
+                success=False,
+                error="Le stagiaire n'a pas d'adresse email."
+            ), 400
+
+
+        # ==============================
+        # RH CONNECTÉ
+        # ==============================
+
+        email_rh = (
+            session.get("user_email")
+            or ""
+        ).strip()
+
+        if not email_rh:
+            return jsonify(
+                success=False,
+                error="Email du RH connecté introuvable."
+            ), 400
+
+
+        # ==============================
+        # TEXTE DYNAMIQUE
+        # ==============================
+
+        template = (
+            OUTLOOK_DOCUMENT_MESSAGES.get(
+                doc_type
+            )
+        )
+
+        nom_stagiaire = (
+            candidat.get("name")
+            or "Stagiaire"
+        )
+
+        sujet = template["subject"]
+
+        corps = template["body"].format(
+            name=nom_stagiaire
+        )
+
+
+        # ==============================
+        # OUTLOOK
+        # ==============================
+
+        ouvrir_mail_outlook(
+            email_rh=email_rh,
+            destinataire=email_stagiaire,
+            sujet=sujet,
+            corps=corps,
+            fichier_path=fichier_path,
+        )
+
+        return jsonify(
+            success=True,
+            message="Email préparé dans Outlook."
+        )
+
+
+    except Exception as exc:
+
+        print(
+            "[OUTLOOK]",
+            exc
+        )
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500     
+
+
+def ajouter_notification(
+    candidat: dict,
+    texte: str,
+    titre: str = "",
+    url: str = "",
+    type_notification: str = "",
+) -> list:
+
     import datetime as dt
 
-    now_str = dt.datetime.now().isoformat()
     notifications = candidat.get("notifications") or []
+
     if not isinstance(notifications, list):
         notifications = []
-    notifications.append(
-        {
-            "id": f"notif_{int(dt.datetime.now().timestamp())}",
-            "text": texte,
-            "date": now_str,
-            "read": False,
-        }
-    )
+
+    # Évite d'avoir 10 fois la même notification
+    # si le RH modifie/régénère le même document.
+    if type_notification:
+
+        notifications = [
+            notif
+            for notif in notifications
+            if notif.get("type") != type_notification
+        ]
+
+    notifications.append({
+        "id": f"notif_{int(dt.datetime.now().timestamp())}",
+        "title": titre,
+        "text": texte,
+        "date": dt.datetime.now().isoformat(),
+        "read": False,
+        "url": url,
+        "type": type_notification,
+    })
+
     return notifications
+
+
+def notifier_document_officiel(
+    candidate_id: str,
+    document_type: str
+):
+
+    if not supabase:
+        return False
+
+    documents = {
+
+        "fiche_accueil": {
+            "column": "fiche_accueil_pdf",
+            "title": "Fiche d'accueil disponible",
+            "text": (
+                "Votre fiche d'accueil de stage "
+                "est désormais disponible."
+            ),
+        },
+
+        "decision_stage": {
+            "column": "decision_pdf",
+            "title": "Décision de stage disponible",
+            "text": (
+                "Votre décision de stage officielle "
+                "est désormais disponible."
+            ),
+        },
+
+        "evaluation": {
+            "column": "evaluation_pdf",
+            "title": "Fiche d'appréciation validée",
+            "text": (
+                "Votre fiche d'appréciation de stage "
+                "a été validée par le service RH."
+            ),
+        },
+
+        "attestation": {
+            "column": "attestation_pdf",
+            "title": "Attestation de stage disponible",
+            "text": (
+                "Votre attestation de stage officielle "
+                "est désormais disponible."
+            ),
+        },
+    }
+
+
+    config = documents.get(
+        document_type
+    )
+
+    if not config:
+        return False
+
+
+    try:
+
+        response = (
+            supabase
+            .table(TABLE_APPLICATIONS)
+            .select(
+                "id,"
+                "notifications,"
+                "fiche_accueil_pdf,"
+                "decision_pdf,"
+                "evaluation_pdf,"
+                "attestation_pdf"
+            )
+            .eq(
+                "id",
+                candidate_id
+            )
+            .single()
+            .execute()
+        )
+
+
+        candidat = response.data
+
+        if not candidat:
+            return False
+
+
+        filename = (
+            candidat.get(
+                config["column"]
+            )
+            or ""
+        ).strip()
+
+
+        if not filename:
+
+            print(
+                "[NOTIFICATION DOCUMENT] "
+                f"{document_type} sans PDF"
+            )
+
+            return False
+
+
+        filename = os.path.basename(
+            filename
+        )
+
+
+        # URL générique déjà disponible
+        pdf_url = (
+            f"/pdf/{filename}"
+        )
+
+
+        notifications = ajouter_notification(
+
+            candidat,
+
+            texte=config["text"],
+
+            titre=config["title"],
+
+            url=pdf_url,
+
+            type_notification=document_type,
+        )
+
+
+        (
+            supabase
+            .table(TABLE_APPLICATIONS)
+            .update({
+                "notifications":
+                    notifications
+            })
+            .eq(
+                "id",
+                candidate_id
+            )
+            .execute()
+        )
+
+
+        print(
+            "[NOTIFICATION DOCUMENT] "
+            f"{document_type} -> "
+            f"{candidate_id}"
+        )
+
+        return True
+
+
+    except Exception as exc:
+
+        print(
+            "[NOTIFICATION DOCUMENT ERROR]",
+            exc
+        )
+
+        return False
+
 
 
 def charger_candidats():
@@ -3124,6 +3769,7 @@ def rh():
     return render_template(
         "dashboard_rh.html",
         user=rh_name,
+        user_email=session.get("user_email") or "",
         candidates=candidates,
         poles=POLES,
         db_error=db_error,
@@ -5332,6 +5978,726 @@ Système Marsa Maroc Stagiaires
 
         traceback.print_exc()
         return jsonify(success=False, error=str(exc)), 500
+    
+    
+
+# ============================================================
+# SUPERADMIN - GESTION DES UTILISATEURS
+# ============================================================
+
+SUPERADMIN_ROLES = (
+    "stagiaire",
+    "rh",
+    "affectation",
+   
+)
+
+
+def _admin_value(obj, key, default=None):
+    """Lit une valeur depuis un objet Supabase ou un dict."""
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+
+
+def _admin_users_from_response(response):
+    """
+    Compatible avec plusieurs versions de supabase-py :
+    - liste directe
+    - objet avec .users
+    - dict avec users
+    """
+    if isinstance(response, list):
+        return response
+
+    users = getattr(response, "users", None)
+    if users is not None:
+        return list(users)
+
+    if isinstance(response, dict):
+        if isinstance(response.get("users"), list):
+            return response["users"]
+
+        data = response.get("data")
+        if isinstance(data, dict) and isinstance(data.get("users"), list):
+            return data["users"]
+
+    return []
+
+
+def _admin_iso(value):
+    if not value:
+        return ""
+
+    if hasattr(value, "isoformat"):
+        try:
+            return value.isoformat()
+        except Exception:
+            pass
+
+    return str(value)
+
+
+def _admin_user_banned(banned_until):
+    """Retourne True uniquement si le bannissement est encore actif."""
+    if not banned_until:
+        return False
+
+    try:
+        if isinstance(banned_until, datetime):
+            dt = banned_until
+        else:
+            dt = datetime.fromisoformat(
+                str(banned_until).replace("Z", "+00:00")
+            )
+
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+
+        return dt > datetime.now(timezone.utc)
+
+    except Exception:
+        return bool(banned_until)
+
+
+def charger_utilisateurs_superadmin():
+    if not supabase_admin:
+        raise RuntimeError(
+            "SUPABASE_SERVICE_ROLE_KEY n'est pas configurée."
+        )
+
+    # --------------------------------------------------------
+    # 1. Charger les profils
+    # --------------------------------------------------------
+    profiles_response = (
+        supabase_admin
+        .table("profiles")
+        .select("id,name,email,role")
+        .execute()
+    )
+
+    profiles = profiles_response.data or []
+
+    profiles_by_id = {
+        str(profile.get("id")): profile
+        for profile in profiles
+        if profile.get("id")
+    }
+
+    # --------------------------------------------------------
+    # 2. Charger tous les utilisateurs Supabase Auth
+    # --------------------------------------------------------
+    auth_users = []
+
+    page = 1
+    per_page = 1000
+
+    while True:
+        response = supabase_admin.auth.admin.list_users(
+            page=page,
+            per_page=per_page,
+        )
+
+        batch = _admin_users_from_response(response)
+
+        auth_users.extend(batch)
+
+        if len(batch) < per_page:
+            break
+
+        page += 1
+
+        # Sécurité contre une boucle accidentelle
+        if page > 50:
+            break
+
+    # --------------------------------------------------------
+    # 3. Fusionner auth.users + profiles
+    # --------------------------------------------------------
+    resultat = []
+
+    for auth_user in auth_users:
+
+        user_id = str(_admin_value(auth_user, "id", ""))
+
+        if not user_id:
+            continue
+
+        profile = profiles_by_id.get(user_id, {})
+
+        metadata = (
+            _admin_value(auth_user, "user_metadata", {})
+            or {}
+        )
+
+        name = (
+            profile.get("name")
+            or metadata.get("full_name")
+            or metadata.get("name")
+            or ""
+        )
+
+        first_name = (
+            metadata.get("first_name")
+            or metadata.get("prenom")
+            or ""
+        )
+
+        last_name = (
+            metadata.get("last_name")
+            or metadata.get("nom")
+            or ""
+        )
+
+        # Anciens comptes : récupérer prénom/nom depuis profiles.name
+        if not first_name and not last_name and name:
+            morceaux = name.split(None, 1)
+
+            first_name = morceaux[0]
+
+            if len(morceaux) > 1:
+                last_name = morceaux[1]
+
+        role = (
+            profile.get("role")
+            or "stagiaire"
+        ).strip().lower()
+
+        email = (
+            _admin_value(auth_user, "email", "")
+            or profile.get("email")
+            or ""
+        )
+
+        banned_until = _admin_value(
+            auth_user,
+            "banned_until",
+            None
+        )
+
+        active = not _admin_user_banned(banned_until)
+
+        resultat.append({
+            "id": user_id,
+            "name": name,
+            "first_name": first_name,
+            "last_name": last_name,
+            "email": email,
+            "role": role,
+            "active": active,
+            "banned_until": _admin_iso(banned_until),
+            "created_at": _admin_iso(
+                _admin_value(auth_user, "created_at", None)
+            ),
+            "last_sign_in_at": _admin_iso(
+                _admin_value(auth_user, "last_sign_in_at", None)
+            ),
+            "email_confirmed": bool(
+                _admin_value(
+                    auth_user,
+                    "email_confirmed_at",
+                    None
+                )
+            ),
+        })
+
+    resultat.sort(
+        key=lambda u: u.get("created_at") or "",
+        reverse=True,
+    )
+
+    return resultat
+
+
+# ============================================================
+# PAGE SUPERADMIN
+# ============================================================
+
+@app.route("/superadmin")
+@login_required("superadmin")
+def superadmin():
+
+    try:
+        users = charger_utilisateurs_superadmin()
+        error = None
+
+    except Exception as exc:
+        print(f"[SUPERADMIN] Chargement utilisateurs : {exc}")
+
+        users = []
+        error = str(exc)
+
+    stats = {
+        "total": len(users),
+
+        "stagiaire": sum(
+            u["role"] == "stagiaire"
+            for u in users
+        ),
+
+        "rh": sum(
+            u["role"] == "rh"
+            for u in users
+        ),
+
+        "affectation": sum(
+            u["role"] == "affectation"
+            for u in users
+        ),
+
+        "superadmin": sum(
+            u["role"] == "superadmin"
+            for u in users
+        ),
+
+        "inactive": sum(
+            not u["active"]
+            for u in users
+        ),
+    }
+
+    return render_template(
+        "dashboard_superadmin.html",
+        user=nom_utilisateur(),
+        users=users,
+        stats=stats,
+        error=error,
+        current_user_id=str(session.get("user_id") or ""),
+    )
+
+
+# ============================================================
+# CREATE USER
+# ============================================================
+
+@app.post("/api/superadmin/users")
+@login_required("superadmin")
+def superadmin_create_user():
+
+    if not supabase_admin:
+        return jsonify(
+            success=False,
+            error="Supabase Admin non configuré."
+        ), 500
+
+    data = request.get_json(silent=True) or {}
+
+    first_name = (
+        data.get("first_name") or ""
+    ).strip()
+
+    last_name = (
+        data.get("last_name") or ""
+    ).strip()
+
+    email = (
+        data.get("email") or ""
+    ).strip().lower()
+
+    role = (
+        data.get("role") or ""
+    ).strip().lower()
+    if role == "superadmin":
+        return jsonify(
+            success=False,
+            error="La création d'un autre Superadmin est interdite."
+        ), 403
+
+    password = data.get("password") or ""
+    confirm_password = data.get("confirm_password") or ""
+
+    if not first_name:
+        return jsonify(
+            success=False,
+            error="Le prénom est obligatoire."
+        ), 400
+
+    if not last_name:
+        return jsonify(
+            success=False,
+            error="Le nom est obligatoire."
+        ), 400
+
+    if not email:
+        return jsonify(
+            success=False,
+            error="L'adresse email est obligatoire."
+        ), 400
+
+    if role not in SUPERADMIN_ROLES:
+        return jsonify(
+            success=False,
+            error="Rôle invalide."
+        ), 400
+
+    if len(password) < 6:
+        return jsonify(
+            success=False,
+            error="Le mot de passe doit contenir au moins 6 caractères."
+        ), 400
+
+    if password != confirm_password:
+        return jsonify(
+            success=False,
+            error="Les mots de passe ne correspondent pas."
+        ), 400
+
+    full_name = f"{first_name} {last_name}".strip()
+
+    created_user_id = None
+
+    try:
+        # Création dans Supabase Authentication
+        auth_response = (
+            supabase_admin
+            .auth
+            .admin
+            .create_user({
+                "email": email,
+                "password": password,
+                "email_confirm": True,
+                "user_metadata": {
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "full_name": full_name,
+                },
+            })
+        )
+
+        new_user = (
+            getattr(auth_response, "user", None)
+            or auth_response
+        )
+
+        created_user_id = str(
+            _admin_value(new_user, "id", "")
+        )
+
+        if not created_user_id:
+            raise RuntimeError(
+                "Impossible de récupérer l'identifiant du nouvel utilisateur."
+            )
+
+        # profiles = source de vérité pour le rôle
+        (
+            supabase_admin
+            .table("profiles")
+            .upsert({
+                "id": created_user_id,
+                "name": full_name,
+                "email": email,
+                "role": role,
+            })
+            .execute()
+        )
+
+        return jsonify(
+            success=True,
+            message="Utilisateur créé avec succès."
+        )
+
+    except Exception as exc:
+
+        print(f"[SUPERADMIN CREATE] {exc}")
+
+        # Éviter un compte Auth orphelin si profiles échoue
+        if created_user_id:
+            try:
+                supabase_admin.auth.admin.delete_user(
+                    created_user_id
+                )
+            except Exception:
+                pass
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
+
+
+# ============================================================
+# UPDATE USER
+# ============================================================
+@app.put("/api/superadmin/users/<user_id>")
+@login_required("superadmin")
+def superadmin_update_user(user_id):
+
+    if not supabase_admin:
+        return jsonify(
+            success=False,
+            error="Supabase Admin non configuré."
+        ), 500
+
+    data = request.get_json(silent=True) or {}
+
+    first_name = (
+        data.get("first_name") or ""
+    ).strip()
+
+    last_name = (
+        data.get("last_name") or ""
+    ).strip()
+
+    email = (
+        data.get("email") or ""
+    ).strip().lower()
+
+    role = (
+        data.get("role") or ""
+    ).strip().lower()
+
+    password = data.get("password") or ""
+    confirm_password = data.get("confirm_password") or ""
+
+    if not first_name or not last_name or not email:
+        return jsonify(
+            success=False,
+            error="Prénom, nom et email sont obligatoires."
+        ), 400
+
+    current_user_id = str(
+        session.get("user_id") or ""
+    )
+
+    # Lui-même = reste Superadmin
+    if user_id == current_user_id:
+        role = "superadmin"
+
+    # Quelqu'un d'autre = jamais Superadmin
+    elif role == "superadmin":
+        return jsonify(
+            success=False,
+            error="Un utilisateur ne peut pas être promu Superadmin."
+        ), 403
+
+    elif role not in SUPERADMIN_ROLES:
+        return jsonify(
+            success=False,
+            error="Rôle invalide."
+        ), 400
+    current_user_id = str(
+        session.get("user_id") or ""
+    )
+
+    # Le Superadmin connecté ne peut pas retirer son propre rôle.
+    
+
+    if password:
+        if len(password) < 6:
+            return jsonify(
+                success=False,
+                error="Le mot de passe doit contenir au moins 6 caractères."
+            ), 400
+
+        if password != confirm_password:
+            return jsonify(
+                success=False,
+                error="Les mots de passe ne correspondent pas."
+            ), 400
+
+    full_name = f"{first_name} {last_name}".strip()
+
+    try:
+
+        # Récupérer les métadonnées existantes
+        response = (
+            supabase_admin
+            .auth
+            .admin
+            .get_user_by_id(user_id)
+        )
+
+        auth_user = (
+            getattr(response, "user", None)
+            or response
+        )
+
+        metadata = dict(
+            _admin_value(
+                auth_user,
+                "user_metadata",
+                {}
+            ) or {}
+        )
+
+        metadata.update({
+            "first_name": first_name,
+            "last_name": last_name,
+            "full_name": full_name,
+        })
+
+        auth_update = {
+            "email": email,
+            "user_metadata": metadata,
+        }
+
+        if password:
+            auth_update["password"] = password
+
+        # Modifier Authentication
+        supabase_admin.auth.admin.update_user_by_id(
+            user_id,
+            auth_update,
+        )
+
+        # Modifier profiles
+        (
+            supabase_admin
+            .table("profiles")
+            .upsert({
+                "id": user_id,
+                "name": full_name,
+                "email": email,
+                "role": role,
+            })
+            .execute()
+        )
+
+        # Si le Superadmin modifie son propre nom/email,
+        # mettre également sa session Flask à jour.
+        if user_id == current_user_id:
+            session["user_name"] = full_name
+            session["user_email"] = email
+
+        return jsonify(
+            success=True,
+            message="Utilisateur modifié avec succès."
+        )
+
+    except Exception as exc:
+
+        print(f"[SUPERADMIN UPDATE] {exc}")
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
+
+
+# ============================================================
+# ENABLE / DISABLE USER
+# ============================================================
+
+@app.post("/api/superadmin/users/<user_id>/status")
+@login_required("superadmin")
+def superadmin_user_status(user_id):
+
+    if not supabase_admin:
+        return jsonify(
+            success=False,
+            error="Supabase Admin non configuré."
+        ), 500
+
+    data = request.get_json(silent=True) or {}
+
+    enabled = bool(
+        data.get("enabled")
+    )
+
+    current_user_id = str(
+        session.get("user_id") or ""
+    )
+
+    if user_id == current_user_id and not enabled:
+        return jsonify(
+            success=False,
+            error="Vous ne pouvez pas désactiver votre propre compte."
+        ), 400
+
+    try:
+
+        supabase_admin.auth.admin.update_user_by_id(
+            user_id,
+            {
+                "ban_duration": (
+                    "none"
+                    if enabled
+                    else "876000h"
+                )
+            },
+        )
+
+        return jsonify(
+            success=True,
+            active=enabled,
+            message=(
+                "Compte réactivé."
+                if enabled
+                else "Compte désactivé."
+            )
+        )
+
+    except Exception as exc:
+
+        print(f"[SUPERADMIN STATUS] {exc}")
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
+
+
+# ============================================================
+# DELETE USER
+# ============================================================
+
+@app.delete("/api/superadmin/users/<user_id>")
+@login_required("superadmin")
+def superadmin_delete_user(user_id):
+
+    if not supabase_admin:
+        return jsonify(
+            success=False,
+            error="Supabase Admin non configuré."
+        ), 500
+
+    current_user_id = str(
+        session.get("user_id") or ""
+    )
+
+    if user_id == current_user_id:
+        return jsonify(
+            success=False,
+            error="Vous ne pouvez pas supprimer votre propre compte."
+        ), 400
+
+    try:
+
+        # Supprimer d'abord Authentication.
+        # Si une FK bloque la suppression, aucune donnée profile
+        # n'est supprimée par erreur.
+        supabase_admin.auth.admin.delete_user(
+            user_id
+        )
+
+        # Si profiles possède ON DELETE CASCADE ceci ne fera rien.
+        # Sinon cela nettoie le profil restant.
+        try:
+            (
+                supabase_admin
+                .table("profiles")
+                .delete()
+                .eq("id", user_id)
+                .execute()
+            )
+        except Exception:
+            pass
+
+        return jsonify(
+            success=True,
+            message="Utilisateur supprimé."
+        )
+
+    except Exception as exc:
+
+        print(f"[SUPERADMIN DELETE] {exc}")
+
+        return jsonify(
+            success=False,
+            error=str(exc)
+        ), 500
+
+
 
 
 @app.post("/api/candidates/evaluation/valider")
@@ -5921,25 +7287,92 @@ def _reupload_document_interne(file, doc_type: str, candidate_id: str, candidat:
 
 
 @app.route("/api/candidates/<candidate_id>/documents")
+@login_required("rh")
 def get_candidate_documents(candidate_id):
-    docs = ["cv", "cin", "assurance", "convention", "demande"]
+
+    docs = [
+        "cv",
+        "cin",
+        "assurance",
+        "convention",
+        "demande",
+    ]
+
     result = {}
+
+    # Récupérer les validations RH
+    validated_documents = {}
+
+    try:
+        response = (
+            supabase
+            .table(TABLE_APPLICATIONS)
+            .select("validated_documents")
+            .eq("id", candidate_id)
+            .single()
+            .execute()
+        )
+
+        if response.data:
+            validated_documents = (
+                response.data.get("validated_documents")
+                or {}
+            )
+
+    except Exception as exc:
+        print("[DOCUMENTS VALIDATION]", exc)
+
+    # Vérifier les PDF
     for doc in docs:
+
         filename = f"{candidate_id}_{doc}.pdf"
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+        filepath = os.path.join(
+            app.config["UPLOAD_FOLDER"],
+            filename
+        )
+
         exists = os.path.exists(filepath)
-        
+
         if not exists:
-            fallback_filename = f"{secure_filename(candidate_id)}_{doc}.pdf"
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], fallback_filename)
+
+            fallback_filename = (
+                f"{secure_filename(candidate_id)}_{doc}.pdf"
+            )
+
+            filepath = os.path.join(
+                app.config["UPLOAD_FOLDER"],
+                fallback_filename
+            )
+
             exists = os.path.exists(filepath)
-            
+
         result[doc] = {
+
             "uploaded": exists,
-            "url": f"/api/documents/{candidate_id}/{doc}" if exists else None,
-            "download_url": f"/api/documents/{candidate_id}/{doc}/download" if exists else None
+
+            "validated": bool(
+                validated_documents.get(doc)
+            ),
+
+            "url": (
+                f"/api/documents/{candidate_id}/{doc}"
+                if exists
+                else None
+            ),
+
+            "download_url": (
+                f"/api/documents/{candidate_id}/{doc}/download"
+                if exists
+                else None
+            ),
         }
-    return jsonify(success=True, documents=result)
+
+    return jsonify(
+        success=True,
+        documents=result
+    )
+
 
 
 @app.route("/api/documents/<candidate_id>/<doc_type>")

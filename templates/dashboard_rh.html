@@ -232,7 +232,8 @@
 
     </nav>
 
-    <main id="overview-section" class="max-w-7xl mx-auto p-8 space-y-6">
+    <main id="overview-section"
+      class="w-[96%] max-w-none mx-auto px-4 md:px-6 lg:px-8 py-8 space-y-6">
         {% if db_error %}
         <div class="bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl px-6 py-4 text-sm font-semibold">
             Impossible de charger les candidatures : {{ db_error }}
@@ -818,6 +819,8 @@
 
                                     </div>
 
+                                   
+
                                 </div>
 
 
@@ -917,6 +920,7 @@
                                         class="text-[9px] font-black text-amber-600 hover:underline">
                                         Modifier
                                     </button>
+                                   
 
                                 </div>
 
@@ -1021,6 +1025,10 @@
                                         text-emerald-600 uppercase">
                                     Éval Validée
                                 </span>
+                                {% if candidate.evaluation_pdf %}
+
+
+                                {% endif %}
 
 
                                 {% if candidate.attestation_pdf %}
@@ -1039,6 +1047,7 @@
                                         uppercase hover:underline flex items-center gap-1">
                                     Télécharger l'attestation de stage 📥
                                 </a>
+
 
                                 {% endif %}
 
@@ -1205,6 +1214,7 @@
                             </div>
                             <a id="download-cv" href="#" target="_blank"
                                 class="doc-download hidden mt-2 block text-[9px] font-black text-[#003399] hover:underline">Télécharger</a>
+                                
                         </div>
                         <!-- CIN -->
                         <div id="doc-row-cin" class="p-3 bg-white rounded-xl shadow-sm hover:bg-slate-50 transition">
@@ -5106,6 +5116,13 @@ document.addEventListener(
 );
 
 
+
+
+
+
+
+
+
     </script>
 
     <footer class="max-w-7xl mx-auto px-8 py-10 text-center border-t border-slate-100 mt-10">
@@ -5115,5 +5132,8 @@ document.addEventListener(
     </footer>
 
 </body>
+
+
+
 
 </html>

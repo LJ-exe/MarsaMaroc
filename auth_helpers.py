@@ -10,7 +10,7 @@ from flask import redirect, request, session, url_for
 
 
 
-ROLES_VALIDES = ("stagiaire", "rh", "affectation")
+ROLES_VALIDES = ("stagiaire", "rh", "affectation","superadmin")
 
 ROLE_INSCRIPTION = "stagiaire"
 
@@ -25,6 +25,7 @@ EMAILS_RESERVES_INSCRIPTION = frozenset(
         "rh@marsamaroc.ma",
 
         "aff@marsamaroc.ma",
+        "superadmin@marsamaroc.ma",
 
     }
 
@@ -39,6 +40,7 @@ REDIRECTION_PAR_ROLE = {
     "rh": "/rh",
 
     "affectation": "/affectation",
+    "superadmin": "/superadmin",
 
 }
 
@@ -129,6 +131,9 @@ def role_depuis_profil(profil: dict | None) -> str | None:
         return role
 
     return None
+
+
+ 
 
 
 
@@ -292,12 +297,11 @@ def profil_depuis_auth_user(user):
 
 
 
-    if email == "rh@marsamaroc.ma":
-
+    if email == "superadmin@marsamaroc.ma":
+        role, name = "superadmin", "Super Administrateur"
+    elif email == "rh@marsamaroc.ma":
         role, name = "rh", "Responsable RH"
-
     elif email == "aff@marsamaroc.ma":
-
         role, name = "affectation", "Responsable Affectation"
 
 

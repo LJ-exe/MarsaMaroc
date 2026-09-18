@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Super Administration | Marsa Maroc</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        .modal-backdrop {
+            backdrop-filter: blur(7px);
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 999px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+    </style>
+
+</head>
+
+
+<body class="bg-[#f5f8fc] text-slate-700 min-h-screen">
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header class="bg-white border-b border-[#e5eef7] sticky top-0 z-30">
+
+        <div class="max-w-[1600px] mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
+
+            <div class="flex items-center gap-4">
+
+                <div
+                    class="w-11 h-11 rounded-2xl bg-[#001a4d] flex items-center justify-center shadow-lg shadow-blue-900/10">
+
+                    <svg class="w-6 h-6 text-white"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2.3">
+
+                        <path stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4" />
+
+                    </svg>
+
+                </div>
+
+                <div>
+                    <p class="text-[9px] uppercase tracking-[.28em] text-slate-400 font-black">
+                        Marsa Maroc
+                    </p>
+
+                    <h1 class="font-black text-[#001a4d] text-lg">
+                        Super Administration
+                    </h1>
+                </div>
+
+            </div>
+
+
+            <div class="flex items-center gap-3">
+
+                <div class="hidden sm:block text-right mr-2">
+                    <p class="text-sm font-black text-[#001a4d]">
+                        {{ user }}
+                    </p>
+
+                    <p class="text-[9px] uppercase tracking-widest font-black text-blue-500">
+                        Super Administrateur
+                    </p>
+                </div>
+
+
+                <div
+                    class="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-[#003399] font-black">
+
+                    {{ (user or 'SA')[0] | upper }}
+
+                </div>
+
+
+                <a href="/logout"
+                    title="Déconnexion"
+                    class="w-10 h-10 rounded-xl border border-slate-200 bg-white hover:bg-rose-50 hover:border-rose-100 hover:text-rose-600 transition flex items-center justify-center">
+
+                    <svg class="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2">
+
+                        <path stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
+
+                    </svg>
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- =====================================================
+         CONTENT
+    ====================================================== -->
+
+    <main class="max-w-[1600px] mx-auto px-6 lg:px-10 py-10">
+
+
+        <!-- TITLE -->
+
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-9">
+
+            <div>
+
+                <div class="flex items-center gap-2 mb-3">
+
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+
+                    <span class="text-[9px] uppercase tracking-[.24em] font-black text-slate-400">
+                        Administration centrale
+                    </span>
+
+                </div>
+
+                <h2 class="text-3xl lg:text-4xl font-black tracking-tight text-[#001a4d]">
+                    Gestion des utilisateurs
+                </h2>
+
+                <p class="text-sm text-slate-400 font-medium mt-2">
+                    Gérez l'ensemble des comptes et leurs droits d'accès.
+                </p>
+
+            </div>
+
+
+            <button
+                onclick="openCreateModal()"
+                class="inline-flex items-center justify-center gap-3 px-6 py-4 rounded-2xl bg-[#003399] hover:bg-[#002979] text-white shadow-xl shadow-blue-900/15 font-black text-[10px] uppercase tracking-[.16em] transition">
+
+                <svg class="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2.5">
+
+                    <path stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M12 4v16m8-8H4" />
+
+                </svg>
+
+                Nouvel utilisateur
+
+            </button>
+
+        </div>
+
+
+        {% if error %}
+
+        <div class="mb-8 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl p-5 text-sm font-bold">
+            {{ error }}
+        </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             STATS
+        ================================================== -->
+
+        <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-8">
+
+
+            <!-- TOTAL -->
+
+            <div class="bg-white border border-[#e5eef7] rounded-[26px] p-6 shadow-sm">
+
+                <div class="flex items-center justify-between">
+
+                    <div>
+
+                        <p class="text-[9px] text-slate-400 uppercase tracking-widest font-black">
+                            Total
+                        </p>
+
+                        <p class="text-3xl font-black text-[#001a4d] mt-2">
+                            {{ stats.total }}
+                        </p>
+
+                    </div>
+
+                    <div class="w-11 h-11 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+
+                        <svg class="w-5 h-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2">
+
+                            <path stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H2v-2a4 4 0 014-4h3m6 6H9m6 0v-2a6 6 0 00-12 0v2m9-10a4 4 0 100-8 4 4 0 000 8z" />
+
+                        </svg>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- STAGIAIRES -->
+
+            <div class="bg-white border border-[#e5eef7] rounded-[26px] p-6 shadow-sm">
+
+                <p class="text-[9px] text-slate-400 uppercase tracking-widest font-black">
+                    Stagiaires
+                </p>
+
+                <p class="text-3xl font-black text-[#001a4d] mt-2">
+                    {{ stats.stagiaire }}
+                </p>
+
+            </div>
+
+
+
+            <!-- RH -->
+
+            <div class="bg-white border border-[#e5eef7] rounded-[26px] p-6 shadow-sm">
+
+                <p class="text-[9px] text-slate-400 uppercase tracking-widest font-black">
+                    RH
+                </p>
+
+                <p class="text-3xl font-black text-[#001a4d] mt-2">
+                    {{ stats.rh }}
+                </p>
+
+            </div>
+
+
+
+            <!-- AFFECTATION -->
+
+            <div class="bg-white border border-[#e5eef7] rounded-[26px] p-6 shadow-sm">
+
+                <p class="text-[9px] text-slate-400 uppercase tracking-widest font-black">
+                    Mentors / Affectation
+                </p>
+
+                <p class="text-3xl font-black text-[#001a4d] mt-2">
+                    {{ stats.affectation }}
+                </p>
+
+            </div>
+
+
+
+            <!-- SUPERADMIN -->
+
+            <div class="bg-[#001a4d] rounded-[26px] p-6 shadow-xl shadow-blue-950/10 text-white">
+
+                <p class="text-[9px] text-white/50 uppercase tracking-widest font-black">
+                    Superadmins
+                </p>
+
+                <div class="flex justify-between items-end">
+
+                    <p class="text-3xl font-black mt-2">
+                        {{ stats.superadmin }}
+                    </p>
+
+                    {% if stats.inactive %}
+
+                    <span class="text-[9px] px-2.5 py-1 rounded-full bg-rose-500/20 text-rose-200 font-black">
+                        {{ stats.inactive }} inactif(s)
+                    </span>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             TABLE
+        ================================================== -->
+
+        <section class="bg-white border border-[#e5eef7] rounded-[32px] shadow-sm overflow-hidden">
+
+
+            <!-- FILTERS -->
+
+            <div class="p-6 lg:p-8 border-b border-slate-100">
+
+                <div class="flex flex-col lg:flex-row gap-4">
+
+
+                    <div class="relative flex-1">
+
+                        <svg
+                            class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            stroke-width="2">
+
+                            <path stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="m21 21-4.35-4.35M11 18a7 7 0 110-14 7 7 0 010 14z" />
+
+                        </svg>
+
+                        <input
+                            id="searchInput"
+                            oninput="renderUsers()"
+                            type="text"
+                            placeholder="Rechercher par nom ou email..."
+                            class="w-full h-13 pl-12 pr-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:border-blue-300 focus:bg-white transition text-sm font-semibold">
+
+                    </div>
+
+
+                    <select
+                        id="roleFilter"
+                        onchange="renderUsers()"
+                        class="px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none text-xs font-black text-slate-600">
+
+                        <option value="">Tous les rôles</option>
+                        <option value="superadmin">Superadmin</option>
+                        <option value="rh">RH</option>
+                        <option value="affectation">Mentor / Affectation</option>
+                        <option value="stagiaire">Stagiaire</option>
+
+                    </select>
+
+
+                    <select
+                        id="statusFilter"
+                        onchange="renderUsers()"
+                        class="px-5 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none text-xs font-black text-slate-600">
+
+                        <option value="">Tous les états</option>
+                        <option value="active">Actifs</option>
+                        <option value="inactive">Désactivés</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- TABLE -->
+
+            <div class="overflow-x-auto custom-scroll">
+
+                <table class="w-full min-w-[1000px]">
+
+                    <thead>
+
+                        <tr class="border-b border-slate-100 bg-slate-50/50">
+
+                            <th class="px-8 py-5 text-left text-[9px] uppercase tracking-widest font-black text-slate-400">
+                                Utilisateur
+                            </th>
+
+                            <th class="px-6 py-5 text-left text-[9px] uppercase tracking-widest font-black text-slate-400">
+                                Rôle
+                            </th>
+
+                            <th class="px-6 py-5 text-left text-[9px] uppercase tracking-widest font-black text-slate-400">
+                                État
+                            </th>
+
+                            <th class="px-6 py-5 text-left text-[9px] uppercase tracking-widest font-black text-slate-400">
+                                Création
+                            </th>
+
+                            <th class="px-6 py-5 text-left text-[9px] uppercase tracking-widest font-black text-slate-400">
+                                Dernière connexion
+                            </th>
+
+                            <th class="px-8 py-5 text-right text-[9px] uppercase tracking-widest font-black text-slate-400">
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="usersTableBody">
+                    </tbody>
+
+                </table>
+
+            </div>
+
+
+
+            <!-- FOOTER / PAGINATION -->
+
+            <div class="px-8 py-5 border-t border-slate-100 flex items-center justify-between">
+
+                <p id="paginationInfo"
+                    class="text-[10px] font-bold text-slate-400">
+                </p>
+
+
+                <div class="flex gap-2">
+
+                    <button
+                        onclick="previousPage()"
+                        class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-black hover:bg-slate-50 transition">
+
+                        ←
+
+                    </button>
+
+                    <button
+                        onclick="nextPage()"
+                        class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-black hover:bg-slate-50 transition">
+
+                        →
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+
+    <!-- =====================================================
+         USER MODAL
+    ====================================================== -->
+
+    <div
+        id="userModal"
+        class="hidden fixed inset-0 z-50 bg-[#001a4d]/40 modal-backdrop p-4 flex items-center justify-center">
+
+
+        <div class="bg-white rounded-[32px] shadow-2xl w-full max-w-2xl max-h-[94vh] overflow-y-auto custom-scroll">
+
+
+            <!-- MODAL HEADER -->
+
+            <div class="px-8 pt-8 pb-6 flex items-start justify-between border-b border-slate-100">
+
+                <div>
+
+                    <p class="text-[9px] uppercase tracking-[.22em] text-blue-500 font-black mb-2">
+                        Gestion du compte
+                    </p>
+
+                    <h3 id="modalTitle"
+                        class="text-2xl font-black text-[#001a4d]">
+
+                        Nouvel utilisateur
+
+                    </h3>
+
+                    <p id="modalSubtitle"
+                        class="text-xs text-slate-400 mt-1">
+
+                        Créer un nouveau compte.
+
+                    </p>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    onclick="closeUserModal()"
+                    class="w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center">
+
+                    ✕
+
+                </button>
+
+            </div>
+
+
+
+            <form id="userForm"
+                onsubmit="saveUser(event)"
+                class="p-8">
+
+
+                <input
+                    id="userId"
+                    type="hidden">
+
+
+
+                <div class="grid sm:grid-cols-2 gap-5">
+
+
+                    <div>
+
+                        <label class="block text-[9px] uppercase tracking-widest font-black text-slate-400 mb-2">
+                            Prénom
+                        </label>
+
+                        <input
+                            id="firstName"
+                            required
+                            type="text"
+                            class="w-full px-4 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:border-blue-300 text-sm font-bold"
+                            placeholder="Prénom">
+
+                    </div>
+
+
+
+                    <div>
+
+                        <label class="block text-[9px] uppercase tracking-widest font-black text-slate-400 mb-2">
+                            Nom
+                        </label>
+
+                        <input
+                            id="lastName"
+                            required
+                            type="text"
+                            class="w-full px-4 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:border-blue-300 text-sm font-bold"
+                            placeholder="Nom">
+
+                    </div>
+
+
+
+                    <div class="sm:col-span-2">
+
+                        <label class="block text-[9px] uppercase tracking-widest font-black text-slate-400 mb-2">
+                            Email
+                        </label>
+
+                        <input
+                            id="email"
+                            required
+                            type="email"
+                            class="w-full px-4 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:border-blue-300 text-sm font-bold"
+                            placeholder="email@marsamaroc.ma">
+
+                    </div>
+
+
+
+                    <div class="sm:col-span-2">
+
+                        <label class="block text-[9px] uppercase tracking-widest font-black text-slate-400 mb-2">
+                            Rôle
+                        </label>
+
+                        <select
+                            id="role"
+                            required
+                            class="w-full px-4 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:border-blue-300 text-sm font-bold">
+
+                            <option value="stagiaire">
+                                Stagiaire
+                            </option>
+
+                            <option value="rh">
+                                Ressources Humaines
+                            </option>
+
+                            <option value="affectation">
+                                Mentor / Affectation
+                            </option>
+
+                           
+
+                        </select>
+
+                    </div>
+
+
+
+                    <div>
+
+                        <label
+                            id="passwordLabel"
+                            class="block text-[9px] uppercase tracking-widest font-black text-slate-400 mb-2">
+
+                            Mot de passe
+
+                        </label>
+
+                        <input
+                            id="password"
+                            type="password"
+                            minlength="6"
+                            class="w-full px-4 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:border-blue-300 text-sm font-bold"
+                            placeholder="••••••••">
+
+                    </div>
+
+
+
+                    <div>
+
+                        <label class="block text-[9px] uppercase tracking-widest font-black text-slate-400 mb-2">
+                            Confirmation
+                        </label>
+
+                        <input
+                            id="confirmPassword"
+                            type="password"
+                            minlength="6"
+                            class="w-full px-4 py-4 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:border-blue-300 text-sm font-bold"
+                            placeholder="••••••••">
+
+                    </div>
+
+                </div>
+
+
+                <p
+                    id="passwordHelp"
+                    class="text-[10px] text-slate-400 mt-3 font-medium">
+
+                    Le mot de passe est obligatoire lors de la création.
+
+                </p>
+
+
+
+                <div
+                    id="formError"
+                    class="hidden mt-5 p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-700 text-xs font-bold">
+                </div>
+
+
+
+                <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 mt-8 pt-6 border-t border-slate-100">
+
+                    <button
+                        type="button"
+                        onclick="closeUserModal()"
+                        class="px-6 py-4 rounded-2xl border border-slate-200 text-slate-500 font-black text-[10px] uppercase tracking-widest hover:bg-slate-50">
+
+                        Annuler
+
+                    </button>
+
+
+                    <button
+                        id="saveButton"
+                        type="submit"
+                        class="px-7 py-4 rounded-2xl bg-[#003399] text-white font-black text-[10px] uppercase tracking-widest hover:bg-[#002979] shadow-lg shadow-blue-900/10">
+
+                        Enregistrer
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         TOAST
+    ====================================================== -->
+
+    <div
+        id="toast"
+        class="hidden fixed bottom-6 right-6 z-[70] max-w-sm bg-[#001a4d] text-white px-6 py-4 rounded-2xl shadow-2xl">
+
+        <p id="toastText"
+            class="text-xs font-bold">
+        </p>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         JAVASCRIPT
+    ====================================================== -->
+
+    <script>
+
+        const USERS = {{ users | tojson }};
+
+        const CURRENT_USER_ID = {{ current_user_id | tojson }};
+
+        let page = 1;
+
+        const perPage = 10;
+
+        let currentFilteredUsers = [];
+
+
+        // -----------------------------------------------------
+        // SAFE HTML
+        // -----------------------------------------------------
+
+        function escapeHtml(value) {
+
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+
+        }
+
+
+        // -----------------------------------------------------
+        // ROLE
+        // -----------------------------------------------------
+
+        function roleLabel(role) {
+
+            const roles = {
+                superadmin: 'Superadmin',
+                rh: 'RH',
+                affectation: 'Mentor / Affectation',
+                stagiaire: 'Stagiaire'
+            };
+
+            return roles[role] || role || 'Non défini';
+
+        }
+
+
+        function roleBadge(role) {
+
+            const styles = {
+
+                superadmin:
+                    'bg-violet-50 text-violet-700 border-violet-100',
+
+                rh:
+                    'bg-blue-50 text-blue-700 border-blue-100',
+
+                affectation:
+                    'bg-amber-50 text-amber-700 border-amber-100',
+
+                stagiaire:
+                    'bg-emerald-50 text-emerald-700 border-emerald-100'
+
+            };
+
+            return styles[role]
+                || 'bg-slate-50 text-slate-600 border-slate-100';
+
+        }
+
+
+        // -----------------------------------------------------
+        // DATE
+        // -----------------------------------------------------
+
+        function formatDate(dateValue) {
+
+            if (!dateValue) {
+                return '—';
+            }
+
+            const date = new Date(dateValue);
+
+            if (Number.isNaN(date.getTime())) {
+                return '—';
+            }
+
+            return date.toLocaleDateString(
+                'fr-FR',
+                {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                }
+            );
+
+        }
+
+
+        // -----------------------------------------------------
+        // INITIALS
+        // -----------------------------------------------------
+
+        function getInitials(user) {
+
+            const first = (
+                user.first_name || ''
+            ).trim();
+
+            const last = (
+                user.last_name || ''
+            ).trim();
+
+            const result =
+                `${first.charAt(0)}${last.charAt(0)}`
+                    .toUpperCase();
+
+            if (result) {
+                return result;
+            }
+
+            return (
+                user.email?.charAt(0)?.toUpperCase()
+                || '?'
+            );
+
+        }
+
+
+        // -----------------------------------------------------
+        // FILTER + RENDER
+        // -----------------------------------------------------
+
+        function renderUsers(resetPage = false) {
+
+            if (resetPage) {
+                page = 1;
+            }
+
+            const search = (
+                document.getElementById('searchInput').value
+                || ''
+            )
+                .trim()
+                .toLowerCase();
+
+            const role = (
+                document.getElementById('roleFilter').value
+                || ''
+            );
+
+            const status = (
+                document.getElementById('statusFilter').value
+                || ''
+            );
+
+
+            currentFilteredUsers = USERS.filter(user => {
+
+                const haystack = [
+                    user.name,
+                    user.first_name,
+                    user.last_name,
+                    user.email,
+                    user.role
+                ]
+                    .join(' ')
+                    .toLowerCase();
+
+
+                if (
+                    search
+                    && !haystack.includes(search)
+                ) {
+                    return false;
+                }
+
+
+                if (
+                    role
+                    && user.role !== role
+                ) {
+                    return false;
+                }
+
+
+                if (
+                    status === 'active'
+                    && !user.active
+                ) {
+                    return false;
+                }
+
+
+                if (
+                    status === 'inactive'
+                    && user.active
+                ) {
+                    return false;
+                }
+
+
+                return true;
+
+            });
+
+
+            const totalPages = Math.max(
+                1,
+                Math.ceil(
+                    currentFilteredUsers.length / perPage
+                )
+            );
+
+
+            if (page > totalPages) {
+                page = totalPages;
+            }
+
+
+            const start = (
+                page - 1
+            ) * perPage;
+
+            const visibleUsers =
+                currentFilteredUsers.slice(
+                    start,
+                    start + perPage
+                );
+
+
+            const body = document.getElementById(
+                'usersTableBody'
+            );
+
+
+            if (!visibleUsers.length) {
+
+                body.innerHTML = `
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="px-8 py-20 text-center">
+
+                            <div
+                                class="w-14 h-14 rounded-2xl bg-slate-50 mx-auto flex items-center justify-center text-slate-300 mb-4">
+
+                                <svg class="w-7 h-7"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor">
+
+                                    <path stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H2v-2a4 4 0 014-4h3m6 6H9m6 0v-2a6 6 0 00-12 0v2m9-10a4 4 0 100-8 4 4 0 000 8z" />
+
+                                </svg>
+
+                            </div>
+
+                            <p class="font-black text-[#001a4d]">
+                                Aucun utilisateur
+                            </p>
+
+                            <p class="text-xs text-slate-400 mt-1">
+                                Aucun compte ne correspond aux critères.
+                            </p>
+
+                        </td>
+
+                    </tr>
+                `;
+
+            } else {
+
+                body.innerHTML = visibleUsers
+                    .map(user => {
+
+                        const isMe =
+                            user.id === CURRENT_USER_ID;
+
+                        return `
+
+                            <tr
+                                class="border-b border-slate-50 hover:bg-slate-50/50 transition">
+
+                                <td class="px-8 py-5">
+
+                                    <div class="flex items-center gap-4">
+
+                                        <div
+                                            class="w-11 h-11 shrink-0 rounded-2xl bg-[#eef4ff] text-[#003399] flex items-center justify-center font-black text-xs">
+
+                                            ${escapeHtml(getInitials(user))}
+
+                                        </div>
+
+                                        <div>
+
+                                            <div class="flex items-center gap-2">
+
+                                                <p class="text-sm font-black text-[#001a4d]">
+                                                    ${escapeHtml(user.name || 'Utilisateur')}
+                                                </p>
+
+                                                ${
+                                                    isMe
+                                                    ? `
+                                                        <span
+                                                            class="text-[8px] font-black uppercase tracking-widest bg-[#001a4d] text-white px-2 py-1 rounded-full">
+
+                                                            Vous
+
+                                                        </span>
+                                                    `
+                                                    : ''
+                                                }
+
+                                            </div>
+
+                                            <p class="text-xs text-slate-400 font-medium mt-1">
+                                                ${escapeHtml(user.email)}
+                                            </p>
+
+                                        </div>
+
+                                    </div>
+
+                                </td>
+
+
+                                <td class="px-6 py-5">
+
+                                    <span
+                                        class="inline-flex border px-3 py-1.5 rounded-full text-[9px] uppercase tracking-wider font-black ${roleBadge(user.role)}">
+
+                                        ${escapeHtml(roleLabel(user.role))}
+
+                                    </span>
+
+                                </td>
+
+
+                                <td class="px-6 py-5">
+
+                                    ${
+                                        user.active
+                                        ? `
+                                            <span
+                                                class="inline-flex items-center gap-2 text-[10px] font-black text-emerald-600">
+
+                                                <span
+                                                    class="w-2 h-2 rounded-full bg-emerald-500">
+
+                                                </span>
+
+                                                Actif
+
+                                            </span>
+                                        `
+                                        : `
+                                            <span
+                                                class="inline-flex items-center gap-2 text-[10px] font-black text-rose-600">
+
+                                                <span
+                                                    class="w-2 h-2 rounded-full bg-rose-500">
+
+                                                </span>
+
+                                                Désactivé
+
+                                            </span>
+                                        `
+                                    }
+
+                                </td>
+
+
+                                <td class="px-6 py-5 text-xs text-slate-500 font-semibold">
+
+                                    ${formatDate(user.created_at)}
+
+                                </td>
+
+
+                                <td class="px-6 py-5 text-xs text-slate-500 font-semibold">
+
+                                    ${formatDate(user.last_sign_in_at)}
+
+                                </td>
+
+
+                                <td class="px-8 py-5">
+
+                                    <div class="flex justify-end gap-2">
+
+                                        <button
+                                            onclick='openEditModal(${JSON.stringify(user.id)})'
+                                            title="Modifier"
+                                            class="w-9 h-9 rounded-xl border border-slate-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-600 transition flex items-center justify-center">
+
+                                            ✎
+
+                                        </button>
+
+
+                                        ${
+                                            !isMe
+                                            ? `
+
+                                                <button
+                                                    onclick='toggleUser(${JSON.stringify(user.id)}, ${user.active})'
+                                                    title="${user.active ? 'Désactiver' : 'Réactiver'}"
+                                                    class="w-9 h-9 rounded-xl border border-slate-200 hover:bg-amber-50 hover:text-amber-600 transition flex items-center justify-center">
+
+                                                    ${user.active ? '⊘' : '✓'}
+
+                                                </button>
+
+
+                                                <button
+                                                    onclick='deleteUser(${JSON.stringify(user.id)})'
+                                                    title="Supprimer"
+                                                    class="w-9 h-9 rounded-xl border border-slate-200 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 transition flex items-center justify-center">
+
+                                                    🗑
+
+                                                </button>
+
+                                            `
+                                            : ''
+                                        }
+
+                                    </div>
+
+                                </td>
+
+                            </tr>
+                        `;
+
+                    })
+                    .join('');
+
+            }
+
+
+            const first =
+                currentFilteredUsers.length
+                    ? start + 1
+                    : 0;
+
+            const last =
+                Math.min(
+                    start + perPage,
+                    currentFilteredUsers.length
+                );
+
+
+            document.getElementById(
+                'paginationInfo'
+            ).innerText =
+                `${first} - ${last} sur ${currentFilteredUsers.length}`;
+
+        }
+
+
+        function previousPage() {
+
+            if (page > 1) {
+                page--;
+                renderUsers();
+            }
+
+        }
+
+
+        function nextPage() {
+
+            const totalPages = Math.max(
+                1,
+                Math.ceil(
+                    currentFilteredUsers.length / perPage
+                )
+            );
+
+            if (page < totalPages) {
+                page++;
+                renderUsers();
+            }
+
+        }
+
+
+        // -----------------------------------------------------
+        // CREATE MODAL
+        // -----------------------------------------------------
+
+        function openCreateModal() {
+
+            document.getElementById(
+                'userForm'
+            ).reset();
+
+            document.getElementById(
+                'userId'
+            ).value = '';
+
+            document.getElementById(
+                'modalTitle'
+            ).innerText =
+                'Nouvel utilisateur';
+
+            document.getElementById(
+                'modalSubtitle'
+            ).innerText =
+                'Créer un nouveau compte et définir son rôle.';
+
+            document.getElementById(
+                'passwordHelp'
+            ).innerText =
+                'Le mot de passe est obligatoire lors de la création.';
+
+            document.getElementById(
+                'password'
+            ).required = true;
+
+            document.getElementById(
+                'confirmPassword'
+            ).required = true;
+
+            hideFormError();
+
+            document.getElementById(
+                'userModal'
+            ).classList.remove('hidden');
+
+            document.body.style.overflow =
+                'hidden';
+
+        }
+
+
+        // -----------------------------------------------------
+        // EDIT MODAL
+        // -----------------------------------------------------
+
+        function openEditModal(id) {
+
+            const user = USERS.find(
+                item => item.id === id
+            );
+
+            if (!user) {
+                return;
+            }
+
+            document.getElementById(
+                'userForm'
+            ).reset();
+
+            document.getElementById(
+                'userId'
+            ).value =
+                user.id;
+
+            document.getElementById(
+                'firstName'
+            ).value =
+                user.first_name || '';
+
+            document.getElementById(
+                'lastName'
+            ).value =
+                user.last_name || '';
+
+            document.getElementById(
+                'email'
+            ).value =
+                user.email || '';
+
+            document.getElementById(
+                'role'
+            ).value =
+                user.role || 'stagiaire';
+
+
+            document.getElementById(
+                'modalTitle'
+            ).innerText =
+                'Modifier utilisateur';
+
+            document.getElementById(
+                'modalSubtitle'
+            ).innerText =
+                user.email;
+
+
+            document.getElementById(
+                'password'
+            ).required = false;
+
+            document.getElementById(
+                'confirmPassword'
+            ).required = false;
+
+
+            document.getElementById(
+                'passwordHelp'
+            ).innerText =
+                'Laissez les champs mot de passe vides pour conserver le mot de passe actuel.';
+
+
+            hideFormError();
+
+            document.getElementById(
+                'userModal'
+            ).classList.remove('hidden');
+
+            document.body.style.overflow =
+                'hidden';
+
+        }
+
+
+        function closeUserModal() {
+
+            document.getElementById(
+                'userModal'
+            ).classList.add('hidden');
+
+            document.body.style.overflow =
+                '';
+
+        }
+
+
+        // -----------------------------------------------------
+        // SAVE
+        // -----------------------------------------------------
+
+        async function saveUser(event) {
+
+            event.preventDefault();
+
+            hideFormError();
+
+
+            const id =
+                document.getElementById(
+                    'userId'
+                ).value;
+
+
+            const payload = {
+
+                first_name:
+                    document.getElementById(
+                        'firstName'
+                    ).value.trim(),
+
+                last_name:
+                    document.getElementById(
+                        'lastName'
+                    ).value.trim(),
+
+                email:
+                    document.getElementById(
+                        'email'
+                    ).value.trim(),
+
+                role:
+                    document.getElementById(
+                        'role'
+                    ).value,
+
+                password:
+                    document.getElementById(
+                        'password'
+                    ).value,
+
+                confirm_password:
+                    document.getElementById(
+                        'confirmPassword'
+                    ).value
+
+            };
+
+
+            if (
+                payload.password
+                !== payload.confirm_password
+            ) {
+
+                showFormError(
+                    'Les mots de passe ne correspondent pas.'
+                );
+
+                return;
+
+            }
+
+
+            const button =
+                document.getElementById(
+                    'saveButton'
+                );
+
+            const original =
+                button.innerText;
+
+            button.disabled = true;
+
+            button.innerText =
+                'Enregistrement...';
+
+
+            try {
+
+                const response = await fetch(
+                    id
+                        ? `/api/superadmin/users/${id}`
+                        : '/api/superadmin/users',
+                    {
+                        method: id ? 'PUT' : 'POST',
+
+                        headers: {
+                            'Content-Type':
+                                'application/json'
+                        },
+
+                        body:
+                            JSON.stringify(payload)
+                    }
+                );
+
+
+                const data =
+                    await response.json();
+
+
+                if (!response.ok || !data.success) {
+
+                    throw new Error(
+                        data.error
+                        || 'Une erreur est survenue.'
+                    );
+
+                }
+
+
+                closeUserModal();
+
+                showToast(
+                    data.message
+                    || 'Opération réussie.'
+                );
+
+
+                setTimeout(
+                    () => location.reload(),
+                    500
+                );
+
+            }
+
+            catch (error) {
+
+                showFormError(
+                    error.message
+                );
+
+            }
+
+            finally {
+
+                button.disabled = false;
+
+                button.innerText =
+                    original;
+
+            }
+
+        }
+
+
+        // -----------------------------------------------------
+        // ENABLE / DISABLE
+        // -----------------------------------------------------
+
+        async function toggleUser(
+            id,
+            currentlyActive
+        ) {
+
+            const action =
+                currentlyActive
+                    ? 'désactiver'
+                    : 'réactiver';
+
+
+            if (
+                !confirm(
+                    `Voulez-vous vraiment ${action} ce compte ?`
+                )
+            ) {
+                return;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/superadmin/users/${id}/status`,
+                        {
+                            method: 'POST',
+
+                            headers: {
+                                'Content-Type':
+                                    'application/json'
+                            },
+
+                            body:
+                                JSON.stringify({
+                                    enabled:
+                                        !currentlyActive
+                                })
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (
+                    !response.ok
+                    || !data.success
+                ) {
+
+                    throw new Error(
+                        data.error
+                        || 'Erreur'
+                    );
+
+                }
+
+
+                showToast(
+                    data.message
+                );
+
+
+                setTimeout(
+                    () => location.reload(),
+                    500
+                );
+
+            }
+
+            catch (error) {
+
+                alert(
+                    error.message
+                );
+
+            }
+
+        }
+
+
+        // -----------------------------------------------------
+        // DELETE
+        // -----------------------------------------------------
+
+        async function deleteUser(id) {
+
+            const user =
+                USERS.find(
+                    item => item.id === id
+                );
+
+
+            if (!user) {
+                return;
+            }
+
+
+            const confirmation =
+                confirm(
+                    `Supprimer définitivement le compte de ${user.name || user.email} ?\n\nCette action est irréversible.`
+                );
+
+
+            if (!confirmation) {
+                return;
+            }
+
+
+            try {
+
+                const response =
+                    await fetch(
+                        `/api/superadmin/users/${id}`,
+                        {
+                            method:
+                                'DELETE'
+                        }
+                    );
+
+
+                const data =
+                    await response.json();
+
+
+                if (
+                    !response.ok
+                    || !data.success
+                ) {
+
+                    throw new Error(
+                        data.error
+                        || 'Erreur'
+                    );
+
+                }
+
+
+                showToast(
+                    data.message
+                );
+
+
+                setTimeout(
+                    () => location.reload(),
+                    500
+                );
+
+            }
+
+            catch (error) {
+
+                alert(
+                    error.message
+                );
+
+            }
+
+        }
+
+
+        // -----------------------------------------------------
+        // ERROR
+        // -----------------------------------------------------
+
+        function showFormError(message) {
+
+            const box =
+                document.getElementById(
+                    'formError'
+                );
+
+            box.innerText =
+                message;
+
+            box.classList.remove(
+                'hidden'
+            );
+
+        }
+
+
+        function hideFormError() {
+
+            document.getElementById(
+                'formError'
+            ).classList.add(
+                'hidden'
+            );
+
+        }
+
+
+        // -----------------------------------------------------
+        // TOAST
+        // -----------------------------------------------------
+
+        function showToast(message) {
+
+            const toast =
+                document.getElementById(
+                    'toast'
+                );
+
+            document.getElementById(
+                'toastText'
+            ).innerText =
+                message;
+
+            toast.classList.remove(
+                'hidden'
+            );
+
+
+            setTimeout(
+                () => {
+                    toast.classList.add(
+                        'hidden'
+                    );
+                },
+                3500
+            );
+
+        }
+
+
+        // -----------------------------------------------------
+        // MODAL OUTSIDE CLICK
+        // -----------------------------------------------------
+
+        document.getElementById(
+            'userModal'
+        ).addEventListener(
+            'click',
+            function (event) {
+
+                if (
+                    event.target === this
+                ) {
+                    closeUserModal();
+                }
+
+            }
+        );
+
+
+        // -----------------------------------------------------
+        // ESC
+        // -----------------------------------------------------
+
+        document.addEventListener(
+            'keydown',
+            function (event) {
+
+                if (
+                    event.key === 'Escape'
+                ) {
+                    closeUserModal();
+                }
+
+            }
+        );
+
+
+        // -----------------------------------------------------
+        // INITIAL
+        // -----------------------------------------------------
+
+        renderUsers();
+
+    </script>
+
+</body>
+
+</html>
