@@ -39,21 +39,20 @@
 
 ```
 project-root/
-├── app.py                          # Main Flask application + all routes
-├── auth_helpers.py                 # Authentication logic & session management
-├── db_config.py                    # Database configuration & data normalization
-├── server.js                       # Alternative Node.js/Express server
-├── requirements.txt                # Python dependencies
-├── package.json                    # Node.js dependencies
+├── backend/                        # Flask application and backend runtime
+│   ├── app.py                      # Main Flask application + all routes
+│   ├── auth_helpers.py             # Authentication logic & session management
+│   ├── db_config.py                # Database configuration & data normalization
+│   ├── requirements.txt            # Python dependencies
+│   ├── pdf/                        # PDF templates
+│   └── storage/                    # Local runtime storage
+├── frontend/                       # Jinja templates and static assets
+├── tools/                          # Diagnostic scripts and legacy Node files
+├── wsgi.py                         # Production Flask entry point
 ├── metadata.json                   # Project metadata
 ├── README.md                       # Installation & deployment guide
 │
-├── static/                         # Static assets
-│   ├── css/
-│   │   └── style.css              # Main stylesheet
-│   └── uploads/                    # User-uploaded files (CVs, documents)
-│
-├── templates/                      # HTML templates (Nunjucks)
+├── frontend/templates/             # HTML templates (Jinja)
 │   ├── index.html                 # Landing page
 │   ├── login.html                 # User login page
 │   ├── register.html              # User registration page
@@ -61,7 +60,7 @@ project-root/
 │   ├── dashboard_rh.html          # HR dashboard (all applications)
 │   └── dashboard_affectation.html # Assignment dashboard
 │
-└── scripts/                        # Utility scripts
+└── backend/scripts/                # Utility scripts
     ├── cv_analyzer.py             # CV/Application analysis tool
     ├── creer_comptes_admin.py     # Admin account creation script
     ├── test_routes.py             # Route testing utility
@@ -242,16 +241,12 @@ GEMINI_API_KEY=<optional-for-ai-features>
 ### Local Development
 ```bash
 # Install dependencies
-npm install  # for Node.js modules
-pip install -r requirements.txt  # for Python
+pip install -r backend/requirements.txt
 
 # Set environment variables in .env file
 
 # Run Flask app
-python app.py
-
-# OR run Node.js server
-node server.js
+flask --app wsgi:app run
 ```
 
 ### AI Studio Deployment
@@ -314,8 +309,8 @@ node server.js
 - **verify_setup.py** - Verify environment setup and database connection
 
 ### SQL Files
-- **supabase_auth.sql** - Initial authentication setup
-- **supabase_migration.sql** - Database schema creation
+- **supabase/migrations/supabase_auth.sql** - Initial authentication setup
+- **supabase/migrations/supabase_migration.sql** - Database schema creation
 - **supabase_fix_*.sql** - Various database constraint fixes
 
 ---

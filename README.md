@@ -1,20 +1,25 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Marsa Maroc Internship Management
 
-# Run and deploy your AI Studio app
+Application Flask de gestion des stages, avec Supabase pour l'authentification et la base de donnees.
 
-This contains everything you need to run your app locally.
+## Structure
 
-View your app in AI Studio: https://ai.studio/apps/7691bfc4-59dd-4242-a698-70d1d4ae6178
+- `backend/` : application Flask, modules Python, templates PDF et stockage runtime.
+- `frontend/` : templates Jinja et assets statiques servis par Flask.
+- `supabase/migrations/` : migrations SQL Supabase.
+- `tools/` : scripts de diagnostic et ancienne implementation Node.
 
-## Run Locally
+## Lancement local
 
-**Prerequisites:**  Node.js
+Depuis la racine :
 
+```powershell
+pip install -r backend/requirements.txt
+flask --app wsgi:app run
+```
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Copier `.env.example` vers l'environnement local et renseigner les variables Supabase. Ne jamais publier `SUPABASE_SERVICE_ROLE_KEY` dans le frontend.
+
+## Deploiement
+
+Consulter [DEPLOYMENT.md](DEPLOYMENT.md). Le backend Flask doit etre deploye sur un hebergeur Python. Netlify pourra heberger un frontend React/Vite apres migration des templates Jinja.

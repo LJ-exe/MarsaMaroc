@@ -2,7 +2,17 @@ node_modules/
 build/
 dist/
 coverage/
+__pycache__/
+*.py[cod]
+backend/storage/generated_pdfs/*
+backend/storage/uploads/*
+backend/storage/emails_sent/*
+backend/storage/fiches_accueil/*
+output_test.pdf
+overlay_temp.pdf
+analyzed_attestation.png
 .DS_Store
 *.log
 .env*
+.env.local
 !.env.example

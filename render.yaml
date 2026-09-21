@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: marsa-maroc-backend
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn wsgi:app
+    healthCheckPath: /
+    envVars:
+      - key: SECRET_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_TABLE
+        value: applications
+      - key: SUPABASE_STATUS_INITIAL
+        value: pending
+      - key: SUPABASE_SSL_VERIFY
+        value: "true"
+      - key: APP_URL
+        sync: false
+      - key: EMAIL_RH
+        sync: false
+      - key: EMAIL_AFFECTATION
+        sync: false
+      - key: SMTP_SERVER
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_LOGIN
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false

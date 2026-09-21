@@ -14,9 +14,9 @@
 
 Exécuter si ce n'est pas déjà fait :
 
-- `supabase_evaluation_workflow.sql`
-- `supabase_chat_and_report.sql`
-- `supabase_report_validation.sql` (colonnes `intern_report_status`, `evaluation_reject_reason`)
+- `supabase/migrations/supabase_evaluation_workflow.sql`
+- `supabase/migrations/supabase_chat_and_report.sql`
+- `supabase/migrations/supabase_report_validation.sql` (colonnes `intern_report_status`, `evaluation_reject_reason`)
 
 ## API ajoutées / modifiées
 
