@@ -57,8 +57,8 @@ def utilisateur_connecte():
 
 
 def role_utilisateur():
-
-    return session.get("role") or ROLE_INSCRIPTION
+    role = (session.get("role") or "").strip().lower()
+    return role if role in ROLES_VALIDES else None
 
 
 
@@ -73,10 +73,8 @@ def nom_utilisateur():
 
 
 def redirection_pour_role(role=None):
-
-    """URL de redirection selon le rôle."""
-
-    return REDIRECTION_PAR_ROLE.get(role or role_utilisateur(), "/stagiaire")
+    role = (role or role_utilisateur() or "").strip().lower()
+    return REDIRECTION_PAR_ROLE.get(role, "/login")
 
 
 

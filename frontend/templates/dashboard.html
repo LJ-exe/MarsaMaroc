@@ -147,6 +147,44 @@
                         </div>
                         <h1 class="text-3xl font-black text-[#001a4d]">Bonjour, {{ user }}</h1>
                     </div>
+                    {% if candidat and (candidat.project or candidat.mentor) %}
+                    <div class="grid md:grid-cols-3 gap-4">
+
+                    <!-- Projet -->
+                    <div class="bg-[#f8fafc] border border-[#e5eef7] rounded-2xl p-5">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                            Projet de stage
+                        </p>
+
+                        <p class="text-sm font-black text-[#001a4d]">
+                            {{ candidat.project or 'Non défini' }}
+                        </p>
+                    </div>
+
+                    <!-- Mentor -->
+                    <div class="bg-[#f8fafc] border border-[#e5eef7] rounded-2xl p-5">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                            Mentor / Encadrant
+                        </p>
+
+                        <p class="text-sm font-black text-[#001a4d]">
+                            {{ candidat.mentor or 'Non affecté' }}
+                        </p>
+                    </div>
+
+                    <!-- Direction / Pôle -->
+                    <div class="bg-[#f8fafc] border border-[#e5eef7] rounded-2xl p-5">
+                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                            Direction / Pôle
+                        </p>
+
+                        <p class="text-sm font-black text-[#001a4d]">
+                            {{ candidat.department or 'Non défini' }}
+                        </p>
+                    </div>
+
+                    </div>
+                {% endif %}
                     <p class="text-slate-500 font-medium">Portail stagiaire Marsa Maroc — Suivez l'évolution de votre candidature.</p>
                 </div>
 
