@@ -4000,13 +4000,26 @@ def register():
 
 @app.route("/logout")
 def logout():
+
+    next_page = request.args.get("next")
+
     if supabase and session.get("access_token"):
         try:
             appliquer_session_supabase(supabase)
             supabase.auth.sign_out()
         except Exception as exc:
             print(f"[AUTH] Erreur logout: {exc}")
+
     session.clear()
+
+    if next_page:
+        return redirect(
+            url_for(
+                "login",
+                next=next_page
+            )
+        )
+
     return redirect(url_for("login"))
 
 
