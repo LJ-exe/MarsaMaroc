@@ -311,6 +311,19 @@
                                         </div>
 
                                         {% endif %}
+                                        {% if candidate.evaluation_status == 'En attente' %}
+                                            <button type="button"
+                                                onclick="refaireEvaluation('{{ candidate.id }}')"
+                                                title="Refaire la fiche d'appréciation"
+                                                class="bg-slate-100 text-slate-500 px-2.5 py-2 rounded-lg
+                                                    text-[8px] font-black uppercase tracking-widest
+                                                    hover:bg-amber-50 hover:text-amber-600 transition">
+                                                ↻ Refaire
+                                            </button>
+                                        {% endif %}
+
+
+
                                     {% if candidate.evaluation_status == 'Refusé' and candidate.evaluation_reject_reason
                                     %}
                                     <span
@@ -1390,6 +1403,7 @@
 
         // --- Evaluation Modal & Signature Capture Implementation ---
         let currentEvaluationCandidateId = null;
+        let remplacerEvaluationExistante = false;
         let canvasEncadrant = null, canvasChef = null;
         let ctxEncadrant = null, ctxChef = null;
         let drawingEncadrant = false, drawingChef = false;
@@ -1516,6 +1530,49 @@
             }
         }
 
+
+        function refaireEvaluation(candidateId) {
+
+    if (!confirm(
+        "Refaire cette fiche d'appréciation ?\n\n" +
+        "La nouvelle fiche remplacera celle actuellement envoyée au RH."
+    )) {
+        return;
+    }
+
+    const row = document.querySelector(
+        `tr[data-candidate-id="${candidateId}"]`
+    );
+
+    if (!row) {
+        alert("Impossible de récupérer les informations du stagiaire.");
+        return;
+    }
+
+    remplacerEvaluationExistante = true;
+
+    const mockBtn = {
+        disabled: false,
+        dataset: {
+            id: row.dataset.candidateId,
+            name: row.dataset.candidateName,
+            specialty: row.dataset.candidateSpecialty,
+            school: row.dataset.candidateSchool,
+            mentor: row.dataset.candidateMentor,
+            mentorFunction: row.dataset.candidateMentorFunction,
+            department: row.dataset.candidateDepartment,
+            period: row.dataset.candidatePeriod,
+            evaluationStatus: row.dataset.candidateEvaluationStatus,
+            internReportStatus: row.dataset.candidateInternReportStatus,
+            rejectReason: row.dataset.candidateRejectReason
+        }
+    };
+
+    openEvaluationModal(mockBtn);
+}
+
+
+
         function openEvaluationModal(btn) {
             if (btn.disabled) {
                 const rs = btn.dataset.internReportStatus || '';
@@ -1564,8 +1621,14 @@
             }, 100);
         }
 
-        function closeEvaluationModal() {
-            document.getElementById('evaluation-modal').classList.add('hidden');
+       function closeEvaluationModal() {
+
+            remplacerEvaluationExistante = false;
+
+            document
+                .getElementById('evaluation-modal')
+                .classList.add('hidden');
+
             document.body.style.overflow = 'auto';
         }
 
@@ -1616,9 +1679,13 @@
 
             const payload = {
                 id: currentEvaluationCandidateId,
+
+                replace_existing: remplacerEvaluationExistante,
+
                 criteria: criteria,
                 appreciation_globale: appreciation,
                 observations: observations,
+
                 signatures: {
                     encadrant: sigEncadrant,
                     chef_dept: sigChef
@@ -1633,22 +1700,26 @@
                 body: JSON.stringify(payload)
             })
                 .then(res => res.json())
+              
+
                 .then(data => {
                     if (data.success) {
-                        statusMsg.innerText = "Évaluation envoyée avec succès !";
 
-                        // Auto-download the PDF
-                         
+                        remplacerEvaluationExistante = false;
+
+                        statusMsg.innerText = "Évaluation envoyée avec succès !";
 
                         setTimeout(() => {
                             closeEvaluationModal();
                             location.reload();
                         }, 1500);
+
                     } else {
                         statusMsg.classList.add('hidden');
                         alert("Erreur: " + (data.error || "Une erreur est survenue."));
                     }
                 })
+
                 .catch(err => {
                     console.error("Submit evaluation error:", err);
                     statusMsg.classList.add('hidden');

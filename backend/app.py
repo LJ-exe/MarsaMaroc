@@ -5938,10 +5938,17 @@ def api_candidates_evaluation():
             ), 403
 
         eval_status = candidat.get("evaluation_status") or ""
-        if eval_status == "En attente":
+        replace_existing = bool(
+            corps.get("replace_existing")
+        )
+
+        if eval_status == "En attente" and not replace_existing:
             return jsonify(
                 success=False,
-                error="Une fiche d'évaluation est déjà en attente de validation RH.",
+                error=(
+                    "Une fiche d'évaluation est déjà "
+                    "en attente de validation RH."
+                ),
             ), 400
 
         evaluation_data = {
