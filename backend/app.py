@@ -6657,8 +6657,9 @@ def superadmin_user_status(user_id):
         ), 500
 
 
+
 # ============================================================
-# DELETE USER
+# DELETE USER - SUPPRESSION DÉFINITIVE
 # ============================================================
 
 @app.delete("/api/superadmin/users/<user_id>")
@@ -6675,7 +6676,8 @@ def superadmin_delete_user(user_id):
         session.get("user_id") or ""
     )
 
-    if user_id == current_user_id:
+    # Empêcher le superadmin de supprimer son propre compte
+    if str(user_id) == current_user_id:
         return jsonify(
             success=False,
             error="Vous ne pouvez pas supprimer votre propre compte."
@@ -6683,39 +6685,155 @@ def superadmin_delete_user(user_id):
 
     try:
 
-        # Supprimer d'abord Authentication.
-        # Si une FK bloque la suppression, aucune donnée profile
-        # n'est supprimée par erreur.
+        # =====================================================
+        # 1. RÉCUPÉRER LE PROFIL AVANT DE LE SUPPRIMER
+        # =====================================================
+
+        profile_result = (
+            supabase_admin
+            .table("profiles")
+            .select("id, name, role, encadrant_id")
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+        profil = (
+            profile_result.data[0]
+            if profile_result.data
+            else {}
+        )
+
+        role = (
+            profil.get("role") or ""
+        ).strip().lower()
+
+        encadrant_id = profil.get(
+            "encadrant_id"
+        )
+
+        print(
+            "[SUPERADMIN DELETE]",
+            "user_id =", user_id,
+            "role =", role,
+            "encadrant_id =", encadrant_id
+        )
+
+        # =====================================================
+        # 2. SI C'EST UN STAGIAIRE :
+        #    SUPPRIMER SA CANDIDATURE / DOSSIER
+        # =====================================================
+
+        if role == "stagiaire":
+
+            (
+                supabase_admin
+                .table(TABLE_APPLICATIONS)
+                .delete()
+                .eq("user_id", user_id)
+                .execute()
+            )
+
+            print(
+                "[SUPERADMIN DELETE] "
+                "Candidature stagiaire supprimée"
+            )
+
+        # =====================================================
+        # 3. SI C'EST UN ENCADRANT :
+        #    RETIRER SES STAGIAIRES DE SON AFFECTATION
+        # =====================================================
+
+        if role in ("affectation", "mentor") and encadrant_id:
+
+            (
+                supabase_admin
+                .table(TABLE_APPLICATIONS)
+                .update({
+                    "encadrant_id": None,
+                    "mentor": "",
+                    "mentor_function": ""
+                })
+                .eq(
+                    "encadrant_id",
+                    encadrant_id
+                )
+                .execute()
+            )
+
+            print(
+                "[SUPERADMIN DELETE] "
+                "Affectations mentor nettoyées"
+            )
+
+        # =====================================================
+        # 4. SUPPRIMER LE PROFIL
+        # =====================================================
+
+        (
+            supabase_admin
+            .table("profiles")
+            .delete()
+            .eq("id", user_id)
+            .execute()
+        )
+
+        print(
+            "[SUPERADMIN DELETE] "
+            "Profil supprimé"
+        )
+
+        # =====================================================
+        # 5. SUPPRIMER LA LIGNE ENCADRANT
+        # =====================================================
+
+        if role in ("affectation", "mentor") and encadrant_id:
+
+            (
+                supabase_admin
+                .table("encadrants")
+                .delete()
+                .eq("id", encadrant_id)
+                .execute()
+            )
+
+            print(
+                "[SUPERADMIN DELETE] "
+                "Encadrant supprimé"
+            )
+
+        # =====================================================
+        # 6. SUPPRIMER DÉFINITIVEMENT SUPABASE AUTH
+        # =====================================================
+
         supabase_admin.auth.admin.delete_user(
             user_id
         )
 
-        # Si profiles possède ON DELETE CASCADE ceci ne fera rien.
-        # Sinon cela nettoie le profil restant.
-        try:
-            (
-                supabase_admin
-                .table("profiles")
-                .delete()
-                .eq("id", user_id)
-                .execute()
-            )
-        except Exception:
-            pass
+        print(
+            "[SUPERADMIN DELETE] "
+            "Compte Auth supprimé"
+        )
 
         return jsonify(
             success=True,
-            message="Utilisateur supprimé."
+            message="Utilisateur supprimé définitivement."
         )
 
     except Exception as exc:
 
-        print(f"[SUPERADMIN DELETE] {exc}")
+        print(
+            f"[SUPERADMIN DELETE] {exc}"
+        )
 
         return jsonify(
             success=False,
             error=str(exc)
         ), 500
+
+
+
+
 
 
 
