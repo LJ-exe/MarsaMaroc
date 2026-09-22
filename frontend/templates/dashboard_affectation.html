@@ -250,17 +250,33 @@
 
                                     {% if deja_affecte %}
                                     {# ── Fiche d'accueil (si générée) ── #}
-                                    {% if candidate.fiche_accueil_pdf %}
-                                    <a href="/download/fiche_accueil/{{ candidate.fiche_accueil_pdf }}"
-                                        class="bg-emerald-500 text-white px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg hover:scale-[1.05] transition flex items-center gap-2">
-                                        <svg viewBox="0 0 24 24" class="w-3 h-3" fill="none" stroke="currentColor"
-                                            stroke-width="2.5">
-                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                                            <polyline points="7 10 12 15 17 10" />
-                                            <line x1="12" y1="15" x2="12" y2="3" />
-                                        </svg>
-                                        Fiche d'accueil
-                                    </a>
+                                     {% if candidate.fiche_accueil_pdf %}
+
+                                    <div class="flex items-center gap-2">
+
+                                        <!-- Voir la fiche -->
+                                        <a href="{{ url_for('preview_fiche_accueil', filename=candidate.fiche_accueil_pdf) }}"
+                                        target="_blank"
+                                        class="bg-[#001a4d] text-white px-4 py-2.5 rounded-xl
+                                                text-[9px] font-black uppercase tracking-widest
+                                                shadow-lg hover:scale-[1.05] transition
+                                                flex items-center gap-2">
+
+                                            Voir fiche d'accueil
+                                        </a>
+
+                                        <!-- Télécharger -->
+                                        <a href="/download/fiche_accueil/{{ candidate.fiche_accueil_pdf }}"
+                                        class="bg-emerald-500 text-white px-4 py-2.5 rounded-xl
+                                                text-[9px] font-black uppercase tracking-widest
+                                                shadow-lg hover:scale-[1.05] transition
+                                                flex items-center gap-2">
+
+                                            Télécharger
+                                        </a>
+
+                                    </div>
+
                                     {% endif %}
 
                                     {# ── Bouton Fiche d'Évaluation ── #}
@@ -269,35 +285,32 @@
                                         or candidate.evaluation_submitted_at
                                         or candidate.evaluation_status in ['En attente', 'Accepté']
                                     %}
-                                    {% if not eval_soumise %}
-                                    <button type="button" id="btn-eval-{{ candidate.id }}"
-                                        onclick="openEvaluationModal(this)" data-id="{{ candidate.id }}"
-                                        data-name="{{ candidate.name }}" data-specialty="{{ candidate.specialty }}"
-                                        data-school="{{ candidate.school }}" data-mentor="{{ candidate.mentor or '' }}"
-                                        data-mentor-function="{{ candidate.mentor_function or '' }}"
-                                        data-department="{{ candidate.department or '' }}"
-                                        data-period="{{ candidate.period or '' }}"
-                                        data-evaluation-status="{{ candidate.evaluation_status or '' }}"
-                                        data-intern-report-status="{{ candidate.intern_report_status or '' }}"
-                                        data-reject-reason="{{ candidate.evaluation_reject_reason or '' }}" {% if not
-                                        rapport_valide or eval_validee %}disabled{% endif %}
-                                        title="{% if not rapport_valide %}Validez d'abord le rapport de stage{% elif eval_en_attente %}Modifier la fiche en attente de validation RH{% elif eval_validee %}Fiche d'évaluation déjà validée{% else %}Remplir la fiche d'évaluation{% endif %}"
-                                        class="px-4 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest shadow-lg flex items-center gap-2 transition
-                                            {% if rapport_valide and not eval_validee %}
-                                                bg-amber-500 text-white hover:scale-[1.05]
-                                            {% else %}
-                                                bg-slate-200 text-slate-400 cursor-not-allowed
-                                            {% endif %}">
-                                        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
-                                            stroke-width="2.5">
-                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                            <polyline points="14 2 14 8 20 8" />
-                                            <line x1="16" y1="13" x2="8" y2="13" />
-                                            <line x1="16" y1="17" x2="8" y2="17" />
-                                        </svg>
-                                        Fiche d'Évaluation
-                                    </button>
-                                    {% endif %}
+                                     {% if candidate.evaluation_pdf %}
+
+                                        <div class="flex items-center gap-2">
+
+                                            <a href="{{ url_for('preview_evaluation', filename=candidate.evaluation_pdf) }}"
+                                            target="_blank"
+                                            class="bg-[#001a4d] text-white px-4 py-2.5 rounded-xl
+                                                    text-[9px] font-black uppercase tracking-widest
+                                                    shadow-lg hover:scale-[1.05] transition
+                                                    flex items-center gap-2">
+
+                                                Voir fiche d'appréciation
+                                            </a>
+
+                                            <a href="/download/evaluation/{{ candidate.evaluation_pdf }}"
+                                            class="bg-amber-500 text-white px-4 py-2.5 rounded-xl
+                                                    text-[9px] font-black uppercase tracking-widest
+                                                    shadow-lg hover:scale-[1.05] transition
+                                                    flex items-center gap-2">
+
+                                                Télécharger
+                                            </a>
+
+                                        </div>
+
+                                        {% endif %}
                                     {% if candidate.evaluation_status == 'Refusé' and candidate.evaluation_reject_reason
                                     %}
                                     <span
@@ -1332,13 +1345,7 @@
 
                     closeAffectationModal();
 
-                    if (data.pdf_path) {
-
-                        window.open(
-                            `/download/fiche_accueil/${data.pdf_path}`,
-                            '_blank'
-                        );
-                    }
+                    
 
                     location.reload();
 
@@ -1631,9 +1638,7 @@
                         statusMsg.innerText = "Évaluation envoyée avec succès !";
 
                         // Auto-download the PDF
-                        if (data.pdf_path) {
-                            window.open(`/download/evaluation/${data.pdf_path}`, '_blank');
-                        }
+                         
 
                         setTimeout(() => {
                             closeEvaluationModal();
@@ -2871,10 +2876,7 @@ document.addEventListener(
                             evalBtn.classList.add('bg-amber-500', 'text-white', 'hover:scale-[1.05]');
                             evalBtn.title = 'Remplir la fiche d\'évaluation';
                             console.log('After - disabled:', evalBtn.disabled, 'classes:', evalBtn.className);
-                        } else {
-                            console.error('Evaluation button not found in DOM');
-                            alert('Attention: Le bouton d\'évaluation n\'existe pas dans le tableau. Le candidat doit être affecté.');
-                        }
+                        } 
 
                         alert('Rapport validé avec succès !');
                     } else {

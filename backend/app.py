@@ -7044,33 +7044,70 @@ La Direction des Ressources Humaines — Marsa Maroc
             error=str(exc)
         ), 500
 
-
 @app.route("/download/fiche_accueil/<path:filename>")
 def download_fiche_accueil(filename):
-    """Télécharger la fiche d'accueil PDF from generated_pdfs directory."""
-    try:
-        base_filename = os.path.basename(filename)
-        return send_file(
-            os.path.join(app.config['GENERATED_PDFS_FOLDER'], base_filename),
-            as_attachment=True,
-            mimetype="application/pdf"
-        )
-    except Exception as exc:
-        return f"Erreur lors du téléchargement: {str(exc)}", 404
+    filepath = trouver_pdf_genere(filename)
+
+    if not filepath:
+        return "Fiche d'accueil introuvable.", 404
+
+    return send_file(
+        filepath,
+        mimetype="application/pdf",
+        as_attachment=True
+    )
+
+
+@app.route("/preview/fiche_accueil/<path:filename>")
+def preview_fiche_accueil(filename):
+    filepath = trouver_pdf_genere(filename)
+
+    if not filepath:
+        return "Fiche d'accueil introuvable.", 404
+
+    return send_file(
+        filepath,
+        mimetype="application/pdf",
+        as_attachment=False
+    )
+
+
+@app.route("/preview/evaluation/<path:filename>")
+def preview_evaluation(filename):
+    return _servir_evaluation_pdf(filename, as_attachment=False)
 
 
 @app.route("/download/evaluation/<path:filename>")
 def download_evaluation(filename):
-    """Télécharger la fiche d'évaluation PDF from generated_pdfs directory."""
-    try:
-        base_filename = os.path.basename(filename)
-        return send_file(
-            os.path.join(app.config['GENERATED_PDFS_FOLDER'], base_filename),
-            as_attachment=True,
-            mimetype="application/pdf"
-        )
-    except Exception as exc:
-        return f"Erreur lors du téléchargement: {str(exc)}", 404
+    return _servir_evaluation_pdf(filename, as_attachment=True)
+
+
+def trouver_pdf_genere(filename):
+    """Cherche un PDF généré dans les emplacements possibles."""
+    safe_filename = secure_filename(os.path.basename(filename))
+
+    chemins = [
+        # Nouveau dossier recommandé
+        os.path.join(STORAGE_DIR, "generated_pdfs", safe_filename),
+
+        # Ancien dossier à la racine du projet
+        os.path.join(os.getcwd(), "generated_pdfs", safe_filename),
+
+        # Ancien dossier backend/generated_pdfs
+        os.path.join(app.root_path, "generated_pdfs", safe_filename),
+    ]
+
+    for filepath in chemins:
+        if os.path.isfile(filepath):
+            return filepath
+
+    print("[PDF] Introuvable :", safe_filename)
+    print("[PDF] Chemins testés :")
+    for filepath in chemins:
+        print("   -", filepath)
+
+    return None
+
 
 
 @app.route("/download/attestation/<path:filename>")
@@ -7776,9 +7813,8 @@ def preview_report(filename):
     return _servir_rapport_stage(filename, as_attachment=False)
 
 
-@app.route("/preview/evaluation/<path:filename>")
-def preview_evaluation(filename):
-    return _servir_evaluation_pdf(filename, as_attachment=False)
+
+
 
 
 def _servir_rapport_stage(filename: str, as_attachment: bool):
@@ -7808,12 +7844,18 @@ def _servir_rapport_stage(filename: str, as_attachment: bool):
     return send_file(filepath, mimetype="application/pdf", as_attachment=as_attachment)
 
 
+
 def _servir_evaluation_pdf(filename: str, as_attachment: bool):
-    safe_filename = secure_filename(os.path.basename(filename))
-    filepath = os.path.join(app.config['GENERATED_PDFS_FOLDER'], safe_filename)
-    if not os.path.exists(filepath):
-        return "Fichier d'évaluation introuvable.", 404
-    return send_file(filepath, mimetype="application/pdf", as_attachment=as_attachment)
+    filepath = trouver_pdf_genere(filename)
+
+    if not filepath:
+        return "Fiche d'appréciation introuvable.", 404
+
+    return send_file(
+        filepath,
+        mimetype="application/pdf",
+        as_attachment=as_attachment
+    )
 
 
 if __name__ == "__main__":
